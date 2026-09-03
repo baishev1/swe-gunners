@@ -1,0 +1,32 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from core import settings
+
+from .lifespan import lifespan
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    lifespan=lifespan,
+    docs_url="/docs" if settings.IS_DEV_ENV else None,
+    redoc_url=None,
+    openapi_url="/openapi.json" if settings.IS_DEV_ENV else None,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class HealthResponse(BaseModel):
+    status: str
+
+
+@app.get("/health", tags=["Health"], response_model=HealthResponse)
+def health():
+    return HealthResponse(status="ok")
