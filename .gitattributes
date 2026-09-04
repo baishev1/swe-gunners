@@ -1,0 +1,18 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+
+*.sh text eol=lf
+*.bat text eol=crlf
+
+package-lock.json linguist-generated=true -diff
+uv.lock linguist-generated=true -diff
