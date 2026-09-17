@@ -8,6 +8,7 @@ from uuid import UUID
 import uuid_utils
 from sqlalchemy import DateTime, Dialect, Engine, MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, declared_attr, mapped_column
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.types import TypeDecorator
 
 from core.helpers import time_now
@@ -47,7 +48,10 @@ def init_db() -> None:
 
     url = settings.database_url
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    engine = create_engine(url, echo=settings.DB_ECHO, connect_args=connect_args)
+    extra_args = {}
+    if url.endswith(":memory:"):
+        extra_args["poolclass"] = StaticPool
+    engine = create_engine(url, echo=settings.DB_ECHO, connect_args=connect_args, **extra_args)
 
     if url.startswith("sqlite"):
         logger.info("Using SQLite database at %s", settings.SQLITE_FILE_NAME)

@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from core import settings
+from features import events
 
 from .lifespan import lifespan
 
@@ -30,3 +31,6 @@ class HealthResponse(BaseModel):
 @app.get("/health", tags=["Health"], response_model=HealthResponse)
 def health():
     return HealthResponse(status="ok")
+
+
+app.include_router(events.routes.router)

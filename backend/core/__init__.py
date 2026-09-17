@@ -6,12 +6,22 @@ from .settings import *
 
 
 def init_core() -> None:
-    # init logging first
     from .logging import init_logging
 
     init_logging()
 
-    # init everything else
     from .database import init_db
 
     init_db()
+
+    from . import database
+
+    globals()["engine"] = database.engine
+
+
+def __getattr__(name: str):
+    if name == "engine":
+        from . import database
+
+        return database.engine
+    raise AttributeError(f"module 'core' has no attribute '{name}'")

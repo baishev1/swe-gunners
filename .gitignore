@@ -119,6 +119,7 @@ venv/
 env/
 ENV/
 virtualenv/
+.conda/
 .python-version.local
 __pypackages__/
 .pdm.toml
