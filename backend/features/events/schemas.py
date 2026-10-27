@@ -3,14 +3,14 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from core import *
+from features.venues.schemas import VenueResponse
 
 
 class EventBase(BaseModel):
     title: str
     description: str | None = None
     category: str
-    venue_name: str
-    venue_address: str
+    venue_id: UUID
     start_time: datetime
     end_time: datetime
     timezone: str = "Asia/Almaty"
@@ -30,8 +30,7 @@ class EventUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     category: str | None = None
-    venue_name: str | None = None
-    venue_address: str | None = None
+    venue_id: UUID | None = None
     start_time: datetime | None = None
     end_time: datetime | None = None
     timezone: str | None = None
@@ -49,5 +48,6 @@ class EventResponse(EventBase):
     id: UUID
     organizer_id: UUID
     status: str
+    venue: VenueResponse
     created_at: datetime
     updated_at: datetime
