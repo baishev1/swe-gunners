@@ -18,7 +18,7 @@ class Event(DbBase):
     status: Mapped[str] = mapped_column(String(20), default="draft")
     registration_start_time: Mapped[AwareDateTime | None] = mapped_column(default=None)
     registration_end_time: Mapped[AwareDateTime | None] = mapped_column(default=None)
-    organizer_id: Mapped[UUID] = mapped_column(default=uuid7)
+    organizer_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
     is_assigned_seating: Mapped[bool] = mapped_column(Boolean, default=False)
     cover_image_url: Mapped[str | None] = mapped_column(String(1000), default=None)
 

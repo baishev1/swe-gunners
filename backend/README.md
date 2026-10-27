@@ -82,8 +82,8 @@ features/<name>/
 Rules:
 
 - `core/` never imports from `features/`.
-- A feature may import from `core` and from another feature's `service`, `models`
-  or `schemas`. It must not import another feature's `routes`.
+- A feature may import from `core` and from another feature's `service`, `models`,
+  `schemas` or `guards`. It must not import another feature's `routes`.
 - Routes stay thin: validate input, call the service, return a schema.
 - Services are module-level singletons and take `db: Session` per call rather
   than holding one.

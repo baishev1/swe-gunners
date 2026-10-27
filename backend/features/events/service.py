@@ -11,12 +11,9 @@ class EventService:
         self,
         db: Session,
         data: EventCreate,
-        organizer_id: UUID | None = None,
+        organizer_id: UUID,
     ) -> Event:
-        payload = data.model_dump()
-        if organizer_id:
-            payload["organizer_id"] = organizer_id
-        event = Event(**payload)
+        event = Event(**data.model_dump(), organizer_id=organizer_id)
         db.add(event)
         db.commit()
         db.refresh(event)
@@ -69,19 +66,20 @@ class EventService:
         db.refresh(new_event)
         return new_event
 
-    def list_events(
-        self,
-        db: Session,
-        organizer_id: UUID | None = None,
-        status: str | None = None,
+    def list_events(self, db: Session) -> list[Event]:
+        stmt = (
+            select(Event)
+            .where(Event.status == "published", Event.visibility == "public")
+            .order_by(Event.start_time.asc())
+        )
+        return list(db.scalars(stmt).all())
+
+    def list_organizer_events(
+        self, db: Session, organizer_id: UUID, status: str | None = None
     ) -> list[Event]:
-        stmt = select(Event)
-        if organizer_id:
-            stmt = stmt.where(Event.organizer_id == organizer_id)
+        stmt = select(Event).where(Event.organizer_id == organizer_id)
         if status:
             stmt = stmt.where(Event.status == status)
-        elif not organizer_id:
-            stmt = stmt.where(Event.status == "published", Event.visibility == "public")
         stmt = stmt.order_by(Event.start_time.asc())
         return list(db.scalars(stmt).all())
 
