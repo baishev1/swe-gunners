@@ -94,7 +94,7 @@ class TicketService:
     def generate_pdf_ticket(self, db: Session, ticket: Ticket) -> bytes:
         event = db.get(Event, ticket.event_id)
         event_title = event.title if event else "BiletFlow Event"
-        event_venue = f"{event.venue_name}, {event.venue_address}" if event else "Venue: TBA"
+        event_venue = f"{event.venue.name}, {event.venue.address}" if event else "Venue: TBA"
         event_time = (
             event.start_time.strftime("%d %B %Y, %H:%M")
             if event
