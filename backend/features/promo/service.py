@@ -8,6 +8,7 @@ from sqlalchemy import or_, select, update
 from core import *
 from features.audit_log.service import audit_log_service
 from features.events.models import Event
+from features.ticket_types.models import TicketType
 
 from .models import *
 from .schemas import *
@@ -24,10 +25,14 @@ QR_MODULE_SIZE = 10
 
 class PromoService:
     def create_campaign(
-        self, db: Session, event: Event, data: PromoCampaignCreate
+        self, db: Session, event: Event, data: PromoCampaignCreate, actor_id: UUID
     ) -> PromoCampaign:
+        ticket_types = db.scalars(
+            select(TicketType).where(TicketType.id.in_(set(data.ticket_type_ids)))
+        ).all()
         campaign = PromoCampaign(
-            **data.model_dump(),
+            **data.model_dump(exclude={"ticket_type_ids"}),
+            ticket_types=list(ticket_types),
             event_id=event.id,
             code="".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH)),
             qr_token=secrets.token_urlsafe(32),
@@ -41,6 +46,7 @@ class PromoService:
             entity_id=campaign.id,
             description=f"Created promo campaign {campaign.name} ({campaign.code})",
             event_id=event.id,
+            actor_id=actor_id,
         )
         db.commit()
         db.refresh(campaign)
@@ -63,7 +69,9 @@ class PromoService:
         db.refresh(campaign)
         return campaign
 
-    def disable_campaign(self, db: Session, campaign: PromoCampaign) -> PromoCampaign:
+    def disable_campaign(
+        self, db: Session, campaign: PromoCampaign, actor_id: UUID
+    ) -> PromoCampaign:
         campaign.is_disabled = True
         audit_log_service.record(
             db,
@@ -72,6 +80,7 @@ class PromoService:
             entity_id=campaign.id,
             description=f"Disabled promo campaign {campaign.name} ({campaign.code})",
             event_id=campaign.event_id,
+            actor_id=actor_id,
         )
         db.commit()
         db.refresh(campaign)
@@ -129,7 +138,11 @@ class PromoService:
             return "Promo code has reached its redemption limit"
         return None
 
+    def applies_to(self, campaign: PromoCampaign, ticket_type_id: UUID) -> bool:
+        return not campaign.ticket_types or ticket_type_id in campaign.ticket_type_ids
+
     def calculate_discount(self, campaign: PromoCampaign, subtotal: int) -> int:
+        """`subtotal` covers only the order items that `applies_to` accepts."""
         if campaign.discount_type == "percent":
             return subtotal * campaign.discount_value // 100
         return min(campaign.discount_value, subtotal)

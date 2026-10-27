@@ -1,3 +1,3 @@
-from . import service
+from . import routes
 
-__all__ = ["service"]
+__all__ = ["routes"]

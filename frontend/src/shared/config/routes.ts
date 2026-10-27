@@ -10,4 +10,7 @@ export const ROUTES = {
   eventDetail: '/events/detail',
   organizerEventNew: '/organizer/events/new',
   organizerEventEdit: '/organizer/events/edit',
+  organizerEventPromo: '/organizer/events/promo',
+  eventHistory: '/events/history',
+  admin: '/admin',
 } as const

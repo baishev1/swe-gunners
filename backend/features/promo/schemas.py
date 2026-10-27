@@ -13,6 +13,7 @@ class PromoCampaignCreate(BaseModel):
     start_time: AwareDatetime | None = None
     end_time: AwareDatetime | None = None
     max_redemptions: int | None = Field(default=None, gt=0)
+    ticket_type_ids: list[UUID] = []
 
     @model_validator(mode="after")
     def check_values(self) -> "PromoCampaignCreate":
@@ -44,6 +45,7 @@ class PromoCampaignResponse(BaseModel):
     max_redemptions: int | None
     redemption_count: int
     is_disabled: bool
+    ticket_type_ids: list[UUID]
     created_at: datetime
     updated_at: datetime
 

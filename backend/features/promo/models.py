@@ -1,7 +1,9 @@
 from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core import *
+from features.events.models import Event
+from features.ticket_types.models import TicketType
 
 
 class PromoCampaign(DbBase):
@@ -17,7 +19,21 @@ class PromoCampaign(DbBase):
     max_redemptions: Mapped[int | None] = mapped_column(Integer, default=None)
     redemption_count: Mapped[int] = mapped_column(Integer, default=0)
     is_disabled: Mapped[bool] = mapped_column(Boolean, default=False)
-    # TODO: add applicable ticket types once features/ticket_types is merged
+
+    event: Mapped[Event] = relationship()
+    # Empty means the discount applies to every ticket type of the event.
+    ticket_types: Mapped[list[TicketType]] = relationship(
+        secondary="promo_campaign_ticket_type", lazy="selectin"
+    )
+
+    @property
+    def ticket_type_ids(self) -> list[UUID]:
+        return [ticket_type.id for ticket_type in self.ticket_types]
+
+
+class PromoCampaignTicketType(DbBase):
+    campaign_id: Mapped[UUID] = mapped_column(ForeignKey("promo_campaign.id"))
+    ticket_type_id: Mapped[UUID] = mapped_column(ForeignKey("ticket_type.id"))
 
 
 class PromoRedemption(DbBase):
