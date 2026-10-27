@@ -12,7 +12,7 @@ router = APIRouter(prefix="/events", tags=["Events"])
 
 @router.post("", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def create_event(
-    data: EventCreate,
+    data: EventCreate = Depends(valid_event_create),
     organizer_id: UUID | None = None,
     db: Session = Depends(get_db),
 ):
@@ -35,7 +35,7 @@ def get_event_detail(event: Event = Depends(valid_event_id)):
 
 @router.patch("/update", response_model=EventResponse)
 def update_event(
-    data: EventUpdate,
+    data: EventUpdate = Depends(valid_event_update),
     event: Event = Depends(editable_event_guard),
     db: Session = Depends(get_db),
 ):
