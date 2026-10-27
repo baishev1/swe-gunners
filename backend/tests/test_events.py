@@ -221,3 +221,22 @@ def test_my_events_shows_only_own(
 def test_my_events_requires_organizer(client: TestClient, attendee_headers: dict[str, str]) -> None:
     assert client.get("/api/v1/events/mine").status_code == 401
     assert client.get("/api/v1/events/mine", headers=attendee_headers).status_code == 403
+
+
+def test_unverified_organizer_cannot_create_event(client: TestClient) -> None:
+    user = {
+        "email": "new@example.com",
+        "password": "s3cretpass",
+        "full_name": "New Organizer",
+        "role": "organizer",
+    }
+    client.post("/api/v1/auth/register", json=user)
+    login = client.post(
+        "/api/v1/auth/login", json={"email": user["email"], "password": user["password"]}
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    response = client.post("/api/v1/events", json={}, headers=headers)
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Email not verified"

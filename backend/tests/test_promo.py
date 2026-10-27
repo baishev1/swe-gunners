@@ -7,16 +7,21 @@ from sqlalchemy import select
 
 import core
 from features.audit_log.models import AuditLog
+from features.auth.service import auth_service
 from features.promo.models import PromoCampaign, PromoRedemption
 from features.promo.service import CODE_ALPHABET, CODE_LENGTH, QR_CAPTION, promo_service
+from features.users.models import User
 
 
 def organizer_auth(client: TestClient) -> dict[str, str]:
     credentials = {"email": "promo-organizer@example.com", "password": "s3cretpass"}
-    client.post(
+    registered = client.post(
         "/api/v1/auth/register",
         json={**credentials, "full_name": "Promo Organizer", "role": "organizer"},
     )
+    if registered.status_code == 201:
+        verify_token = auth_service.create_verify_token(User(id=UUID(registered.json()["id"])))
+        client.post("/api/v1/auth/verify-email", json={"token": verify_token})
     token = client.post("/api/v1/auth/login", json=credentials).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

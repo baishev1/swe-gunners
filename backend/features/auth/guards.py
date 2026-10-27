@@ -66,6 +66,15 @@ def require_role(*roles: str):
     return role_guard
 
 
+def verified_organizer_guard(user: User = Depends(require_role("organizer"))) -> User:
+    if not user.is_email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not verified",
+        )
+    return user
+
+
 def valid_verify_token(data: VerifyEmailRequest, db: Session = Depends(get_db)) -> User:
     invalid = HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"

@@ -27,6 +27,10 @@ export async function verifyEmail(token: string) {
   return data
 }
 
+export async function resendVerification() {
+  await apiClient.post('/auth/resend-verification')
+}
+
 export async function forgotPassword(email: string) {
   await apiClient.post('/auth/forgot-password', { email })
 }
