@@ -29,7 +29,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-docker compose up -d postgres
+docker compose up -d postgres mailpit
 make install
 make migrate
 ```
@@ -46,6 +46,7 @@ make dev-frontend
 
 The API is served at `http://localhost:8000` with interactive docs at `/docs`.
 The web client runs at `http://localhost:5173` and proxies `/api` to the backend.
+Sent emails show up in Mailpit at `http://localhost:8025`.
 
 ## Common tasks
 
