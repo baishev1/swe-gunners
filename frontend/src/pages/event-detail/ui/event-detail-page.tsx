@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { useEvent } from '@/entities/event'
@@ -11,6 +12,7 @@ import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/shar
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function EventDetailPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
   const event = useEvent(eventId)
@@ -46,7 +48,9 @@ export function EventDetailPage() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{data.category}</Badge>
-          {data.status === 'cancelled' && <Badge variant="destructive">Cancelled</Badge>}
+          {data.status === 'cancelled' && (
+            <Badge variant="destructive">{t('eventDetail.cancelled')}</Badge>
+          )}
         </div>
         <h1 className="text-3xl font-semibold">{data.title}</h1>
         <p className="text-muted-foreground text-sm">
@@ -58,9 +62,9 @@ export function EventDetailPage() {
       </div>
       {data.description && <p className="whitespace-pre-line">{data.description}</p>}
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">Tickets</h2>
+        <h2 className="text-xl font-semibold">{t('eventDetail.tickets')}</h2>
         {ticketTypes.data?.length === 0 && (
-          <p className="text-muted-foreground text-sm">No tickets available yet.</p>
+          <p className="text-muted-foreground text-sm">{t('eventDetail.noTickets')}</p>
         )}
         {ticketTypes.data?.map((ticketType) => (
           <Card key={ticketType.id}>
@@ -72,9 +76,11 @@ export function EventDetailPage() {
               <CardAction className="flex flex-col items-end gap-1">
                 <span className="font-semibold">{formatPrice(ticketType.price)}</span>
                 {ticketType.available > 0 ? (
-                  <span className="text-muted-foreground text-xs">{ticketType.available} left</span>
+                  <span className="text-muted-foreground text-xs">
+                    {t('eventDetail.left', { count: ticketType.available })}
+                  </span>
                 ) : (
-                  <Badge variant="destructive">Sold out</Badge>
+                  <Badge variant="destructive">{t('eventDetail.soldOut')}</Badge>
                 )}
               </CardAction>
             </CardHeader>
@@ -82,7 +88,7 @@ export function EventDetailPage() {
         ))}
       </div>
       <Button variant="outline" asChild>
-        <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>Edit event</Link>
+        <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>{t('eventDetail.edit')}</Link>
       </Button>
     </main>
   )

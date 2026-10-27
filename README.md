@@ -55,8 +55,13 @@ make lint          # ruff + mypy + oxlint + tsc
 make format        # ruff format + prettier
 make test          # backend test suite
 make migration m="add events"
+make seed          # demo users and event, dev only
 make up            # full stack in Docker
 ```
+
+Demo accounts created by `make seed`, all with password `password123`:
+`attendee@biletflow.dev`, `organizer@biletflow.dev`, `eventadmin@biletflow.dev`
+and `admin@biletflow.dev`.
 
 ## Repository layout
 

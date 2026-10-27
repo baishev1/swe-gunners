@@ -13,7 +13,7 @@ router = APIRouter(prefix="/ticket-types", tags=["Ticket Types"])
 @router.post("", response_model=TicketTypeResponse, status_code=status.HTTP_201_CREATED)
 def create_ticket_type(
     data: TicketTypeCreate = Depends(valid_ticket_type_create),
-    event: Event = Depends(editable_event_guard),
+    event: Event = Depends(owned_event_guard),
     db: Session = Depends(get_db),
 ):
     return ticket_type_service.create_ticket_type(db=db, event=event, data=data)
@@ -38,7 +38,7 @@ def get_ticket_type_detail(ticket_type: TicketType = Depends(valid_ticket_type_i
 @router.patch("/update", response_model=TicketTypeResponse)
 def update_ticket_type(
     data: TicketTypeUpdate = Depends(valid_ticket_type_update),
-    ticket_type: TicketType = Depends(editable_ticket_type_guard),
+    ticket_type: TicketType = Depends(owned_ticket_type_guard),
     db: Session = Depends(get_db),
 ):
     return ticket_type_service.update_ticket_type(db=db, ticket_type=ticket_type, data=data)
