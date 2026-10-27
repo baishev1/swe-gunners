@@ -1,5 +1,7 @@
 import logging
+import smtplib
 from datetime import timedelta
+from email.message import EmailMessage
 
 import jwt
 from pwdlib import PasswordHash
@@ -66,13 +68,25 @@ class AuthService:
             raise ValueError("Wrong token purpose")
         return payload
 
+    def send_email(self, to: str, subject: str, body: str) -> None:
+        if not settings.SMTP_HOST:
+            logger.info("Email to %s: %s\n%s", to, subject, body)
+            return
+        message = EmailMessage()
+        message["From"] = settings.MAIL_FROM
+        message["To"] = to
+        message["Subject"] = subject
+        message.set_content(body)
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
+            smtp.send_message(message)
+
     def send_verification_email(self, user: User) -> None:
         link = f"{settings.FRONTEND_URL}/verify-email?token={self.create_verify_token(user)}"
-        logger.info("Verification email for %s: %s", user.email, link)
+        self.send_email(user.email, "Confirm your email", f"Confirm your email: {link}")
 
     def send_password_reset_email(self, user: User) -> None:
         link = f"{settings.FRONTEND_URL}/reset-password?token={self.create_reset_token(user)}"
-        logger.info("Password reset email for %s: %s", user.email, link)
+        self.send_email(user.email, "Reset your password", f"Reset your password: {link}")
 
     def verify_email(self, db: Session, user: User) -> User:
         user.is_email_verified = True
