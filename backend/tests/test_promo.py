@@ -11,13 +11,27 @@ from features.promo.models import PromoCampaign, PromoRedemption
 from features.promo.service import CODE_ALPHABET, CODE_LENGTH, QR_CAPTION, promo_service
 
 
+def organizer_auth(client: TestClient) -> dict[str, str]:
+    credentials = {"email": "promo-organizer@example.com", "password": "s3cretpass"}
+    client.post(
+        "/api/v1/auth/register",
+        json={**credentials, "full_name": "Promo Organizer", "role": "organizer"},
+    )
+    token = client.post("/api/v1/auth/login", json=credentials).json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+
 def create_event(client: TestClient) -> str:
+    headers = organizer_auth(client)
     venue = client.post(
-        "/api/v1/venues", json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"}
+        "/api/v1/venues",
+        json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"},
+        headers=headers,
     )
     now = datetime.now(UTC)
     res = client.post(
         "/api/v1/events",
+        headers=headers,
         json={
             "title": "Almaty Tech Meetup",
             "category": "Technology",
@@ -85,7 +99,7 @@ def test_create_campaign_for_missing_event(client: TestClient) -> None:
 
 def test_create_campaign_for_cancelled_event(client: TestClient) -> None:
     event_id = create_event(client)
-    client.post(f"/api/v1/events/cancel?event_id={event_id}")
+    client.post(f"/api/v1/events/cancel?event_id={event_id}", headers=organizer_auth(client))
 
     res = client.post(
         f"/api/v1/promo/campaigns?event_id={event_id}",
