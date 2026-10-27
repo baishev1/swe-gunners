@@ -15,6 +15,10 @@ uv run fastapi dev app/main.py
 Leave `POSTGRES_SERVER` empty in `.env` to run against SQLite instead and skip the
 container.
 
+Verification and password reset emails go to `SMTP_HOST`. Start Mailpit with
+`docker compose up -d mailpit` and read them at http://localhost:8025. With `SMTP_HOST`
+empty the message is written to the log instead.
+
 ## Layout
 
 ```
