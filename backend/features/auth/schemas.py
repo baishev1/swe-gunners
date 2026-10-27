@@ -27,3 +27,16 @@ class UserResponse(BaseModel):
     full_name: str
     role: str
     is_email_verified: bool
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)

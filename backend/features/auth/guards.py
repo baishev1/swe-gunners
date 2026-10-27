@@ -52,3 +52,31 @@ def get_current_user(
     if not user or not user.is_active:
         raise unauthorized
     return user
+
+
+def valid_verify_token(data: VerifyEmailRequest, db: Session = Depends(get_db)) -> User:
+    invalid = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
+    )
+    try:
+        payload = auth_service.decode_purpose_token(data.token, "verify")
+        user = db.get(User, UUID(payload["sub"]))
+    except (jwt.PyJWTError, KeyError, ValueError):
+        raise invalid from None
+    if not user:
+        raise invalid
+    return user
+
+
+def valid_reset_token(data: ResetPasswordRequest, db: Session = Depends(get_db)) -> User:
+    invalid = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
+    )
+    try:
+        payload = auth_service.decode_purpose_token(data.token, "reset")
+        user = db.get(User, UUID(payload["sub"]))
+    except (jwt.PyJWTError, KeyError, ValueError):
+        raise invalid from None
+    if not user or user.password_hash[-10:] != payload["pwd"]:
+        raise invalid
+    return user
