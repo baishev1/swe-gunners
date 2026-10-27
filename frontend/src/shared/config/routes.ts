@@ -13,4 +13,7 @@ export const ROUTES = {
   organizerEventPromo: '/organizer/events/promo',
   eventHistory: '/events/history',
   admin: '/admin',
+  checkout: '/checkout',
+  orders: '/orders',
+  tickets: '/tickets',
 } as const
