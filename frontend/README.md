@@ -69,6 +69,27 @@ Adding a language:
 
 The switcher in `src/widgets/language-switcher` picks the new code up from `LANGUAGES`.
 
+## End-to-end tests
+
+Playwright specs live in `e2e/` and run in Chromium against the real API. The UI
+language is forced to English before each test. Playwright starts the Vite dev
+server itself (or reuses one on port 5173) but not the backend. Test runs leave
+extra users and events in the database.
+
+From the repo root:
+
+```bash
+docker compose up -d postgres
+make migrate
+make seed
+make dev-backend
+cd frontend && npx playwright install chromium   # first run only
+npm run e2e
+```
+
+The registration test needs `uv` on the PATH: it asks the backend code for the
+email verification token, since no mail is sent.
+
 ## Commands
 
 ```bash
@@ -77,4 +98,5 @@ npm run build
 npm run lint
 npm run typecheck
 npm run format
+npm run e2e
 ```
