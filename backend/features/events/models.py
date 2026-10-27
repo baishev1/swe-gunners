@@ -1,15 +1,15 @@
-from sqlalchemy import Boolean, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core import *
+from features.venues.models import Venue
 
 
 class Event(DbBase):
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text, default=None)
     category: Mapped[str] = mapped_column(String(100))
-    venue_name: Mapped[str] = mapped_column(String(255))
-    venue_address: Mapped[str] = mapped_column(String(500))
+    venue_id: Mapped[UUID] = mapped_column(ForeignKey("venue.id"))
     start_time: Mapped[AwareDateTime]
     end_time: Mapped[AwareDateTime]
     timezone: Mapped[str] = mapped_column(String(50), default="Asia/Almaty")
@@ -21,3 +21,5 @@ class Event(DbBase):
     organizer_id: Mapped[UUID] = mapped_column(default=uuid7)
     is_assigned_seating: Mapped[bool] = mapped_column(Boolean, default=False)
     cover_image_url: Mapped[str | None] = mapped_column(String(1000), default=None)
+
+    venue: Mapped[Venue] = relationship(lazy="joined")

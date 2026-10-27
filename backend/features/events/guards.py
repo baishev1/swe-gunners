@@ -1,6 +1,7 @@
 from fastapi import Depends, HTTPException, status
 
 from core import *
+from features.venues.models import Venue
 
 from .models import *
 from .schemas import *
@@ -23,3 +24,21 @@ def editable_event_guard(event: Event = Depends(valid_event_id)) -> Event:
             detail="Cannot modify a cancelled event",
         )
     return event
+
+
+def valid_event_create(data: EventCreate, db: Session = Depends(get_db)) -> EventCreate:
+    if not db.get(Venue, data.venue_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Venue not found",
+        )
+    return data
+
+
+def valid_event_update(data: EventUpdate, db: Session = Depends(get_db)) -> EventUpdate:
+    if data.venue_id and not db.get(Venue, data.venue_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Venue not found",
+        )
+    return data
