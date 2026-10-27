@@ -100,8 +100,10 @@ Create the files listed above, then register the router in `app/main.py`:
 ```python
 from features import events
 
-app.include_router(events.routes.router)
+app.include_router(events.routes.router, prefix="/api/v1")
 ```
+
+Every feature router is mounted under `/api/v1`. `/health` stays outside the prefix.
 
 Finally generate a migration for the new models, as described under Migrations.
 
