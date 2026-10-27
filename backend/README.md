@@ -137,5 +137,84 @@ application code.
 ```bash
 uv run pytest
 uv run ruff check . && uv run ruff format .
-uv run mypy app core tests
+uv run mypy app core features tests
 ```
+
+## Support (part 5)
+
+The first support slice handles event-linked attendee cases and platform-support
+cases for organizers. It uses REST requests; the client can poll for messages.
+
+All routes are under `/api/v1/support`:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/cases` | Create a case and its first message in one transaction |
+| GET | `/cases` | List cases visible to the current user |
+| GET | `/cases/detail?case_id=...` | Read a case |
+| GET | `/messages?case_id=...` | Read messages, oldest first |
+| POST | `/messages?case_id=...` | Reply to a case |
+| PATCH | `/cases/status?case_id=...` | Staff change the case status |
+| POST | `/cases/assign?case_id=...` | Staff assign the case to themselves |
+
+Lists accept `limit` (1–100, default 50) and `offset` (default 0).
+Create a case with `target` (`organizer` or `platform`), `category`, `subject`,
+`message`, and optional `event_id`. Organizer-targeted cases require an event.
+Statuses are `open`, `in_progress`, `waiting_for_customer`, and `resolved`.
+
+Requesters can read/reply to their own cases. Event owners and assigned staff with
+`can_manage_support=true` can handle cases targeting their event's organizer.
+Users with role `platform_admin` can handle
+all cases, including organizer requests to the platform. Other users receive
+404 for cases they cannot access. Message authors and requesters come from the
+authenticated user, never request-body IDs.
+
+**Authentication:** support and check-in use the auth feature's shared
+`get_current_user` through `features/users/dependencies.py`. Log in with
+`POST /api/v1/auth/login`, then send `Authorization: Bearer <access_token>`.
+Missing, invalid, expired, and purpose-specific email/reset tokens return 401,
+as do tokens for deleted or disabled users. No client-supplied user-ID header
+is accepted. Integration tests exercise login and protected requests with real
+JWTs; focused permission tests also use dependency overrides.
+
+Remaining integrations: order/ticket context and private-event attendee access
+once order/ticket ownership exists, and notifications once that feature exists.
+
+## Check-in staff access (part 5)
+
+All routes are under `/api/v1/checkin` and require the shared authenticated user:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/events` | List the current user's owned/assigned events, excluding cancelled events |
+| POST | `/staff?event_id=...` | Assign an existing active user to an event |
+| GET | `/staff?event_id=...` | List an event's staff |
+| DELETE | `/staff?event_id=...&assignment_id=...` | Revoke an assignment |
+
+Only the event owner or a `platform_admin` can manage assignments. Lists accept
+`limit` (1–100, default 50) and `offset` (default 0). Platform admins can see all
+non-cancelled events. An assignment request contains:
+
+```json
+{
+  "user_id": "existing-user-uuid",
+  "can_undo_check_in": false,
+  "can_manage_support": false
+}
+```
+
+Each assignment grants scanner access for that event. Undo and support access
+are opt-in. Duplicate user/event assignments return 409, enforced with a database
+unique constraint. To change permissions, revoke the assignment and create a new
+one. Revocation removes event and support access on subsequent requests; stored
+support conversations remain intact.
+
+**Ticket integration is pending:** the ticket feature described by part 3 has
+not landed on this branch. `features/checkin/guards.py` supplies `assigned_event`
+for verify/check-in and `undo_check_in_event` for undo. Wire these as dependencies
+on the ticket routes when they arrive. The guards reject unassigned users and
+cancelled events; owners and platform admins may scan and undo without an
+assignment. The ticket handlers must also check that the ticket belongs to the
+selected event, resolve only admission QR tokens, and perform the ticket-status
+transition atomically. The guards alone do not implement QR verification or
+protect routes that have not yet been connected to them.
