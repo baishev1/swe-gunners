@@ -1,24 +1,42 @@
+import { useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { env } from '@/shared/config'
-import { Button } from '@/shared/ui'
+
+import { resendVerification } from '@/features/auth'
+import { useLogout, useMe } from '@/entities/session'
+import { ROUTES, env } from '@/shared/config'
+import { Button } from '@/shared/ui/button'
 
 export function HomePage() {
+  const { t } = useTranslation()
+  const { data: me } = useMe()
+  const logout = useLogout()
+  const resend = useMutation({ mutationFn: resendVerification })
+
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-4 text-center px-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{env.appName}</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Event ticketing platform for Kazakhstan
-        </p>
-      </div>
-      <div className="flex gap-3">
-        <Button asChild>
-          <Link to="/checkout">Buy Tickets</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to="/orders">My Orders</Link>
-        </Button>
-      </div>
+    <main className="flex min-h-svh flex-col items-center justify-center gap-2">
+      <h1 className="text-2xl font-semibold">{env.appName}</h1>
+      <p className="text-muted-foreground text-sm">{t('home.tagline')}</p>
+      {me && !me.is_email_verified && (
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-sm">{t('home.verifyEmail')}</p>
+          {resend.isSuccess ? (
+            <p className="text-muted-foreground text-sm">{t('home.verificationSent')}</p>
+          ) : (
+            <Button variant="outline" onClick={() => resend.mutate()} disabled={resend.isPending}>
+              {t('home.resendVerification')}
+            </Button>
+          )}
+        </div>
+      )}
+      {me?.role === 'organizer' && (
+        <Link to={ROUTES.organizerProfile} className="text-sm underline">
+          {t('home.organizerProfile')}
+        </Link>
+      )}
+      <Button variant="outline" onClick={logout}>
+        {t('home.signOut')}
+      </Button>
     </main>
   )
 }

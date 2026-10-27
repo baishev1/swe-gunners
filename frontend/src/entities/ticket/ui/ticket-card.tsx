@@ -51,12 +51,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
         </div>
       </CardContent>
       <CardFooter className="border-t bg-muted/10 pt-3">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={handleDownload}
-        >
+        <Button variant="outline" size="sm" className="w-full" onClick={handleDownload}>
           <Download className="size-3.5 mr-1.5" />
           Download Printable PDF
         </Button>

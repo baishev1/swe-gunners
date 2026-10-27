@@ -18,9 +18,7 @@ export function OrderCard({ order }: OrderCardProps) {
     <Card className="hover:border-foreground/20 transition-colors">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-base font-semibold">
-            Order #{order.id.slice(0, 8)}
-          </CardTitle>
+          <CardTitle className="text-base font-semibold">Order #{order.id.slice(0, 8)}</CardTitle>
           <p className="text-muted-foreground text-xs">{formattedDate}</p>
         </div>
         <OrderStatusBadge status={order.status} />

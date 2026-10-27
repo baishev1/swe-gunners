@@ -9,8 +9,7 @@ const DEFAULT_TICKET_TYPES: CheckoutTicketTypeOption[] = [
 
 export function CheckoutPage() {
   const [searchParams] = useSearchParams()
-  const eventId =
-    searchParams.get('event_id') || '00000000-0000-7000-8000-000000000001'
+  const eventId = searchParams.get('event_id') || '00000000-0000-7000-8000-000000000001'
 
   return (
     <div className="container mx-auto px-4 py-8">

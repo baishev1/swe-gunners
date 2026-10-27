@@ -20,7 +20,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(ticketTypes.map((t, idx) => [t.id, idx === 0 ? 1 : 0]))
+    Object.fromEntries(ticketTypes.map((t, idx) => [t.id, idx === 0 ? 1 : 0])),
   )
   const [simulateFailure, setSimulateFailure] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -45,7 +45,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
 
   const totalAmountKzt = selectedItems.reduce(
     (sum, item) => sum + item.unit_price_kzt * item.quantity,
-    0
+    0,
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,8 +87,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
         setErrorMessage('Payment simulation failed. Order remains pending.')
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'An error occurred during checkout.'
+      const message = err instanceof Error ? err.message : 'An error occurred during checkout.'
       setErrorMessage(message)
     } finally {
       setIsLoading(false)
