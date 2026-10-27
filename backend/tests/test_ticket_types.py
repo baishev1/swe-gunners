@@ -1,6 +1,11 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from fastapi.testclient import TestClient
+
+import core
+from features.ticket_types.models import TicketType
+from features.ticket_types.service import ticket_type_service
 
 
 def create_event(client: TestClient, capacity: int = 100) -> str:
@@ -113,3 +118,46 @@ def test_ticket_type_not_found(client: TestClient) -> None:
         "/api/v1/ticket-types/detail?ticket_type_id=00000000-0000-0000-0000-000000000000"
     )
     assert res.status_code == 404
+
+
+def create_ticket_type(client: TestClient, quantity: int) -> UUID:
+    event_id = create_event(client)
+    res = client.post(
+        f"/api/v1/ticket-types?event_id={event_id}", json={"name": "Standard", "quantity": quantity}
+    )
+    return UUID(res.json()["id"])
+
+
+def test_reserve_and_confirm_sale(client: TestClient) -> None:
+    ticket_type_id = create_ticket_type(client, quantity=10)
+
+    with core.Session(core.engine) as db:
+        assert ticket_type_service.reserve(db, ticket_type_id, 3)
+        assert ticket_type_service.confirm_sale(db, ticket_type_id, 2)
+        assert ticket_type_service.release(db, ticket_type_id, 1)
+        db.commit()
+
+    res = client.get(f"/api/v1/ticket-types/detail?ticket_type_id={ticket_type_id}")
+    data = res.json()
+    assert data["reserved_count"] == 0
+    assert data["sold_count"] == 2
+    assert data["available"] == 8
+
+
+def test_reserve_rejects_when_sold_out(client: TestClient) -> None:
+    ticket_type_id = create_ticket_type(client, quantity=2)
+
+    with core.Session(core.engine) as db:
+        assert ticket_type_service.reserve(db, ticket_type_id, 2)
+        assert not ticket_type_service.reserve(db, ticket_type_id, 1)
+        db.commit()
+        ticket_type = db.get(TicketType, ticket_type_id)
+        assert ticket_type is not None
+        assert ticket_type.available == 0
+
+
+def test_confirm_sale_needs_reservation(client: TestClient) -> None:
+    ticket_type_id = create_ticket_type(client, quantity=5)
+
+    with core.Session(core.engine) as db:
+        assert not ticket_type_service.confirm_sale(db, ticket_type_id, 1)

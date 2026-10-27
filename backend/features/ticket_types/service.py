@@ -1,4 +1,6 @@
-from sqlalchemy import func, select
+from typing import Any, cast
+
+from sqlalchemy import CursorResult, Update, func, select, update
 
 from core import *
 
@@ -40,6 +42,42 @@ class TicketTypeService:
         if exclude_id:
             stmt = stmt.where(TicketType.id != exclude_id)
         return db.scalar(stmt) or 0
+
+    # Stock changes run as a single conditional UPDATE so concurrent checkouts can't oversell.
+    # The caller commits, so an order can touch several ticket types in one transaction.
+    def reserve(self, db: Session, ticket_type_id: UUID, quantity: int) -> bool:
+        stmt = (
+            update(TicketType)
+            .where(
+                TicketType.id == ticket_type_id,
+                TicketType.quantity - TicketType.reserved_count - TicketType.sold_count >= quantity,
+            )
+            .values(reserved_count=TicketType.reserved_count + quantity)
+        )
+        return self._update_one(db, stmt)
+
+    def release(self, db: Session, ticket_type_id: UUID, quantity: int) -> bool:
+        stmt = (
+            update(TicketType)
+            .where(TicketType.id == ticket_type_id, TicketType.reserved_count >= quantity)
+            .values(reserved_count=TicketType.reserved_count - quantity)
+        )
+        return self._update_one(db, stmt)
+
+    def confirm_sale(self, db: Session, ticket_type_id: UUID, quantity: int) -> bool:
+        stmt = (
+            update(TicketType)
+            .where(TicketType.id == ticket_type_id, TicketType.reserved_count >= quantity)
+            .values(
+                reserved_count=TicketType.reserved_count - quantity,
+                sold_count=TicketType.sold_count + quantity,
+            )
+        )
+        return self._update_one(db, stmt)
+
+    def _update_one(self, db: Session, stmt: Update) -> bool:
+        result = cast(CursorResult[Any], db.execute(stmt))
+        return result.rowcount == 1
 
 
 ticket_type_service = TicketTypeService()
