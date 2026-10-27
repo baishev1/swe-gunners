@@ -52,3 +52,15 @@ def get_current_user(
     if not user or not user.is_active:
         raise unauthorized
     return user
+
+
+def require_role(*roles: str):
+    def role_guard(user: User = Depends(get_current_user)) -> User:
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return user
+
+    return role_guard
