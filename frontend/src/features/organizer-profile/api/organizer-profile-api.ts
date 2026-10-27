@@ -7,11 +7,11 @@ export type OrganizerProfile = {
 }
 
 export async function fetchOrganizerProfile() {
-  const { data } = await apiClient.get<OrganizerProfile>('/api/v1/organizers/profile')
+  const { data } = await apiClient.get<OrganizerProfile>('/organizers/profile')
   return data
 }
 
 export async function updateOrganizerProfile(body: Partial<OrganizerProfile>) {
-  const { data } = await apiClient.patch<OrganizerProfile>('/api/v1/organizers/profile', body)
+  const { data } = await apiClient.patch<OrganizerProfile>('/organizers/profile', body)
   return data
 }
