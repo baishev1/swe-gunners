@@ -1,10 +1,12 @@
+import { i18n } from '@/shared/i18n'
+
 export function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('ru-KZ', { dateStyle: 'medium', timeStyle: 'short' })
+  return new Date(iso).toLocaleString(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 export function formatPrice(minorUnits: number) {
-  if (minorUnits === 0) return 'Free'
-  return (minorUnits / 100).toLocaleString('ru-KZ', { style: 'currency', currency: 'KZT' })
+  if (minorUnits === 0) return i18n.t('common.free')
+  return (minorUnits / 100).toLocaleString(i18n.language, { style: 'currency', currency: 'KZT' })
 }
 
 export function toDateTimeInput(iso: string | null) {
