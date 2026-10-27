@@ -12,14 +12,16 @@ from features.promo.service import CODE_ALPHABET, CODE_LENGTH, QR_CAPTION, promo
 
 
 def create_event(client: TestClient) -> str:
+    venue = client.post(
+        "/api/v1/venues", json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"}
+    )
     now = datetime.now(UTC)
     res = client.post(
         "/api/v1/events",
         json={
             "title": "Almaty Tech Meetup",
             "category": "Technology",
-            "venue_name": "Astana Hub Almaty",
-            "venue_address": "Al-Farabi 17",
+            "venue_id": venue.json()["id"],
             "start_time": (now + timedelta(days=5)).isoformat(),
             "end_time": (now + timedelta(days=5, hours=3)).isoformat(),
             "capacity": 100,

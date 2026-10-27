@@ -1,7 +1,7 @@
 """create promo and audit log tables
 
 Revision ID: c6313738dbdf
-Revises: b6ee799723fe
+Revises: 26e8e8214d0f
 Create Date: 2026-10-27 14:32:43.687677
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 revision: str = "c6313738dbdf"
-down_revision: str | None = "b6ee799723fe"
+down_revision: str | None = "26e8e8214d0f"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
