@@ -43,6 +43,10 @@ test: ## Run backend tests
 migrate: ## Apply database migrations
 	cd $(BACKEND) && uv run alembic upgrade head
 
+.PHONY: seed
+seed: ## Load demo users and an event (dev only)
+	cd $(BACKEND) && uv run python -m scripts.seed
+
 .PHONY: migration
 migration: ## Create a migration: make migration m="add events"
 	cd $(BACKEND) && uv run alembic revision --autogenerate -m "$(m)"
