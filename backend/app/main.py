@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from core import settings
-from features import events, orders, tickets
+from features import events, orders, payments, tickets
 
 from .lifespan import lifespan
 
@@ -36,3 +36,4 @@ def health():
 app.include_router(events.routes.router)
 app.include_router(orders.routes.router)
 app.include_router(tickets.routes.router)
+app.include_router(payments.routes.router)
