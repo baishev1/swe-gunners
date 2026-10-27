@@ -45,6 +45,30 @@ Do not edit a generated primitive unless the change is intentional and documente
 - Components are function declarations with named exports, named `PascalCase`.
   Hooks are `useCamelCase`.
 
+## Translations
+
+The interface is available in Kazakh, Russian and English. Setup lives in
+`src/shared/i18n`, strings in `src/shared/i18n/locales/{kk,ru,en}.json`. Russian is
+the default, English the fallback. The choice is stored in `localStorage`.
+
+Adding a string:
+
+1. Add the key to all three JSON files, grouped by page or feature
+   (`login.title`, `eventForm.venue`). Reuse `common.*` for shared words.
+2. In the component: `const { t } = useTranslation()`, then `t('login.title')`.
+   Values go in as `t('register.checkEmailDescription', { email })`.
+
+Do not translate backend `detail` messages. Pass dates and prices through
+`formatDateTime` and `formatPrice` from `@/shared/lib/format`, which use the active
+language.
+
+Adding a language:
+
+1. Create `locales/<code>.json` with the same keys as `en.json`.
+2. Register it in `resources` and in `LANGUAGES` in `src/shared/i18n/index.ts`.
+
+The switcher in `src/widgets/language-switcher` picks the new code up from `LANGUAGES`.
+
 ## Commands
 
 ```bash
