@@ -1,3 +1,3 @@
 export { apiClient } from './client'
-export { getErrorMessage } from './error'
+export { getErrorMessage } from './errors'
 export { clearToken, getToken, setToken } from './token'

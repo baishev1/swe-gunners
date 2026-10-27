@@ -1,6 +1,8 @@
 import { Route, Routes } from 'react-router-dom'
 
 import { ForgotPasswordPage } from '@/pages/forgot-password'
+import { EventDetailPage } from '@/pages/event-detail'
+import { EventsListPage } from '@/pages/events-list'
 import { HomePage } from '@/pages/home'
 import { LoginPage } from '@/pages/login'
 import { NotFoundPage } from '@/pages/not-found'
@@ -8,6 +10,8 @@ import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
 import { VerifyEmailPage } from '@/pages/verify-email'
+import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
+import { OrganizerEventNewPage } from '@/pages/organizer-event-new'
 import { ROUTES } from '@/shared/config'
 
 import { ProtectedRoute } from './protected-route'
@@ -26,6 +30,10 @@ export function AppRouter() {
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
       </Route>
+      <Route path={ROUTES.events} element={<EventsListPage />} />
+      <Route path={ROUTES.eventDetail} element={<EventDetailPage />} />
+      <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
+      <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

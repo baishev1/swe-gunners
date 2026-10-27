@@ -4,14 +4,20 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 
-def sample_event_payload() -> dict:
+def create_venue(client: TestClient) -> str:
+    res = client.post(
+        "/api/v1/venues", json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"}
+    )
+    return res.json()["id"]
+
+
+def sample_event_payload(venue_id: str) -> dict:
     now = datetime.now(UTC)
     return {
         "title": "Almaty Tech Meetup",
         "description": "Tech discussions and networking in Almaty",
         "category": "Technology",
-        "venue_name": "Astana Hub Almaty",
-        "venue_address": "Al-Farabi 17",
+        "venue_id": venue_id,
         "start_time": (now + timedelta(days=5)).isoformat(),
         "end_time": (now + timedelta(days=5, hours=3)).isoformat(),
         "timezone": "Asia/Almaty",
@@ -22,7 +28,7 @@ def sample_event_payload() -> dict:
 
 
 def test_create_event(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     response = client.post("/api/v1/events", json=payload)
     assert response.status_code == 201
     data = response.json()
@@ -33,7 +39,7 @@ def test_create_event(client: TestClient) -> None:
 
 
 def test_get_event_detail(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     create_res = client.post("/api/v1/events", json=payload)
     event_id = create_res.json()["id"]
 
@@ -50,7 +56,7 @@ def test_get_event_detail_not_found(client: TestClient) -> None:
 
 
 def test_update_event(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     create_res = client.post("/api/v1/events", json=payload)
     event_id = create_res.json()["id"]
 
@@ -62,7 +68,7 @@ def test_update_event(client: TestClient) -> None:
 
 
 def test_publish_and_unpublish_event(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     create_res = client.post("/api/v1/events", json=payload)
     event_id = create_res.json()["id"]
 
@@ -76,7 +82,7 @@ def test_publish_and_unpublish_event(client: TestClient) -> None:
 
 
 def test_cancel_event_and_guard(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     create_res = client.post("/api/v1/events", json=payload)
     event_id = create_res.json()["id"]
 
@@ -92,7 +98,7 @@ def test_cancel_event_and_guard(client: TestClient) -> None:
 
 
 def test_duplicate_event(client: TestClient) -> None:
-    payload = sample_event_payload()
+    payload = sample_event_payload(create_venue(client))
     create_res = client.post("/api/v1/events", json=payload)
     event_id = create_res.json()["id"]
 
@@ -105,10 +111,10 @@ def test_duplicate_event(client: TestClient) -> None:
 
 
 def test_list_events(client: TestClient) -> None:
-    payload1 = sample_event_payload()
+    payload1 = sample_event_payload(create_venue(client))
     client.post("/api/v1/events", json=payload1)
 
-    payload2 = sample_event_payload()
+    payload2 = sample_event_payload(create_venue(client))
     payload2["title"] = "Published Concert"
     res2 = client.post("/api/v1/events", json=payload2)
     id2 = res2.json()["id"]
@@ -118,3 +124,9 @@ def test_list_events(client: TestClient) -> None:
     assert list_res.status_code == 200
     titles = [e["title"] for e in list_res.json()]
     assert "Published Concert" in titles
+
+
+def test_create_event_unknown_venue(client: TestClient) -> None:
+    res = client.post("/api/v1/events", json=sample_event_payload(str(uuid4())))
+    assert res.status_code == 404
+    assert res.json()["detail"] == "Venue not found"

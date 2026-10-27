@@ -6,4 +6,8 @@ export const ROUTES = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   organizerProfile: '/organizer/profile',
+  events: '/events',
+  eventDetail: '/events/detail',
+  organizerEventNew: '/organizer/events/new',
+  organizerEventEdit: '/organizer/events/edit',
 } as const
