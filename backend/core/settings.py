@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    FRONTEND_URL: str = "http://localhost:5173"
 
     DEFAULT_CURRENCY: str = "KZT"
     DEFAULT_TIMEZONE: str = "Asia/Almaty"
