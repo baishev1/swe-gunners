@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from core import *
+from features.tickets.service import ticket_service
 
 from .models import *
 from .schemas import *
@@ -15,7 +16,7 @@ class OrderService:
             customer_name=data.customer_name,
             customer_email=data.customer_email,
             total_amount_kzt=total_kzt,
-            status="pending",
+            status="paid" if total_kzt == 0 else "pending",
         )
         db.add(order)
         db.flush()
@@ -32,6 +33,10 @@ class OrderService:
 
         db.commit()
         db.refresh(order)
+
+        if total_kzt == 0:
+            ticket_service.issue_tickets_for_order(db=db, order=order)
+
         return order
 
     def list_orders(
