@@ -10,9 +10,16 @@ hasher = PasswordHash.recommended()
 
 
 class AuthService:
-    def register(self, db: Session, email: str, password: str, full_name: str) -> User:
-        user = User(email=email, password_hash=hasher.hash(password), full_name=full_name)
+    def register(self, db: Session, email: str, password: str, full_name: str, role: str) -> User:
+        from features.organizers.models import OrganizerProfile
+
+        user = User(
+            email=email, password_hash=hasher.hash(password), full_name=full_name, role=role
+        )
         db.add(user)
+        if role == "organizer":
+            db.flush()
+            db.add(OrganizerProfile(user_id=user.id))
         db.commit()
         db.refresh(user)
         return user
