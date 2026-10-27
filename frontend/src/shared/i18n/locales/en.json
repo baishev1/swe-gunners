@@ -12,6 +12,9 @@
   },
   "home": {
     "tagline": "Event ticketing platform",
+    "verifyEmail": "Confirm your email to create and publish events.",
+    "resendVerification": "Resend email",
+    "verificationSent": "Verification email sent.",
     "organizerProfile": "Organizer profile",
     "signOut": "Sign out"
   },
