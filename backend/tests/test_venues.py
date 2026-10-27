@@ -2,7 +2,9 @@ from fastapi.testclient import TestClient
 
 
 def test_create_venue(client: TestClient) -> None:
-    res = client.post("/api/v1/venues", json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"})
+    res = client.post(
+        "/api/v1/venues", json={"name": "Astana Hub Almaty", "address": "Al-Farabi 17"}
+    )
     assert res.status_code == 201
     assert res.json()["name"] == "Astana Hub Almaty"
     assert "id" in res.json()
