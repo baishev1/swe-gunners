@@ -3,8 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from core import settings
-from features import admin, audit_log, auth, events, organizers, promo, ticket_types, venues
-from features import checkin, support
+from features import (
+    admin,
+    audit_log,
+    auth,
+    checkin,
+    events,
+    organizers,
+    promo,
+    support,
+    ticket_types,
+    venues,
+)
 
 from .lifespan import lifespan
 
