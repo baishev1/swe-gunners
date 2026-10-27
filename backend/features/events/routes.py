@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 
 from core import *
-from features.auth.guards import require_role
+from features.auth.guards import require_role, verified_organizer_guard
 from features.users.models import User
 
 from .guards import *
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/events", tags=["Events"])
 @router.post("", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def create_event(
     data: EventCreate = Depends(valid_event_create),
-    user: User = Depends(require_role("organizer")),
+    user: User = Depends(verified_organizer_guard),
     db: Session = Depends(get_db),
 ):
     return event_service.create_event(db=db, data=data, organizer_id=user.id)
@@ -51,6 +51,7 @@ def update_event(
 
 @router.post("/publish", response_model=EventResponse)
 def publish_event(
+    _: User = Depends(verified_organizer_guard),
     event: Event = Depends(owned_event_guard),
     db: Session = Depends(get_db),
 ):

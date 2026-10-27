@@ -1,10 +1,12 @@
 from collections.abc import Iterator
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
 
 import core
 from app.main import app
+from features.auth.service import auth_service
 
 
 @pytest.fixture
@@ -17,7 +19,9 @@ def client() -> Iterator[TestClient]:
 
 def make_headers(client: TestClient, email: str, role: str) -> dict[str, str]:
     user = {"email": email, "password": "s3cretpass", "full_name": "Test User", "role": role}
-    client.post("/api/v1/auth/register", json=user)
+    registered = client.post("/api/v1/auth/register", json=user)
+    token = auth_service.create_verify_token(SimpleNamespace(id=registered.json()["id"]))
+    client.post("/api/v1/auth/verify-email", json={"token": token})
     response = client.post(
         "/api/v1/auth/login", json={"email": email, "password": user["password"]}
     )
