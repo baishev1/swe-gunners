@@ -1,12 +1,18 @@
+import logging
 from datetime import timedelta
 
 import jwt
 from pwdlib import PasswordHash
+from sqlalchemy import select
 
 from core import *
 from features.users.models import User
 
 hasher = PasswordHash.recommended()
+logger = logging.getLogger(__name__)
+
+VERIFY_TOKEN_EXPIRE = timedelta(hours=24)
+RESET_TOKEN_EXPIRE = timedelta(minutes=30)
 
 
 class AuthService:
@@ -22,6 +28,7 @@ class AuthService:
             db.add(OrganizerProfile(user_id=user.id))
         db.commit()
         db.refresh(user)
+        self.send_verification_email(user)
         return user
 
     def verify_password(self, password: str, password_hash: str) -> bool:
@@ -35,6 +42,52 @@ class AuthService:
     def decode_access_token(self, token: str) -> UUID:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         return UUID(payload["sub"])
+
+    def create_verify_token(self, user: User) -> str:
+        payload = {
+            "sub": str(user.id),
+            "purpose": "verify",
+            "exp": time_now() + VERIFY_TOKEN_EXPIRE,
+        }
+        return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+    def create_reset_token(self, user: User) -> str:
+        payload = {
+            "sub": str(user.id),
+            "purpose": "reset",
+            "pwd": user.password_hash[-10:],
+            "exp": time_now() + RESET_TOKEN_EXPIRE,
+        }
+        return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+    def decode_purpose_token(self, token: str, purpose: str) -> dict:
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        if payload["purpose"] != purpose:
+            raise ValueError("Wrong token purpose")
+        return payload
+
+    def send_verification_email(self, user: User) -> None:
+        link = f"{settings.FRONTEND_URL}/verify-email?token={self.create_verify_token(user)}"
+        logger.info("Verification email for %s: %s", user.email, link)
+
+    def send_password_reset_email(self, user: User) -> None:
+        link = f"{settings.FRONTEND_URL}/reset-password?token={self.create_reset_token(user)}"
+        logger.info("Password reset email for %s: %s", user.email, link)
+
+    def verify_email(self, db: Session, user: User) -> User:
+        user.is_email_verified = True
+        db.commit()
+        db.refresh(user)
+        return user
+
+    def request_password_reset(self, db: Session, email: str) -> None:
+        user = db.scalar(select(User).where(User.email == email))
+        if user and user.is_active:
+            self.send_password_reset_email(user)
+
+    def reset_password(self, db: Session, user: User, new_password: str) -> None:
+        user.password_hash = hasher.hash(new_password)
+        db.commit()
 
 
 auth_service = AuthService()
