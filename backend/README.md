@@ -15,6 +15,10 @@ uv run fastapi dev app/main.py
 Leave `POSTGRES_SERVER` empty in `.env` to run against SQLite instead and skip the
 container.
 
+Verification and password reset emails go to `SMTP_HOST`. Start Mailpit with
+`docker compose up -d mailpit` and read them at http://localhost:8025. With `SMTP_HOST`
+empty the message is written to the log instead.
+
 ## Layout
 
 ```
@@ -82,8 +86,8 @@ features/<name>/
 Rules:
 
 - `core/` never imports from `features/`.
-- A feature may import from `core` and from another feature's `service`, `models`
-  or `schemas`. It must not import another feature's `routes`.
+- A feature may import from `core` and from another feature's `service`, `models`,
+  `schemas` or `guards`. It must not import another feature's `routes`.
 - Routes stay thin: validate input, call the service, return a schema.
 - Services are module-level singletons and take `db: Session` per call rather
   than holding one.
@@ -100,8 +104,10 @@ Create the files listed above, then register the router in `app/main.py`:
 ```python
 from features import events
 
-app.include_router(events.routes.router)
+app.include_router(events.routes.router, prefix="/api/v1")
 ```
+
+Every feature router is mounted under `/api/v1`. `/health` stays outside the prefix.
 
 Finally generate a migration for the new models, as described under Migrations.
 

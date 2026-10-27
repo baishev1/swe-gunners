@@ -29,7 +29,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-docker compose up -d postgres
+docker compose up -d postgres mailpit
 make install
 make migrate
 ```
@@ -46,6 +46,7 @@ make dev-frontend
 
 The API is served at `http://localhost:8000` with interactive docs at `/docs`.
 The web client runs at `http://localhost:5173` and proxies `/api` to the backend.
+Sent emails show up in Mailpit at `http://localhost:8025`.
 
 ## Common tasks
 
@@ -55,8 +56,13 @@ make lint          # ruff + mypy + oxlint + tsc
 make format        # ruff format + prettier
 make test          # backend test suite
 make migration m="add events"
+make seed          # demo users and event, dev only
 make up            # full stack in Docker
 ```
+
+Demo accounts created by `make seed`, all with password `password123`:
+`attendee@biletflow.dev`, `organizer@biletflow.dev`, `eventadmin@biletflow.dev`
+and `admin@biletflow.dev`.
 
 ## Repository layout
 

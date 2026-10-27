@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30
 
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    FRONTEND_URL: str = "http://localhost:5173"
+
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 1025
+    MAIL_FROM: str = "no-reply@biletflow.dev"
 
     DEFAULT_CURRENCY: str = "KZT"
     DEFAULT_TIMEZONE: str = "Asia/Almaty"
