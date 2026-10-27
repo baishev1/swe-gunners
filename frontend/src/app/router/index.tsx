@@ -32,8 +32,10 @@ export function AppRouter() {
       </Route>
       <Route path={ROUTES.events} element={<EventsListPage />} />
       <Route path={ROUTES.eventDetail} element={<EventDetailPage />} />
-      <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
-      <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
+      <Route element={<ProtectedRoute role="organizer" />}>
+        <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
+        <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
+      </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

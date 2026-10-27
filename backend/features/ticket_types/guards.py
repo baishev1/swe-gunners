@@ -1,6 +1,9 @@
 from fastapi import Depends, HTTPException, status
 
 from core import *
+from features.auth.guards import require_role
+from features.events.guards import owned_event_guard
+from features.users.models import User
 
 from .models import *
 from .schemas import *
@@ -13,15 +16,6 @@ def valid_event_id(event_id: UUID, db: Session = Depends(get_db)) -> Event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found",
-        )
-    return event
-
-
-def editable_event_guard(event: Event = Depends(valid_event_id)) -> Event:
-    if event.status == "cancelled":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot modify a cancelled event",
         )
     return event
 
@@ -47,9 +41,21 @@ def editable_ticket_type_guard(
     return ticket_type
 
 
+def owned_ticket_type_guard(
+    ticket_type: TicketType = Depends(editable_ticket_type_guard),
+    user: User = Depends(require_role("organizer")),
+) -> TicketType:
+    if ticket_type.event.organizer_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket type not found",
+        )
+    return ticket_type
+
+
 def valid_ticket_type_create(
     data: TicketTypeCreate,
-    event: Event = Depends(editable_event_guard),
+    event: Event = Depends(owned_event_guard),
     db: Session = Depends(get_db),
 ) -> TicketTypeCreate:
     if ticket_type_service.total_quantity(db, event.id) + data.quantity > event.capacity:
@@ -62,7 +68,7 @@ def valid_ticket_type_create(
 
 def valid_ticket_type_update(
     data: TicketTypeUpdate,
-    ticket_type: TicketType = Depends(editable_ticket_type_guard),
+    ticket_type: TicketType = Depends(owned_ticket_type_guard),
     db: Session = Depends(get_db),
 ) -> TicketTypeUpdate:
     if data.quantity is None:
