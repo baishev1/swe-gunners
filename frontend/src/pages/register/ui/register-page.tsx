@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { register } from '@/features/auth'
@@ -14,6 +15,7 @@ import { Input } from '@/shared/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 export function RegisterPage() {
+  const { t } = useTranslation()
   const [role, setRole] = useState<RegisterRole>('attendee')
   const mutation = useMutation({ mutationFn: register })
 
@@ -33,12 +35,14 @@ export function RegisterPage() {
       <main className="flex min-h-svh items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Check your email</CardTitle>
-            <CardDescription>We sent a verification link to {mutation.data.email}.</CardDescription>
+            <CardTitle>{t('register.checkEmailTitle')}</CardTitle>
+            <CardDescription>
+              {t('register.checkEmailDescription', { email: mutation.data.email })}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Link to={ROUTES.login} className="text-sm underline">
-              Go to sign in
+              {t('common.goToSignIn')}
             </Link>
           </CardContent>
         </Card>
@@ -50,42 +54,42 @@ export function RegisterPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Create account</CardTitle>
-          <CardDescription>Buy tickets or sell them.</CardDescription>
+          <CardTitle>{t('register.title')}</CardTitle>
+          <CardDescription>{t('register.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel>I am an</FieldLabel>
+                <FieldLabel>{t('register.roleLabel')}</FieldLabel>
                 <ToggleGroup
                   type="single"
                   variant="outline"
                   value={role}
                   onValueChange={(value) => value && setRole(value as RegisterRole)}
                 >
-                  <ToggleGroupItem value="attendee">Attendee</ToggleGroupItem>
-                  <ToggleGroupItem value="organizer">Organizer</ToggleGroupItem>
+                  <ToggleGroupItem value="attendee">{t('register.attendee')}</ToggleGroupItem>
+                  <ToggleGroupItem value="organizer">{t('register.organizer')}</ToggleGroupItem>
                 </ToggleGroup>
               </Field>
               <Field>
-                <FieldLabel htmlFor="full_name">Full name</FieldLabel>
+                <FieldLabel htmlFor="full_name">{t('register.fullName')}</FieldLabel>
                 <Input id="full_name" name="full_name" required />
               </Field>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t('common.email')}</FieldLabel>
                 <Input id="email" name="email" type="email" required />
               </Field>
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">{t('common.password')}</FieldLabel>
                 <Input id="password" name="password" type="password" minLength={8} required />
               </Field>
               {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
               <Button type="submit" disabled={mutation.isPending}>
-                Create account
+                {t('register.submit')}
               </Button>
               <Link to={ROUTES.login} className="text-sm underline">
-                Already have an account?
+                {t('register.haveAccount')}
               </Link>
             </FieldGroup>
           </form>

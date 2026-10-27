@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { resetPassword } from '@/features/auth'
@@ -11,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 export function ResetPasswordPage() {
+  const { t } = useTranslation()
   const [params] = useSearchParams()
   const token = params.get('token')
   const mutation = useMutation({ mutationFn: resetPassword })
@@ -27,12 +29,12 @@ export function ResetPasswordPage() {
       <main className="flex min-h-svh items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Invalid link</CardTitle>
-            <CardDescription>The reset token is missing.</CardDescription>
+            <CardTitle>{t('common.invalidLink')}</CardTitle>
+            <CardDescription>{t('resetPassword.missingToken')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Link to={ROUTES.forgotPassword} className="text-sm underline">
-              Request a new link
+              {t('resetPassword.requestNewLink')}
             </Link>
           </CardContent>
         </Card>
@@ -45,12 +47,12 @@ export function ResetPasswordPage() {
       <main className="flex min-h-svh items-center justify-center p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Password updated</CardTitle>
-            <CardDescription>You can sign in with the new password.</CardDescription>
+            <CardTitle>{t('resetPassword.successTitle')}</CardTitle>
+            <CardDescription>{t('resetPassword.successDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <Link to={ROUTES.login} className="text-sm underline">
-              Go to sign in
+              {t('common.goToSignIn')}
             </Link>
           </CardContent>
         </Card>
@@ -62,14 +64,14 @@ export function ResetPasswordPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Reset password</CardTitle>
-          <CardDescription>Choose a new password.</CardDescription>
+          <CardTitle>{t('resetPassword.title')}</CardTitle>
+          <CardDescription>{t('resetPassword.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="new_password">New password</FieldLabel>
+                <FieldLabel htmlFor="new_password">{t('resetPassword.newPassword')}</FieldLabel>
                 <Input
                   id="new_password"
                   name="new_password"
@@ -80,7 +82,7 @@ export function ResetPasswordPage() {
               </Field>
               {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
               <Button type="submit" disabled={mutation.isPending}>
-                Update password
+                {t('resetPassword.submit')}
               </Button>
             </FieldGroup>
           </form>

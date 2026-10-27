@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { type FormEvent, useState } from 'react'
 
 import { getErrorMessage } from '@/shared/api'
@@ -11,6 +12,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { useCreateTicketType } from '../model/use-ticket-type-mutations'
 
 export function TicketTypeForm({ eventId }: { eventId: string }) {
+  const { t } = useTranslation()
   const createTicketType = useCreateTicketType(eventId)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -53,11 +55,11 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="ticket-name">Name</FieldLabel>
+          <FieldLabel htmlFor="ticket-name">{t('ticketTypes.name')}</FieldLabel>
           <Input id="ticket-name" required value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-description">Description</FieldLabel>
+          <FieldLabel htmlFor="ticket-description">{t('ticketTypes.description')}</FieldLabel>
           <Textarea
             id="ticket-description"
             value={description}
@@ -65,7 +67,7 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-price">Price, KZT (0 for free)</FieldLabel>
+          <FieldLabel htmlFor="ticket-price">{t('ticketTypes.price')}</FieldLabel>
           <Input
             id="ticket-price"
             type="number"
@@ -77,7 +79,7 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-quantity">Quantity</FieldLabel>
+          <FieldLabel htmlFor="ticket-quantity">{t('ticketTypes.quantity')}</FieldLabel>
           <Input
             id="ticket-quantity"
             type="number"
@@ -88,7 +90,7 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-max-per-order">Max per order</FieldLabel>
+          <FieldLabel htmlFor="ticket-max-per-order">{t('ticketTypes.maxPerOrder')}</FieldLabel>
           <Input
             id="ticket-max-per-order"
             type="number"
@@ -98,7 +100,7 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-sales-start">Sales start</FieldLabel>
+          <FieldLabel htmlFor="ticket-sales-start">{t('ticketTypes.salesStart')}</FieldLabel>
           <Input
             id="ticket-sales-start"
             type="datetime-local"
@@ -107,7 +109,7 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="ticket-sales-end">Sales end</FieldLabel>
+          <FieldLabel htmlFor="ticket-sales-end">{t('ticketTypes.salesEnd')}</FieldLabel>
           <Input
             id="ticket-sales-end"
             type="datetime-local"
@@ -121,13 +123,13 @@ export function TicketTypeForm({ eventId }: { eventId: string }) {
             checked={isHidden}
             onCheckedChange={(checked) => setIsHidden(checked === true)}
           />
-          <FieldLabel htmlFor="ticket-hidden">Hidden</FieldLabel>
+          <FieldLabel htmlFor="ticket-hidden">{t('ticketTypes.hidden')}</FieldLabel>
         </Field>
         {createTicketType.isError && (
           <FieldError>{getErrorMessage(createTicketType.error)}</FieldError>
         )}
         <Button type="submit" disabled={createTicketType.isPending}>
-          Add ticket type
+          {t('ticketTypes.add')}
         </Button>
       </FieldGroup>
     </form>

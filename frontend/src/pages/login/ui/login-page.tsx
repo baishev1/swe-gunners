@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { login } from '@/features/auth'
@@ -11,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -36,30 +38,30 @@ export function LoginPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in</CardTitle>
-          <CardDescription>Use your BiletFlow account.</CardDescription>
+          <CardTitle>{t('login.title')}</CardTitle>
+          <CardDescription>{t('login.description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t('common.email')}</FieldLabel>
                 <Input id="email" name="email" type="email" required />
               </Field>
               <Field>
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">{t('common.password')}</FieldLabel>
                 <Input id="password" name="password" type="password" required />
               </Field>
               {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
               <Button type="submit" disabled={mutation.isPending}>
-                Sign in
+                {t('login.submit')}
               </Button>
               <div className="flex justify-between text-sm">
                 <Link to={ROUTES.register} className="underline">
-                  Create account
+                  {t('login.createAccount')}
                 </Link>
                 <Link to={ROUTES.forgotPassword} className="underline">
-                  Forgot password?
+                  {t('login.forgotPassword')}
                 </Link>
               </div>
             </FieldGroup>
