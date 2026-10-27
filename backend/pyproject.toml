@@ -62,4 +62,5 @@ env = [
     "IS_DEV_ENV=true",
     "POSTGRES_SERVER=",
     "SQLITE_FILE_NAME=:memory:",
+    "JWT_SECRET=test-secret",
 ]
