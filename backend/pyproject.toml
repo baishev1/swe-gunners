@@ -9,6 +9,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "pwdlib[argon2]>=0.3.1",
     "pydantic-settings>=2.7",
+    "reportlab>=5.0",
     "pyjwt>=2.15.1",
     "qrcode>=8.0",
     "sqlalchemy>=2.0.36",
@@ -56,6 +57,10 @@ check_untyped_defs = true
 warn_redundant_casts = true
 no_implicit_optional = true
 exclude = ["alembic/"]
+
+[[tool.mypy.overrides]]
+module = "reportlab.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

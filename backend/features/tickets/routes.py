@@ -63,3 +63,18 @@ def undo_check_in(
     db: Session = Depends(get_db),
 ):
     return ticket_service.undo_check_in(db=db, ticket=ticket)
+
+
+@router.get("/pdf")
+def download_ticket_pdf(
+    ticket: Ticket = Depends(valid_ticket_id),
+    db: Session = Depends(get_db),
+):
+    pdf_bytes = ticket_service.generate_pdf_ticket(db=db, ticket=ticket)
+    from fastapi.responses import Response
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="ticket-{ticket.id}.pdf"'},
+    )
