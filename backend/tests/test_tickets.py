@@ -94,10 +94,10 @@ def test_check_in_and_undo_check_in(client: TestClient) -> None:
 
 def test_download_ticket_pdf(client: TestClient) -> None:
     order = create_free_order(client)
-    tickets = client.get(f"/tickets?order_id={order['id']}").json()
+    tickets = client.get(f"/api/v1/tickets?order_id={order['id']}").json()
     ticket_id = tickets[0]["id"]
 
-    pdf_res = client.get(f"/tickets/pdf?ticket_id={ticket_id}")
+    pdf_res = client.get(f"/api/v1/tickets/pdf?ticket_id={ticket_id}")
     assert pdf_res.status_code == 200
     assert pdf_res.headers["content-type"] == "application/pdf"
     assert pdf_res.content.startswith(b"%PDF")
