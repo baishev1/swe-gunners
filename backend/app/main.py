@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from core import settings
-from features import auth, checkin, events, organizers, promo, support, ticket_types, venues
+from features import admin, audit_log, auth, events, organizers, promo, ticket_types, venues
+from features import checkin, support
 
 from .lifespan import lifespan
 
@@ -41,3 +42,5 @@ app.include_router(ticket_types.routes.router, prefix="/api/v1")
 app.include_router(support.routes.router, prefix="/api/v1")
 app.include_router(checkin.routes.router, prefix="/api/v1")
 app.include_router(promo.routes.router, prefix="/api/v1")
+app.include_router(audit_log.routes.router, prefix="/api/v1")
+app.include_router(admin.routes.router, prefix="/api/v1")

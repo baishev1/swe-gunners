@@ -1,3 +1,7 @@
+from datetime import datetime
+
+from sqlalchemy import select
+
 from core import *
 
 from .models import *
@@ -25,6 +29,23 @@ class AuditLogService:
         )
         db.add(entry)
         return entry
+
+    def list_event_entries(
+        self,
+        db: Session,
+        event_id: UUID,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
+        action: str | None = None,
+    ) -> list[AuditLog]:
+        stmt = select(AuditLog).where(AuditLog.event_id == event_id)
+        if date_from:
+            stmt = stmt.where(AuditLog.created_at >= date_from)
+        if date_to:
+            stmt = stmt.where(AuditLog.created_at < date_to)
+        if action:
+            stmt = stmt.where(AuditLog.action == action)
+        return list(db.scalars(stmt.order_by(AuditLog.created_at)).all())
 
 
 audit_log_service = AuditLogService()
