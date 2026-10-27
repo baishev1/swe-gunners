@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { useEvent } from '@/entities/event'
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function OrganizerEventEditPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
   const event = useEvent(eventId)
@@ -40,11 +42,13 @@ export function OrganizerEventEditPage() {
       </div>
       <EventStatusActions event={event.data} />
       <Button variant="link" asChild className="self-start">
-        <Link to={`${ROUTES.eventDetail}?event_id=${event.data.id}`}>View event page</Link>
+        <Link to={`${ROUTES.eventDetail}?event_id=${event.data.id}`}>
+          {t('organizerEventEdit.viewPage')}
+        </Link>
       </Button>
       <Card>
         <CardHeader>
-          <CardTitle>Event details</CardTitle>
+          <CardTitle>{t('organizerEventEdit.details')}</CardTitle>
         </CardHeader>
         <CardContent>
           <EventForm key={event.data.updated_at} event={event.data} />
@@ -52,7 +56,7 @@ export function OrganizerEventEditPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Ticket types</CardTitle>
+          <CardTitle>{t('organizerEventEdit.ticketTypes')}</CardTitle>
         </CardHeader>
         <CardContent>
           <TicketTypeManager eventId={event.data.id} />

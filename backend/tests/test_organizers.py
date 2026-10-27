@@ -27,6 +27,9 @@ def test_organizer_registration_creates_empty_profile(client: TestClient) -> Non
         "organization_name": None,
         "contact_email": None,
         "contact_phone": None,
+        "payout_recipient_name": None,
+        "payout_iban": None,
+        "payout_bin": None,
     }
 
 
@@ -50,3 +53,18 @@ def test_patch_updates_only_sent_fields(client: TestClient) -> None:
     body = response.json()
     assert body["organization_name"] == "Acme"
     assert body["contact_phone"] == "+77001234567"
+
+
+def test_patch_saves_payout_details(client: TestClient) -> None:
+    headers = auth_headers(client, ORGANIZER)
+    payout = {
+        "payout_recipient_name": "Acme LLP",
+        "payout_iban": "KZ86125KZT5004100100",
+        "payout_bin": "123456789012",
+    }
+
+    client.patch("/api/v1/organizers/profile", json=payout, headers=headers)
+    response = client.get("/api/v1/organizers/profile", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json() | payout == response.json()

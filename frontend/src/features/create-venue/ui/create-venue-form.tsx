@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { type FormEvent, useState } from 'react'
 
 import { type Venue, venueKeys } from '@/entities/venue'
@@ -8,6 +9,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 export function CreateVenueForm() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
@@ -29,11 +31,11 @@ export function CreateVenueForm() {
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="venue-name">Venue name</FieldLabel>
+          <FieldLabel htmlFor="venue-name">{t('createVenue.name')}</FieldLabel>
           <Input id="venue-name" required value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field>
-          <FieldLabel htmlFor="venue-address">Address</FieldLabel>
+          <FieldLabel htmlFor="venue-address">{t('createVenue.address')}</FieldLabel>
           <Input
             id="venue-address"
             required
@@ -43,7 +45,7 @@ export function CreateVenueForm() {
         </Field>
         {createVenue.isError && <FieldError>{getErrorMessage(createVenue.error)}</FieldError>}
         <Button type="submit" variant="outline" disabled={createVenue.isPending}>
-          Add venue
+          {t('createVenue.submit')}
         </Button>
       </FieldGroup>
     </form>

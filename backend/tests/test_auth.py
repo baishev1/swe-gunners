@@ -1,4 +1,6 @@
+import smtplib
 from datetime import timedelta
+from email.message import EmailMessage
 
 import jwt
 from fastapi.testclient import TestClient
@@ -6,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 import core
+from core import settings
 from features.auth.service import auth_service
 from features.users.models import User
 
@@ -158,3 +161,29 @@ def test_forgot_password_unknown_email_returns_204(client: TestClient) -> None:
     response = client.post("/api/v1/auth/forgot-password", json={"email": "nobody@example.com"})
 
     assert response.status_code == 204
+
+
+def test_verification_email_is_sent_over_smtp(client: TestClient, monkeypatch) -> None:
+    sent: list[EmailMessage] = []
+
+    class FakeSMTP:
+        def __init__(self, host: str, port: int) -> None:
+            pass
+
+        def __enter__(self) -> "FakeSMTP":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def send_message(self, message: EmailMessage) -> None:
+            sent.append(message)
+
+    monkeypatch.setattr(settings, "SMTP_HOST", "localhost")
+    monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
+
+    client.post("/api/v1/auth/register", json=USER)
+
+    assert len(sent) == 1
+    assert sent[0]["To"] == USER["email"]
+    assert "/verify-email?token=" in sent[0].get_content()

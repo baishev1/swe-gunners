@@ -1,0 +1,145 @@
+{
+  "common": {
+    "free": "Тегін",
+    "email": "Эл. пошта",
+    "password": "Құпиясөз",
+    "goToSignIn": "Кіруге өту",
+    "backToHome": "Басты бетке",
+    "invalidLink": "Жарамсыз сілтеме"
+  },
+  "language": {
+    "label": "Тіл"
+  },
+  "home": {
+    "tagline": "Іс-шараларға билет сату платформасы",
+    "verifyEmail": "Іс-шараларды жасау және жариялау үшін поштаңызды растаңыз.",
+    "resendVerification": "Хатты қайта жіберу",
+    "verificationSent": "Хат жіберілді.",
+    "organizerProfile": "Ұйымдастырушы профилі",
+    "signOut": "Шығу"
+  },
+  "login": {
+    "title": "Кіру",
+    "description": "BiletFlow аккаунтыңызды пайдаланыңыз.",
+    "submit": "Кіру",
+    "createAccount": "Аккаунт жасау",
+    "forgotPassword": "Құпиясөзді ұмыттыңыз ба?"
+  },
+  "register": {
+    "title": "Аккаунт жасау",
+    "description": "Билет сатып алыңыз немесе сатыңыз.",
+    "roleLabel": "Мен",
+    "attendee": "Қатысушы",
+    "organizer": "Ұйымдастырушы",
+    "fullName": "Толық аты-жөні",
+    "submit": "Аккаунт жасау",
+    "haveAccount": "Аккаунтыңыз бар ма?",
+    "checkEmailTitle": "Поштаңызды тексеріңіз",
+    "checkEmailDescription": "Растау сілтемесін {{email}} мекенжайына жібердік."
+  },
+  "verifyEmail": {
+    "pendingTitle": "Поштаңыз расталуда",
+    "pendingMessage": "Бір сәт күтіңіз.",
+    "missingToken": "Растау токені жоқ.",
+    "failedTitle": "Растау сәтсіз аяқталды",
+    "successTitle": "Пошта расталды",
+    "successMessage": "Электрондық пошта мекенжайыңыз расталды."
+  },
+  "forgotPassword": {
+    "title": "Құпиясөзді қалпына келтіру",
+    "descriptionSent": "Мекенжай тіркелген болса, қалпына келтіру сілтемесі жолда.",
+    "description": "Поштаңызды енгізіңіз, біз қалпына келтіру сілтемесін жібереміз.",
+    "submit": "Сілтеме жіберу",
+    "backToSignIn": "Кіруге оралу"
+  },
+  "resetPassword": {
+    "title": "Құпиясөзді қалпына келтіру",
+    "description": "Жаңа құпиясөз ойлап табыңыз.",
+    "newPassword": "Жаңа құпиясөз",
+    "submit": "Құпиясөзді жаңарту",
+    "missingToken": "Қалпына келтіру токені жоқ.",
+    "requestNewLink": "Жаңа сілтеме сұрау",
+    "successTitle": "Құпиясөз жаңартылды",
+    "successDescription": "Енді жаңа құпиясөзбен кіре аласыз."
+  },
+  "organizerProfile": {
+    "title": "Ұйымдастырушы профилі",
+    "description": "Қатысушылар сізбен қалай байланыса алады.",
+    "organizationName": "Ұйымның атауы",
+    "contactEmail": "Байланыс поштасы",
+    "contactPhone": "Байланыс телефоны",
+    "payout": "Төлем деректері",
+    "payoutRecipientName": "Алушының атауы",
+    "payoutIban": "IBAN",
+    "payoutBin": "БСН / ЖСН",
+    "saved": "Сақталды.",
+    "save": "Сақтау",
+    "loading": "Жүктелуде..."
+  },
+  "eventsList": {
+    "title": "Іс-шаралар",
+    "create": "Іс-шара жасау",
+    "empty": "Әзірге іс-шара жоқ."
+  },
+  "eventDetail": {
+    "cancelled": "Бас тартылды",
+    "tickets": "Билеттер",
+    "noTickets": "Әзірге билет жоқ.",
+    "left": "Қалды: {{count}}",
+    "soldOut": "Сатылып кетті",
+    "edit": "Іс-шараны өзгерту"
+  },
+  "organizerEventNew": {
+    "title": "Жаңа іс-шара",
+    "details": "Іс-шара туралы",
+    "addVenue": "Алаңды қосу"
+  },
+  "organizerEventEdit": {
+    "viewPage": "Іс-шара беті",
+    "details": "Іс-шара туралы",
+    "ticketTypes": "Билет түрлері"
+  },
+  "eventForm": {
+    "title": "Атауы",
+    "description": "Сипаттамасы",
+    "category": "Санаты",
+    "venue": "Өтетін орны",
+    "selectVenue": "Алаңды таңдаңыз",
+    "starts": "Басталуы",
+    "ends": "Аяқталуы",
+    "capacity": "Сыйымдылығы",
+    "visibility": "Көрінуі",
+    "public": "Ашық",
+    "unlisted": "Сілтеме бойынша",
+    "private": "Жабық",
+    "registrationOpens": "Тіркеу басталады",
+    "registrationCloses": "Тіркеу аяқталады",
+    "coverImageUrl": "Мұқаба суретінің сілтемесі",
+    "saveChanges": "Өзгерістерді сақтау",
+    "create": "Іс-шара жасау"
+  },
+  "ticketTypes": {
+    "name": "Атауы",
+    "description": "Сипаттамасы",
+    "price": "Бағасы, KZT (0 — тегін)",
+    "quantity": "Саны",
+    "maxPerOrder": "Тапсырыстағы ең көп саны",
+    "salesStart": "Сатылым басталуы",
+    "salesEnd": "Сатылым аяқталуы",
+    "hidden": "Жасырын",
+    "add": "Билет түрін қосу",
+    "show": "Көрсету",
+    "hide": "Жасыру",
+    "stats": "Қолжетімді: {{available}} · броньда: {{reserved}} · сатылды: {{sold}} / {{quantity}}"
+  },
+  "createVenue": {
+    "name": "Алаңның атауы",
+    "address": "Мекенжайы",
+    "submit": "Алаңды қосу"
+  },
+  "eventStatus": {
+    "unpublish": "Жариялаудан алу",
+    "publish": "Жариялау",
+    "cancel": "Іс-шарадан бас тарту"
+  }
+}
