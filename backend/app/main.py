@@ -33,4 +33,4 @@ def health():
     return HealthResponse(status="ok")
 
 
-app.include_router(events.routes.router)
+app.include_router(events.routes.router, prefix="/api/v1")
