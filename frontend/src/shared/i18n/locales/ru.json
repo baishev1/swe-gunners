@@ -65,6 +65,10 @@
     "organizationName": "Название организации",
     "contactEmail": "Контактная почта",
     "contactPhone": "Контактный телефон",
+    "payout": "Платёжные данные",
+    "payoutRecipientName": "Имя получателя",
+    "payoutIban": "IBAN",
+    "payoutBin": "БИН / ИИН",
     "saved": "Сохранено.",
     "save": "Сохранить",
     "loading": "Загрузка..."

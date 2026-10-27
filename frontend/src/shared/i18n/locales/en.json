@@ -65,6 +65,10 @@
     "organizationName": "Organization name",
     "contactEmail": "Contact email",
     "contactPhone": "Contact phone",
+    "payout": "Payout details",
+    "payoutRecipientName": "Recipient name",
+    "payoutIban": "IBAN",
+    "payoutBin": "BIN / IIN",
     "saved": "Saved.",
     "save": "Save",
     "loading": "Loading..."

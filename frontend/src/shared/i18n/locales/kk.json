@@ -65,6 +65,10 @@
     "organizationName": "Ұйымның атауы",
     "contactEmail": "Байланыс поштасы",
     "contactPhone": "Байланыс телефоны",
+    "payout": "Төлем деректері",
+    "payoutRecipientName": "Алушының атауы",
+    "payoutIban": "IBAN",
+    "payoutBin": "БСН / ЖСН",
     "saved": "Сақталды.",
     "save": "Сақтау",
     "loading": "Жүктелуде..."

@@ -29,6 +29,9 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
       organization_name: String(form.get('organization_name')) || null,
       contact_email: String(form.get('contact_email')) || null,
       contact_phone: String(form.get('contact_phone')) || null,
+      payout_recipient_name: String(form.get('payout_recipient_name')) || null,
+      payout_iban: String(form.get('payout_iban')) || null,
+      payout_bin: String(form.get('payout_bin')) || null,
     })
   }
 
@@ -62,6 +65,25 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
             type="tel"
             defaultValue={profile.contact_phone ?? ''}
           />
+        </Field>
+        <h2 className="text-sm font-medium">{t('organizerProfile.payout')}</h2>
+        <Field>
+          <FieldLabel htmlFor="payout_recipient_name">
+            {t('organizerProfile.payoutRecipientName')}
+          </FieldLabel>
+          <Input
+            id="payout_recipient_name"
+            name="payout_recipient_name"
+            defaultValue={profile.payout_recipient_name ?? ''}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="payout_iban">{t('organizerProfile.payoutIban')}</FieldLabel>
+          <Input id="payout_iban" name="payout_iban" defaultValue={profile.payout_iban ?? ''} />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="payout_bin">{t('organizerProfile.payoutBin')}</FieldLabel>
+          <Input id="payout_bin" name="payout_bin" defaultValue={profile.payout_bin ?? ''} />
         </Field>
         {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
         {mutation.isSuccess && (
