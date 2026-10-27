@@ -1,30 +1,36 @@
 from fastapi import Depends, HTTPException, status
+from sqlalchemy import select
 
 from core import *
+from features.auth.guards import require_role
+from features.events.guards import owned_event_guard
 from features.events.models import Event
+from features.ticket_types.models import TicketType
+from features.users.models import User
 
 from .models import *
 from .schemas import *
 from .service import promo_service
 
 
-def valid_event_id(event_id: UUID, db: Session = Depends(get_db)) -> Event:
-    event = db.get(Event, event_id)
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found",
-        )
-    return event
-
-
-def editable_event_guard(event: Event = Depends(valid_event_id)) -> Event:
-    if event.status == "cancelled":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot modify a cancelled event",
-        )
-    return event
+def valid_campaign_create(
+    data: PromoCampaignCreate,
+    event: Event = Depends(owned_event_guard),
+    db: Session = Depends(get_db),
+) -> PromoCampaignCreate:
+    requested = set(data.ticket_type_ids)
+    if requested:
+        found = db.scalars(
+            select(TicketType.id).where(
+                TicketType.id.in_(requested), TicketType.event_id == event.id
+            )
+        ).all()
+        if set(found) != requested:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ticket type does not belong to this event",
+            )
+    return data
 
 
 def valid_campaign_id(campaign_id: UUID, db: Session = Depends(get_db)) -> PromoCampaign:
@@ -37,8 +43,20 @@ def valid_campaign_id(campaign_id: UUID, db: Session = Depends(get_db)) -> Promo
     return campaign
 
 
-def enabled_campaign_guard(
+def owned_campaign_guard(
     campaign: PromoCampaign = Depends(valid_campaign_id),
+    user: User = Depends(require_role("organizer")),
+) -> PromoCampaign:
+    if campaign.event.organizer_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Campaign not found",
+        )
+    return campaign
+
+
+def enabled_campaign_guard(
+    campaign: PromoCampaign = Depends(owned_campaign_guard),
 ) -> PromoCampaign:
     if campaign.is_disabled:
         raise HTTPException(

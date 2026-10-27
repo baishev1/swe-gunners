@@ -46,7 +46,11 @@ def create_event(client: TestClient) -> str:
 
 def create_campaign(client: TestClient, event_id: str, **overrides) -> dict:
     payload = {"name": "Instagram", "discount_type": "percent", "discount_value": 20}
-    res = client.post(f"/api/v1/promo/campaigns?event_id={event_id}", json=payload | overrides)
+    res = client.post(
+        f"/api/v1/promo/campaigns?event_id={event_id}",
+        json=payload | overrides,
+        headers=organizer_auth(client),
+    )
     assert res.status_code == 201
     return res.json()
 
@@ -92,6 +96,7 @@ def test_create_campaign_for_missing_event(client: TestClient) -> None:
     res = client.post(
         f"/api/v1/promo/campaigns?event_id={uuid4()}",
         json={"name": "Instagram", "discount_type": "fixed", "discount_value": 100000},
+        headers=organizer_auth(client),
     )
     assert res.status_code == 404
     assert res.json()["detail"] == "Event not found"
@@ -104,6 +109,7 @@ def test_create_campaign_for_cancelled_event(client: TestClient) -> None:
     res = client.post(
         f"/api/v1/promo/campaigns?event_id={event_id}",
         json={"name": "Instagram", "discount_type": "percent", "discount_value": 10},
+        headers=organizer_auth(client),
     )
     assert res.status_code == 400
 
@@ -111,16 +117,17 @@ def test_create_campaign_for_cancelled_event(client: TestClient) -> None:
 def test_create_campaign_rejects_bad_values(client: TestClient) -> None:
     event_id = create_event(client)
     url = f"/api/v1/promo/campaigns?event_id={event_id}"
+    headers = organizer_auth(client)
     now = datetime.now(UTC)
 
     over_100 = {"name": "x", "discount_type": "percent", "discount_value": 150}
-    assert client.post(url, json=over_100).status_code == 422
+    assert client.post(url, json=over_100, headers=headers).status_code == 422
 
     zero = {"name": "x", "discount_type": "fixed", "discount_value": 0}
-    assert client.post(url, json=zero).status_code == 422
+    assert client.post(url, json=zero, headers=headers).status_code == 422
 
     unknown_type = {"name": "x", "discount_type": "bogo", "discount_value": 10}
-    assert client.post(url, json=unknown_type).status_code == 422
+    assert client.post(url, json=unknown_type, headers=headers).status_code == 422
 
     reversed_dates = {
         "name": "x",
@@ -129,7 +136,7 @@ def test_create_campaign_rejects_bad_values(client: TestClient) -> None:
         "start_time": (now + timedelta(days=2)).isoformat(),
         "end_time": (now + timedelta(days=1)).isoformat(),
     }
-    assert client.post(url, json=reversed_dates).status_code == 422
+    assert client.post(url, json=reversed_dates, headers=headers).status_code == 422
 
     naive_date = {
         "name": "x",
@@ -137,7 +144,7 @@ def test_create_campaign_rejects_bad_values(client: TestClient) -> None:
         "discount_value": 10,
         "start_time": "2026-11-01T10:00:00",
     }
-    assert client.post(url, json=naive_date).status_code == 422
+    assert client.post(url, json=naive_date, headers=headers).status_code == 422
 
 
 def test_list_campaigns_by_event(client: TestClient) -> None:
@@ -147,7 +154,7 @@ def test_list_campaigns_by_event(client: TestClient) -> None:
     create_campaign(client, event_id, name="Telegram")
     create_campaign(client, other_event_id, name="Posters")
 
-    res = client.get(f"/api/v1/promo/campaigns?event_id={event_id}")
+    res = client.get(f"/api/v1/promo/campaigns?event_id={event_id}", headers=organizer_auth(client))
     assert res.status_code == 200
     assert sorted(c["name"] for c in res.json()) == ["Instagram", "Telegram"]
 
@@ -155,11 +162,16 @@ def test_list_campaigns_by_event(client: TestClient) -> None:
 def test_get_campaign_detail(client: TestClient) -> None:
     campaign = create_campaign(client, create_event(client))
 
-    res = client.get(f"/api/v1/promo/campaigns/detail?campaign_id={campaign['id']}")
+    res = client.get(
+        f"/api/v1/promo/campaigns/detail?campaign_id={campaign['id']}",
+        headers=organizer_auth(client),
+    )
     assert res.status_code == 200
     assert res.json()["code"] == campaign["code"]
 
-    missing = client.get(f"/api/v1/promo/campaigns/detail?campaign_id={uuid4()}")
+    missing = client.get(
+        f"/api/v1/promo/campaigns/detail?campaign_id={uuid4()}", headers=organizer_auth(client)
+    )
     assert missing.status_code == 404
     assert missing.json()["detail"] == "Campaign not found"
 
@@ -170,6 +182,7 @@ def test_update_campaign(client: TestClient) -> None:
     res = client.patch(
         f"/api/v1/promo/campaigns/update?campaign_id={campaign['id']}",
         json={"name": "Instagram stories", "max_redemptions": 50},
+        headers=organizer_auth(client),
     )
     assert res.status_code == 200
     assert res.json()["name"] == "Instagram stories"
@@ -188,6 +201,7 @@ def test_update_campaign_checks_dates_against_stored_values(client: TestClient) 
     res = client.patch(
         f"/api/v1/promo/campaigns/update?campaign_id={campaign['id']}",
         json={"end_time": (now + timedelta(days=1)).isoformat()},
+        headers=organizer_auth(client),
     )
     assert res.status_code == 400
     assert res.json()["detail"] == "end_time must be after start_time"
@@ -197,17 +211,19 @@ def test_disable_campaign(client: TestClient) -> None:
     campaign = create_campaign(client, create_event(client))
     url = f"/api/v1/promo/campaigns/disable?campaign_id={campaign['id']}"
 
-    res = client.post(url)
+    res = client.post(url, headers=organizer_auth(client))
     assert res.status_code == 200
     assert res.json()["is_disabled"] is True
     assert audit_actions(campaign["id"]) == ["promo_created", "promo_disabled"]
 
-    again = client.post(url)
+    again = client.post(url, headers=organizer_auth(client))
     assert again.status_code == 400
     assert again.json()["detail"] == "Campaign is disabled"
 
     update = client.patch(
-        f"/api/v1/promo/campaigns/update?campaign_id={campaign['id']}", json={"name": "x"}
+        f"/api/v1/promo/campaigns/update?campaign_id={campaign['id']}",
+        json={"name": "x"},
+        headers=organizer_auth(client),
     )
     assert update.status_code == 400
 
@@ -215,7 +231,9 @@ def test_disable_campaign(client: TestClient) -> None:
 def test_campaign_qr_is_marked_as_not_a_ticket(client: TestClient) -> None:
     campaign = create_campaign(client, create_event(client))
 
-    res = client.get(f"/api/v1/promo/campaigns/qr?campaign_id={campaign['id']}")
+    res = client.get(
+        f"/api/v1/promo/campaigns/qr?campaign_id={campaign['id']}", headers=organizer_auth(client)
+    )
     assert res.status_code == 200
     assert res.headers["content-type"].startswith("image/svg+xml")
     assert QR_CAPTION in res.text
@@ -255,7 +273,10 @@ def test_resolve_rejects_unusable_links(client: TestClient) -> None:
     assert unknown.json()["detail"] == "Promo link is not valid"
 
     disabled = create_campaign(client, event_id)
-    client.post(f"/api/v1/promo/campaigns/disable?campaign_id={disabled['id']}")
+    client.post(
+        f"/api/v1/promo/campaigns/disable?campaign_id={disabled['id']}",
+        headers=organizer_auth(client),
+    )
     res = client.get(f"/api/v1/promo/resolve?token={qr_token(disabled['id'])}")
     assert res.status_code == 400
     assert res.json()["detail"] == "Promo code is disabled"
@@ -334,3 +355,80 @@ def test_redeem_checks_limit_in_the_update(client: TestClient) -> None:
 
         assert second.redemption_count == 0
         assert promo_service.redeem(second_db, second, order_id=uuid4(), discount_amount=1) is None
+
+
+def create_ticket_type(client: TestClient, event_id: str, name: str) -> str:
+    res = client.post(
+        f"/api/v1/ticket-types?event_id={event_id}",
+        json={"name": name, "price": 500000, "quantity": 10},
+        headers=organizer_auth(client),
+    )
+    return res.json()["id"]
+
+
+def test_campaign_routes_need_the_event_owner(
+    client: TestClient,
+    other_organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+) -> None:
+    event_id = create_event(client)
+    campaign = create_campaign(client, event_id)
+    payload = {"name": "x", "discount_type": "percent", "discount_value": 10}
+    create_url = f"/api/v1/promo/campaigns?event_id={event_id}"
+    detail_url = f"/api/v1/promo/campaigns/detail?campaign_id={campaign['id']}"
+
+    assert client.post(create_url, json=payload).status_code == 401
+    assert client.post(create_url, json=payload, headers=attendee_headers).status_code == 403
+    assert client.post(create_url, json=payload, headers=other_organizer_headers).status_code == 404
+
+    assert client.get(detail_url, headers=other_organizer_headers).status_code == 404
+    assert client.get(create_url, headers=other_organizer_headers).status_code == 404
+    disable_url = f"/api/v1/promo/campaigns/disable?campaign_id={campaign['id']}"
+    assert client.post(disable_url, headers=other_organizer_headers).status_code == 404
+
+    token = qr_token(campaign["id"])
+    assert client.get(f"/api/v1/promo/resolve?token={token}").status_code == 200
+
+
+def test_audit_entries_record_the_actor(client: TestClient) -> None:
+    campaign = create_campaign(client, create_event(client))
+
+    with core.Session(core.engine) as db:
+        entry = db.scalars(select(AuditLog).where(AuditLog.entity_id == UUID(campaign["id"]))).one()
+        assert entry.actor_name == "Promo Organizer"
+
+
+def test_campaign_limited_to_ticket_types(client: TestClient) -> None:
+    event_id = create_event(client)
+    vip = create_ticket_type(client, event_id, "VIP")
+    standard = create_ticket_type(client, event_id, "Standard")
+
+    campaign = create_campaign(client, event_id, ticket_type_ids=[vip])
+    assert campaign["ticket_type_ids"] == [vip]
+
+    with core.Session(core.engine) as db:
+        stored = db.get(PromoCampaign, UUID(campaign["id"]))
+        assert stored
+        assert promo_service.applies_to(stored, UUID(vip))
+        assert not promo_service.applies_to(stored, UUID(standard))
+
+    open_campaign = create_campaign(client, event_id)
+    assert open_campaign["ticket_type_ids"] == []
+
+
+def test_campaign_rejects_ticket_types_of_another_event(client: TestClient) -> None:
+    event_id = create_event(client)
+    foreign = create_ticket_type(client, create_event(client), "VIP")
+
+    res = client.post(
+        f"/api/v1/promo/campaigns?event_id={event_id}",
+        json={
+            "name": "x",
+            "discount_type": "percent",
+            "discount_value": 10,
+            "ticket_type_ids": [foreign],
+        },
+        headers=organizer_auth(client),
+    )
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Ticket type does not belong to this event"
