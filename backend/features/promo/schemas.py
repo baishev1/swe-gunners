@@ -46,3 +46,13 @@ class PromoCampaignResponse(BaseModel):
     is_disabled: bool
     created_at: datetime
     updated_at: datetime
+
+
+class PromoCampaignPublicResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    event_id: UUID
+    code: str
+    discount_type: str
+    discount_value: int
+    end_time: datetime | None

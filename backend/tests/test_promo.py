@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from urllib.parse import parse_qs, urlsplit
 from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
@@ -6,7 +7,8 @@ from sqlalchemy import select
 
 import core
 from features.audit_log.models import AuditLog
-from features.promo.service import CODE_ALPHABET, CODE_LENGTH
+from features.promo.models import PromoCampaign, PromoRedemption
+from features.promo.service import CODE_ALPHABET, CODE_LENGTH, QR_CAPTION, promo_service
 
 
 def create_event(client: TestClient) -> str:
@@ -41,6 +43,13 @@ def audit_actions(entity_id: str) -> list[str]:
             .order_by(AuditLog.created_at)
         )
         return list(db.scalars(stmt).all())
+
+
+def qr_token(campaign_id: str) -> str:
+    with core.Session(core.engine) as db:
+        campaign = db.get(PromoCampaign, UUID(campaign_id))
+        assert campaign
+        return campaign.qr_token
 
 
 def test_create_campaign(client: TestClient) -> None:
@@ -185,3 +194,127 @@ def test_disable_campaign(client: TestClient) -> None:
         f"/api/v1/promo/campaigns/update?campaign_id={campaign['id']}", json={"name": "x"}
     )
     assert update.status_code == 400
+
+
+def test_campaign_qr_is_marked_as_not_a_ticket(client: TestClient) -> None:
+    campaign = create_campaign(client, create_event(client))
+
+    res = client.get(f"/api/v1/promo/campaigns/qr?campaign_id={campaign['id']}")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("image/svg+xml")
+    assert QR_CAPTION in res.text
+
+
+def test_campaign_link_carries_only_the_token(client: TestClient) -> None:
+    event_id = create_event(client)
+    campaign = create_campaign(client, event_id, discount_value=50)
+
+    with core.Session(core.engine) as db:
+        stored = db.get(PromoCampaign, UUID(campaign["id"]))
+        assert stored
+        link = promo_service.campaign_link(stored)
+
+    url = urlsplit(link)
+    assert url.path == "/events/detail"
+    assert parse_qs(url.query) == {"event_id": [event_id], "promo": [stored.qr_token]}
+
+
+def test_resolve_promo_link(client: TestClient) -> None:
+    event_id = create_event(client)
+    campaign = create_campaign(client, event_id)
+
+    res = client.get(f"/api/v1/promo/resolve?token={qr_token(campaign['id'])}")
+    assert res.status_code == 200
+    assert res.json()["event_id"] == event_id
+    assert res.json()["code"] == campaign["code"]
+    assert res.json()["discount_value"] == 20
+
+
+def test_resolve_rejects_unusable_links(client: TestClient) -> None:
+    event_id = create_event(client)
+    now = datetime.now(UTC)
+
+    unknown = client.get("/api/v1/promo/resolve?token=nope")
+    assert unknown.status_code == 404
+    assert unknown.json()["detail"] == "Promo link is not valid"
+
+    disabled = create_campaign(client, event_id)
+    client.post(f"/api/v1/promo/campaigns/disable?campaign_id={disabled['id']}")
+    res = client.get(f"/api/v1/promo/resolve?token={qr_token(disabled['id'])}")
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Promo code is disabled"
+
+    expired = create_campaign(
+        client,
+        event_id,
+        start_time=(now - timedelta(days=2)).isoformat(),
+        end_time=(now - timedelta(days=1)).isoformat(),
+    )
+    res = client.get(f"/api/v1/promo/resolve?token={qr_token(expired['id'])}")
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Promo code has expired"
+
+    upcoming = create_campaign(client, event_id, start_time=(now + timedelta(days=1)).isoformat())
+    res = client.get(f"/api/v1/promo/resolve?token={qr_token(upcoming['id'])}")
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Promo code is not active yet"
+
+
+def test_find_by_code(client: TestClient) -> None:
+    event_id = create_event(client)
+    campaign = create_campaign(client, event_id)
+
+    with core.Session(core.engine) as db:
+        found = promo_service.find_by_code(db, UUID(event_id), f" {campaign['code'].lower()} ")
+        assert found and str(found.id) == campaign["id"]
+        assert promo_service.find_by_code(db, uuid4(), campaign["code"]) is None
+
+
+def test_calculate_discount() -> None:
+    percent = PromoCampaign(discount_type="percent", discount_value=15)
+    assert promo_service.calculate_discount(percent, 333_333) == 49_999
+
+    fixed = PromoCampaign(discount_type="fixed", discount_value=500_000)
+    assert promo_service.calculate_discount(fixed, 1_200_000) == 500_000
+    assert promo_service.calculate_discount(fixed, 300_000) == 300_000
+
+
+def test_redeem_stops_at_limit(client: TestClient) -> None:
+    campaign = create_campaign(client, create_event(client), max_redemptions=1)
+
+    with core.Session(core.engine) as db:
+        stored = db.get(PromoCampaign, UUID(campaign["id"]))
+        assert stored
+
+        first = promo_service.redeem(db, stored, order_id=uuid4(), discount_amount=1000)
+        db.commit()
+        assert first is not None
+
+        db.refresh(stored)
+        assert stored.redemption_count == 1
+        assert promo_service.redeem(db, stored, order_id=uuid4(), discount_amount=1000) is None
+
+        redemptions = db.scalars(
+            select(PromoRedemption).where(PromoRedemption.campaign_id == stored.id)
+        ).all()
+        assert len(redemptions) == 1
+
+    res = client.get(f"/api/v1/promo/resolve?token={qr_token(campaign['id'])}")
+    assert res.json()["detail"] == "Promo code has reached its redemption limit"
+
+
+def test_redeem_checks_limit_in_the_update(client: TestClient) -> None:
+    campaign = create_campaign(client, create_event(client), max_redemptions=1)
+
+    with core.Session(core.engine) as first_db, core.Session(core.engine) as second_db:
+        first = first_db.get(PromoCampaign, UUID(campaign["id"]))
+        second = second_db.get(PromoCampaign, UUID(campaign["id"]))
+        assert first and second
+
+        assert (
+            promo_service.redeem(first_db, first, order_id=uuid4(), discount_amount=1) is not None
+        )
+        first_db.commit()
+
+        assert second.redemption_count == 0
+        assert promo_service.redeem(second_db, second, order_id=uuid4(), discount_amount=1) is None

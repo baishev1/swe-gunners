@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 
 from core import *
 from features.events.models import Event
@@ -47,3 +47,13 @@ def disable_campaign(
     db: Session = Depends(get_db),
 ):
     return promo_service.disable_campaign(db=db, campaign=campaign)
+
+
+@router.get("/campaigns/qr", response_class=Response)
+def get_campaign_qr(campaign: PromoCampaign = Depends(valid_campaign_id)):
+    return Response(content=promo_service.build_qr_svg(campaign), media_type="image/svg+xml")
+
+
+@router.get("/resolve", response_model=PromoCampaignPublicResponse)
+def resolve_promo_link(campaign: PromoCampaign = Depends(redeemable_campaign_guard)):
+    return campaign

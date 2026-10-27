@@ -5,6 +5,7 @@ from features.events.models import Event
 
 from .models import *
 from .schemas import *
+from .service import promo_service
 
 
 def valid_event_id(event_id: UUID, db: Session = Depends(get_db)) -> Event:
@@ -44,6 +45,25 @@ def enabled_campaign_guard(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Campaign is disabled",
         )
+    return campaign
+
+
+def valid_qr_token(token: str, db: Session = Depends(get_db)) -> PromoCampaign:
+    campaign = promo_service.find_by_qr_token(db, token)
+    if not campaign:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Promo link is not valid",
+        )
+    return campaign
+
+
+def redeemable_campaign_guard(
+    campaign: PromoCampaign = Depends(valid_qr_token),
+) -> PromoCampaign:
+    error = promo_service.redeem_error(campaign)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     return campaign
 
 
