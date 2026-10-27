@@ -1,5 +1,11 @@
 export const ROUTES = {
   home: '/',
+  login: '/login',
+  register: '/register',
+  verifyEmail: '/verify-email',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset-password',
+  organizerProfile: '/organizer/profile',
   events: '/events',
   eventDetail: '/events/detail',
   organizerEventNew: '/organizer/events/new',

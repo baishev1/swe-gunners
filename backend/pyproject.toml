@@ -7,7 +7,9 @@ dependencies = [
     "alembic>=1.14",
     "fastapi[standard]>=0.115",
     "psycopg[binary]>=3.2",
+    "pwdlib[argon2]>=0.3.1",
     "pydantic-settings>=2.7",
+    "pyjwt>=2.15.1",
     "sqlalchemy>=2.0.36",
     "uuid-utils>=0.10",
 ]
@@ -60,4 +62,5 @@ env = [
     "IS_DEV_ENV=true",
     "POSTGRES_SERVER=",
     "SQLITE_FILE_NAME=:memory:",
+    "JWT_SECRET=test-secret",
 ]
