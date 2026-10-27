@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from core import settings
-from features import events
+from features import auth, events
 
 from .lifespan import lifespan
 
@@ -34,3 +34,4 @@ def health():
 
 
 app.include_router(events.routes.router, prefix="/api/v1")
+app.include_router(auth.routes.router, prefix="/api/v1")
