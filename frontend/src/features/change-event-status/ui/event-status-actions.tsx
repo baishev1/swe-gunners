@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { type EventItem, eventKeys } from '@/entities/event'
@@ -8,6 +9,7 @@ import { FieldError } from '@/shared/ui/field'
 type StatusAction = 'publish' | 'unpublish' | 'cancel'
 
 export function EventStatusActions({ event }: { event: EventItem }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const changeStatus = useMutation({
     mutationFn: async (action: StatusAction) =>
@@ -29,11 +31,11 @@ export function EventStatusActions({ event }: { event: EventItem }) {
           disabled={changeStatus.isPending}
           onClick={() => changeStatus.mutate('unpublish')}
         >
-          Unpublish
+          {t('eventStatus.unpublish')}
         </Button>
       ) : (
         <Button disabled={changeStatus.isPending} onClick={() => changeStatus.mutate('publish')}>
-          Publish
+          {t('eventStatus.publish')}
         </Button>
       )}
       <Button
@@ -41,7 +43,7 @@ export function EventStatusActions({ event }: { event: EventItem }) {
         disabled={changeStatus.isPending}
         onClick={() => changeStatus.mutate('cancel')}
       >
-        Cancel event
+        {t('eventStatus.cancel')}
       </Button>
       {changeStatus.isError && <FieldError>{getErrorMessage(changeStatus.error)}</FieldError>}
     </div>

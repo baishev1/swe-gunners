@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { type FormEvent, useState } from 'react'
 
 import type { EventItem, EventVisibility } from '@/entities/event'
@@ -18,6 +19,7 @@ interface EventFormProps {
 }
 
 export function EventForm({ event, onSaved }: EventFormProps) {
+  const { t } = useTranslation()
   const venues = useVenues()
   const saveEvent = useSaveEvent(event?.id)
   const [title, setTitle] = useState(event?.title ?? '')
@@ -60,7 +62,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="event-title">Title</FieldLabel>
+          <FieldLabel htmlFor="event-title">{t('eventForm.title')}</FieldLabel>
           <Input
             id="event-title"
             required
@@ -69,7 +71,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-description">Description</FieldLabel>
+          <FieldLabel htmlFor="event-description">{t('eventForm.description')}</FieldLabel>
           <Textarea
             id="event-description"
             value={description}
@@ -77,7 +79,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-category">Category</FieldLabel>
+          <FieldLabel htmlFor="event-category">{t('eventForm.category')}</FieldLabel>
           <Input
             id="event-category"
             required
@@ -86,7 +88,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-venue">Venue</FieldLabel>
+          <FieldLabel htmlFor="event-venue">{t('eventForm.venue')}</FieldLabel>
           <NativeSelect
             id="event-venue"
             className="w-full"
@@ -94,7 +96,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
             value={venueId}
             onChange={(e) => setVenueId(e.target.value)}
           >
-            <NativeSelectOption value="">Select a venue</NativeSelectOption>
+            <NativeSelectOption value="">{t('eventForm.selectVenue')}</NativeSelectOption>
             {venues.data?.map((venue) => (
               <NativeSelectOption key={venue.id} value={venue.id}>
                 {venue.name}, {venue.address}
@@ -103,7 +105,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           </NativeSelect>
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-start">Starts</FieldLabel>
+          <FieldLabel htmlFor="event-start">{t('eventForm.starts')}</FieldLabel>
           <Input
             id="event-start"
             type="datetime-local"
@@ -113,7 +115,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-end">Ends</FieldLabel>
+          <FieldLabel htmlFor="event-end">{t('eventForm.ends')}</FieldLabel>
           <Input
             id="event-end"
             type="datetime-local"
@@ -123,7 +125,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-capacity">Capacity</FieldLabel>
+          <FieldLabel htmlFor="event-capacity">{t('eventForm.capacity')}</FieldLabel>
           <Input
             id="event-capacity"
             type="number"
@@ -134,20 +136,22 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-visibility">Visibility</FieldLabel>
+          <FieldLabel htmlFor="event-visibility">{t('eventForm.visibility')}</FieldLabel>
           <NativeSelect
             id="event-visibility"
             className="w-full"
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as EventVisibility)}
           >
-            <NativeSelectOption value="public">Public</NativeSelectOption>
-            <NativeSelectOption value="unlisted">Unlisted</NativeSelectOption>
-            <NativeSelectOption value="private">Private</NativeSelectOption>
+            <NativeSelectOption value="public">{t('eventForm.public')}</NativeSelectOption>
+            <NativeSelectOption value="unlisted">{t('eventForm.unlisted')}</NativeSelectOption>
+            <NativeSelectOption value="private">{t('eventForm.private')}</NativeSelectOption>
           </NativeSelect>
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-registration-start">Registration opens</FieldLabel>
+          <FieldLabel htmlFor="event-registration-start">
+            {t('eventForm.registrationOpens')}
+          </FieldLabel>
           <Input
             id="event-registration-start"
             type="datetime-local"
@@ -156,7 +160,9 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-registration-end">Registration closes</FieldLabel>
+          <FieldLabel htmlFor="event-registration-end">
+            {t('eventForm.registrationCloses')}
+          </FieldLabel>
           <Input
             id="event-registration-end"
             type="datetime-local"
@@ -165,7 +171,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="event-cover">Cover image URL</FieldLabel>
+          <FieldLabel htmlFor="event-cover">{t('eventForm.coverImageUrl')}</FieldLabel>
           <Input
             id="event-cover"
             type="url"
@@ -175,7 +181,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         </Field>
         {saveEvent.isError && <FieldError>{getErrorMessage(saveEvent.error)}</FieldError>}
         <Button type="submit" disabled={saveEvent.isPending}>
-          {event ? 'Save changes' : 'Create event'}
+          {event ? t('eventForm.saveChanges') : t('eventForm.create')}
         </Button>
       </FieldGroup>
     </form>
