@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { forgotPassword } from '@/features/auth'
@@ -11,6 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation()
   const mutation = useMutation({ mutationFn: forgotPassword })
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -23,26 +25,26 @@ export function ForgotPasswordPage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Forgot password</CardTitle>
+          <CardTitle>{t('forgotPassword.title')}</CardTitle>
           <CardDescription>
             {mutation.isSuccess
-              ? 'If the address is registered, a reset link is on its way.'
-              : 'Enter your email and we will send a reset link.'}
+              ? t('forgotPassword.descriptionSent')
+              : t('forgotPassword.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">{t('common.email')}</FieldLabel>
                 <Input id="email" name="email" type="email" required />
               </Field>
               {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
               <Button type="submit" disabled={mutation.isPending}>
-                Send reset link
+                {t('forgotPassword.submit')}
               </Button>
               <Link to={ROUTES.login} className="text-sm underline">
-                Back to sign in
+                {t('forgotPassword.backToSignIn')}
               </Link>
             </FieldGroup>
           </form>

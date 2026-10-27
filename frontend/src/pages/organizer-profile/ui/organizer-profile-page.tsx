@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 
 import { fetchOrganizerProfile, updateOrganizerProfile } from '@/features/organizer-profile'
@@ -14,6 +15,7 @@ import { Input } from '@/shared/ui/input'
 const PROFILE_QUERY_KEY = ['organizer-profile']
 
 function ProfileForm({ profile }: { profile: OrganizerProfile }) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationFn: updateOrganizerProfile,
@@ -27,6 +29,9 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
       organization_name: String(form.get('organization_name')) || null,
       contact_email: String(form.get('contact_email')) || null,
       contact_phone: String(form.get('contact_phone')) || null,
+      payout_recipient_name: String(form.get('payout_recipient_name')) || null,
+      payout_iban: String(form.get('payout_iban')) || null,
+      payout_bin: String(form.get('payout_bin')) || null,
     })
   }
 
@@ -34,7 +39,9 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="organization_name">Organization name</FieldLabel>
+          <FieldLabel htmlFor="organization_name">
+            {t('organizerProfile.organizationName')}
+          </FieldLabel>
           <Input
             id="organization_name"
             name="organization_name"
@@ -42,7 +49,7 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="contact_email">Contact email</FieldLabel>
+          <FieldLabel htmlFor="contact_email">{t('organizerProfile.contactEmail')}</FieldLabel>
           <Input
             id="contact_email"
             name="contact_email"
@@ -51,7 +58,7 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="contact_phone">Contact phone</FieldLabel>
+          <FieldLabel htmlFor="contact_phone">{t('organizerProfile.contactPhone')}</FieldLabel>
           <Input
             id="contact_phone"
             name="contact_phone"
@@ -59,10 +66,31 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
             defaultValue={profile.contact_phone ?? ''}
           />
         </Field>
+        <h2 className="text-sm font-medium">{t('organizerProfile.payout')}</h2>
+        <Field>
+          <FieldLabel htmlFor="payout_recipient_name">
+            {t('organizerProfile.payoutRecipientName')}
+          </FieldLabel>
+          <Input
+            id="payout_recipient_name"
+            name="payout_recipient_name"
+            defaultValue={profile.payout_recipient_name ?? ''}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="payout_iban">{t('organizerProfile.payoutIban')}</FieldLabel>
+          <Input id="payout_iban" name="payout_iban" defaultValue={profile.payout_iban ?? ''} />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="payout_bin">{t('organizerProfile.payoutBin')}</FieldLabel>
+          <Input id="payout_bin" name="payout_bin" defaultValue={profile.payout_bin ?? ''} />
+        </Field>
         {mutation.isError && <FieldError>{getErrorMessage(mutation.error)}</FieldError>}
-        {mutation.isSuccess && <p className="text-muted-foreground text-sm">Saved.</p>}
+        {mutation.isSuccess && (
+          <p className="text-muted-foreground text-sm">{t('organizerProfile.saved')}</p>
+        )}
         <Button type="submit" disabled={mutation.isPending}>
-          Save
+          {t('organizerProfile.save')}
         </Button>
       </FieldGroup>
     </form>
@@ -70,6 +98,7 @@ function ProfileForm({ profile }: { profile: OrganizerProfile }) {
 }
 
 export function OrganizerProfilePage() {
+  const { t } = useTranslation()
   const { data, isPending, isError, error } = useQuery({
     queryKey: PROFILE_QUERY_KEY,
     queryFn: fetchOrganizerProfile,
@@ -79,15 +108,17 @@ export function OrganizerProfilePage() {
     <main className="flex min-h-svh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Organizer profile</CardTitle>
-          <CardDescription>How attendees can reach you.</CardDescription>
+          <CardTitle>{t('organizerProfile.title')}</CardTitle>
+          <CardDescription>{t('organizerProfile.description')}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          {isPending && <p className="text-muted-foreground text-sm">Loading...</p>}
+          {isPending && (
+            <p className="text-muted-foreground text-sm">{t('organizerProfile.loading')}</p>
+          )}
           {isError && <FieldError>{getErrorMessage(error)}</FieldError>}
           {data && <ProfileForm profile={data} />}
           <Link to={ROUTES.home} className="text-sm underline">
-            Back to home
+            {t('common.backToHome')}
           </Link>
         </CardContent>
       </Card>

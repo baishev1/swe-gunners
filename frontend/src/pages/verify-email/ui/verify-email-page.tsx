@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { verifyEmail } from '@/features/auth'
@@ -7,6 +8,7 @@ import { ROUTES } from '@/shared/config'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
 export function VerifyEmailPage() {
+  const { t } = useTranslation()
   const [params] = useSearchParams()
   const token = params.get('token')
 
@@ -17,17 +19,17 @@ export function VerifyEmailPage() {
     retry: false,
   })
 
-  let title = 'Verifying your email'
-  let message = 'One moment.'
+  let title = t('verifyEmail.pendingTitle')
+  let message = t('verifyEmail.pendingMessage')
   if (token === null) {
-    title = 'Invalid link'
-    message = 'The verification token is missing.'
+    title = t('common.invalidLink')
+    message = t('verifyEmail.missingToken')
   } else if (isError) {
-    title = 'Verification failed'
+    title = t('verifyEmail.failedTitle')
     message = getErrorMessage(error)
   } else if (!isPending) {
-    title = 'Email verified'
-    message = 'Your email address is confirmed.'
+    title = t('verifyEmail.successTitle')
+    message = t('verifyEmail.successMessage')
   }
 
   return (
@@ -39,7 +41,7 @@ export function VerifyEmailPage() {
         </CardHeader>
         <CardContent>
           <Link to={ROUTES.login} className="text-sm underline">
-            Go to sign in
+            {t('common.goToSignIn')}
           </Link>
         </CardContent>
       </Card>

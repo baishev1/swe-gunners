@@ -1,0 +1,142 @@
+{
+  "common": {
+    "free": "Бесплатно",
+    "email": "Эл. почта",
+    "password": "Пароль",
+    "goToSignIn": "Перейти ко входу",
+    "backToHome": "На главную",
+    "invalidLink": "Недействительная ссылка"
+  },
+  "language": {
+    "label": "Язык"
+  },
+  "home": {
+    "tagline": "Платформа продажи билетов на мероприятия",
+    "organizerProfile": "Профиль организатора",
+    "signOut": "Выйти"
+  },
+  "login": {
+    "title": "Вход",
+    "description": "Используйте свой аккаунт BiletFlow.",
+    "submit": "Войти",
+    "createAccount": "Создать аккаунт",
+    "forgotPassword": "Забыли пароль?"
+  },
+  "register": {
+    "title": "Создать аккаунт",
+    "description": "Покупайте билеты или продавайте их.",
+    "roleLabel": "Я",
+    "attendee": "Посетитель",
+    "organizer": "Организатор",
+    "fullName": "Полное имя",
+    "submit": "Создать аккаунт",
+    "haveAccount": "Уже есть аккаунт?",
+    "checkEmailTitle": "Проверьте почту",
+    "checkEmailDescription": "Мы отправили ссылку для подтверждения на {{email}}."
+  },
+  "verifyEmail": {
+    "pendingTitle": "Подтверждаем вашу почту",
+    "pendingMessage": "Одну минуту.",
+    "missingToken": "Отсутствует токен подтверждения.",
+    "failedTitle": "Не удалось подтвердить",
+    "successTitle": "Почта подтверждена",
+    "successMessage": "Ваш адрес электронной почты подтверждён."
+  },
+  "forgotPassword": {
+    "title": "Восстановление пароля",
+    "descriptionSent": "Если адрес зарегистрирован, ссылка для сброса уже в пути.",
+    "description": "Введите почту, и мы отправим ссылку для сброса.",
+    "submit": "Отправить ссылку",
+    "backToSignIn": "Назад ко входу"
+  },
+  "resetPassword": {
+    "title": "Сброс пароля",
+    "description": "Придумайте новый пароль.",
+    "newPassword": "Новый пароль",
+    "submit": "Обновить пароль",
+    "missingToken": "Отсутствует токен сброса.",
+    "requestNewLink": "Запросить новую ссылку",
+    "successTitle": "Пароль обновлён",
+    "successDescription": "Теперь можно войти с новым паролем."
+  },
+  "organizerProfile": {
+    "title": "Профиль организатора",
+    "description": "Как посетители могут с вами связаться.",
+    "organizationName": "Название организации",
+    "contactEmail": "Контактная почта",
+    "contactPhone": "Контактный телефон",
+    "payout": "Платёжные данные",
+    "payoutRecipientName": "Имя получателя",
+    "payoutIban": "IBAN",
+    "payoutBin": "БИН / ИИН",
+    "saved": "Сохранено.",
+    "save": "Сохранить",
+    "loading": "Загрузка..."
+  },
+  "eventsList": {
+    "title": "Мероприятия",
+    "create": "Создать мероприятие",
+    "empty": "Пока нет мероприятий."
+  },
+  "eventDetail": {
+    "cancelled": "Отменено",
+    "tickets": "Билеты",
+    "noTickets": "Билетов пока нет.",
+    "left": "Осталось: {{count}}",
+    "soldOut": "Распродано",
+    "edit": "Редактировать мероприятие"
+  },
+  "organizerEventNew": {
+    "title": "Новое мероприятие",
+    "details": "О мероприятии",
+    "addVenue": "Добавить площадку"
+  },
+  "organizerEventEdit": {
+    "viewPage": "Страница мероприятия",
+    "details": "О мероприятии",
+    "ticketTypes": "Типы билетов"
+  },
+  "eventForm": {
+    "title": "Название",
+    "description": "Описание",
+    "category": "Категория",
+    "venue": "Площадка",
+    "selectVenue": "Выберите площадку",
+    "starts": "Начало",
+    "ends": "Окончание",
+    "capacity": "Вместимость",
+    "visibility": "Видимость",
+    "public": "Публичное",
+    "unlisted": "По ссылке",
+    "private": "Закрытое",
+    "registrationOpens": "Регистрация открывается",
+    "registrationCloses": "Регистрация закрывается",
+    "coverImageUrl": "Ссылка на обложку",
+    "saveChanges": "Сохранить изменения",
+    "create": "Создать мероприятие"
+  },
+  "ticketTypes": {
+    "name": "Название",
+    "description": "Описание",
+    "price": "Цена, KZT (0 — бесплатно)",
+    "quantity": "Количество",
+    "maxPerOrder": "Максимум в заказе",
+    "salesStart": "Начало продаж",
+    "salesEnd": "Окончание продаж",
+    "hidden": "Скрытый",
+    "add": "Добавить тип билета",
+    "show": "Показать",
+    "hide": "Скрыть",
+    "stats": "Доступно: {{available}} · в резерве: {{reserved}} · продано: {{sold}} из {{quantity}}"
+  },
+  "createVenue": {
+    "name": "Название площадки",
+    "address": "Адрес",
+    "submit": "Добавить площадку"
+  },
+  "eventStatus": {
+    "unpublish": "Снять с публикации",
+    "publish": "Опубликовать",
+    "cancel": "Отменить мероприятие"
+  }
+}

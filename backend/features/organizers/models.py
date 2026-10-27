@@ -9,3 +9,6 @@ class OrganizerProfile(DbBase):
     organization_name: Mapped[str | None] = mapped_column(String(255), default=None)
     contact_email: Mapped[str | None] = mapped_column(String(255), default=None)
     contact_phone: Mapped[str | None] = mapped_column(String(50), default=None)
+    payout_recipient_name: Mapped[str | None] = mapped_column(String(255), default=None)
+    payout_iban: Mapped[str | None] = mapped_column(String(34), default=None)
+    payout_bin: Mapped[str | None] = mapped_column(String(12), default=None)

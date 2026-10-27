@@ -1,0 +1,142 @@
+{
+  "common": {
+    "free": "Free",
+    "email": "Email",
+    "password": "Password",
+    "goToSignIn": "Go to sign in",
+    "backToHome": "Back to home",
+    "invalidLink": "Invalid link"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "home": {
+    "tagline": "Event ticketing platform",
+    "organizerProfile": "Organizer profile",
+    "signOut": "Sign out"
+  },
+  "login": {
+    "title": "Sign in",
+    "description": "Use your BiletFlow account.",
+    "submit": "Sign in",
+    "createAccount": "Create account",
+    "forgotPassword": "Forgot password?"
+  },
+  "register": {
+    "title": "Create account",
+    "description": "Buy tickets or sell them.",
+    "roleLabel": "I am an",
+    "attendee": "Attendee",
+    "organizer": "Organizer",
+    "fullName": "Full name",
+    "submit": "Create account",
+    "haveAccount": "Already have an account?",
+    "checkEmailTitle": "Check your email",
+    "checkEmailDescription": "We sent a verification link to {{email}}."
+  },
+  "verifyEmail": {
+    "pendingTitle": "Verifying your email",
+    "pendingMessage": "One moment.",
+    "missingToken": "The verification token is missing.",
+    "failedTitle": "Verification failed",
+    "successTitle": "Email verified",
+    "successMessage": "Your email address is confirmed."
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "descriptionSent": "If the address is registered, a reset link is on its way.",
+    "description": "Enter your email and we will send a reset link.",
+    "submit": "Send reset link",
+    "backToSignIn": "Back to sign in"
+  },
+  "resetPassword": {
+    "title": "Reset password",
+    "description": "Choose a new password.",
+    "newPassword": "New password",
+    "submit": "Update password",
+    "missingToken": "The reset token is missing.",
+    "requestNewLink": "Request a new link",
+    "successTitle": "Password updated",
+    "successDescription": "You can sign in with the new password."
+  },
+  "organizerProfile": {
+    "title": "Organizer profile",
+    "description": "How attendees can reach you.",
+    "organizationName": "Organization name",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "payout": "Payout details",
+    "payoutRecipientName": "Recipient name",
+    "payoutIban": "IBAN",
+    "payoutBin": "BIN / IIN",
+    "saved": "Saved.",
+    "save": "Save",
+    "loading": "Loading..."
+  },
+  "eventsList": {
+    "title": "Events",
+    "create": "Create event",
+    "empty": "No events yet."
+  },
+  "eventDetail": {
+    "cancelled": "Cancelled",
+    "tickets": "Tickets",
+    "noTickets": "No tickets available yet.",
+    "left": "{{count}} left",
+    "soldOut": "Sold out",
+    "edit": "Edit event"
+  },
+  "organizerEventNew": {
+    "title": "New event",
+    "details": "Event details",
+    "addVenue": "Add a venue"
+  },
+  "organizerEventEdit": {
+    "viewPage": "View event page",
+    "details": "Event details",
+    "ticketTypes": "Ticket types"
+  },
+  "eventForm": {
+    "title": "Title",
+    "description": "Description",
+    "category": "Category",
+    "venue": "Venue",
+    "selectVenue": "Select a venue",
+    "starts": "Starts",
+    "ends": "Ends",
+    "capacity": "Capacity",
+    "visibility": "Visibility",
+    "public": "Public",
+    "unlisted": "Unlisted",
+    "private": "Private",
+    "registrationOpens": "Registration opens",
+    "registrationCloses": "Registration closes",
+    "coverImageUrl": "Cover image URL",
+    "saveChanges": "Save changes",
+    "create": "Create event"
+  },
+  "ticketTypes": {
+    "name": "Name",
+    "description": "Description",
+    "price": "Price, KZT (0 for free)",
+    "quantity": "Quantity",
+    "maxPerOrder": "Max per order",
+    "salesStart": "Sales start",
+    "salesEnd": "Sales end",
+    "hidden": "Hidden",
+    "add": "Add ticket type",
+    "show": "Show",
+    "hide": "Hide",
+    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold of {{quantity}}"
+  },
+  "createVenue": {
+    "name": "Venue name",
+    "address": "Address",
+    "submit": "Add venue"
+  },
+  "eventStatus": {
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "cancel": "Cancel event"
+  }
+}
