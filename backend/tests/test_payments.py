@@ -3,9 +3,9 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 
-def create_paid_order(client: TestClient) -> dict:
+def create_paid_order(client: TestClient, event_id: str) -> dict:
     payload = {
-        "event_id": str(uuid4()),
+        "event_id": event_id,
         "customer_name": "Daulet Sarsenov",
         "customer_email": "daulet@example.kz",
         "items": [
@@ -22,8 +22,8 @@ def create_paid_order(client: TestClient) -> dict:
     return res.json()
 
 
-def test_simulate_payment_failure(client: TestClient) -> None:
-    order = create_paid_order(client)
+def test_simulate_payment_failure(client: TestClient, paid_event_id: str) -> None:
+    order = create_paid_order(client, paid_event_id)
     order_id = order["id"]
     assert order["status"] == "pending"
 
@@ -44,8 +44,10 @@ def test_simulate_payment_failure(client: TestClient) -> None:
     assert len(tickets_res.json()) == 0
 
 
-def test_simulate_payment_success_and_ticket_issuance(client: TestClient) -> None:
-    order = create_paid_order(client)
+def test_simulate_payment_success_and_ticket_issuance(
+    client: TestClient, paid_event_id: str
+) -> None:
+    order = create_paid_order(client, paid_event_id)
     order_id = order["id"]
 
     pay_res = client.post(
@@ -76,8 +78,8 @@ def test_simulate_payment_success_and_ticket_issuance(client: TestClient) -> Non
     assert "cannot be paid" in repeat_pay.json()["detail"]
 
 
-def test_get_payment_detail(client: TestClient) -> None:
-    order = create_paid_order(client)
+def test_get_payment_detail(client: TestClient, paid_event_id: str) -> None:
+    order = create_paid_order(client, paid_event_id)
     order_id = order["id"]
 
     client.post(

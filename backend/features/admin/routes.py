@@ -4,6 +4,13 @@ from core import *
 from features.auth.guards import get_current_user, require_role
 from features.events.models import Event
 from features.events.schemas import EventResponse
+from features.paid_sales.guards import (
+    reinstatable_activation_guard,
+    suspendable_activation_guard,
+)
+from features.paid_sales.models import PaidSalesActivation
+from features.paid_sales.schemas import PaidSalesActivationResponse, PaidSalesSuspendRequest
+from features.paid_sales.service import paid_sales_service
 from features.promo.schemas import PromoCampaignResponse
 from features.users.models import User
 
@@ -44,6 +51,32 @@ def suspend_event(
     db: Session = Depends(get_db),
 ):
     return admin_service.suspend_event(db=db, event=event, actor_id=admin.id)
+
+
+@router.get("/paid-sales", response_model=list[PaidSalesActivationResponse])
+def list_paid_sales_activations(status: str | None = None, db: Session = Depends(get_db)):
+    return paid_sales_service.list_activations(db=db, status=status)
+
+
+@router.post("/paid-sales/suspend", response_model=PaidSalesActivationResponse)
+def suspend_paid_sales(
+    data: PaidSalesSuspendRequest,
+    activation: PaidSalesActivation = Depends(suspendable_activation_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return paid_sales_service.suspend(
+        db=db, activation=activation, reason=data.reason, actor_id=admin.id
+    )
+
+
+@router.post("/paid-sales/reinstate", response_model=PaidSalesActivationResponse)
+def reinstate_paid_sales(
+    activation: PaidSalesActivation = Depends(reinstatable_activation_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return paid_sales_service.reinstate(db=db, activation=activation, actor_id=admin.id)
 
 
 @router.get("/promo-campaigns", response_model=list[PromoCampaignResponse])

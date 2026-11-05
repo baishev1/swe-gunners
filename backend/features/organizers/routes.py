@@ -22,3 +22,11 @@ def update_profile(
     db: Session = Depends(get_db),
 ):
     return organizer_service.update_profile(db=db, profile=profile, data=data)
+
+
+@router.post("/verify-identity", response_model=OrganizerProfileResponse)
+def verify_identity(
+    profile: OrganizerProfile = Depends(organizer_profile_guard),
+    db: Session = Depends(get_db),
+):
+    return organizer_service.verify_identity(db=db, profile=profile)

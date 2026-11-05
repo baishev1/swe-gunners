@@ -26,8 +26,8 @@ def sample_order_payload(event_id: str | None = None, user_id: str | None = None
     }
 
 
-def test_create_order(client: TestClient) -> None:
-    payload = sample_order_payload()
+def test_create_order(client: TestClient, paid_event_id: str) -> None:
+    payload = sample_order_payload(paid_event_id)
     res = client.post("/api/v1/orders", json=payload)
     assert res.status_code == 201
     data = res.json()
@@ -39,8 +39,8 @@ def test_create_order(client: TestClient) -> None:
     assert "id" in data
 
 
-def test_get_order_detail(client: TestClient) -> None:
-    payload = sample_order_payload()
+def test_get_order_detail(client: TestClient, paid_event_id: str) -> None:
+    payload = sample_order_payload(paid_event_id)
     create_res = client.post("/api/v1/orders", json=payload)
     order_id = create_res.json()["id"]
 
@@ -58,8 +58,8 @@ def test_get_order_detail_not_found(client: TestClient) -> None:
     assert res.json()["detail"] == "Order not found"
 
 
-def test_cancel_order(client: TestClient) -> None:
-    payload = sample_order_payload()
+def test_cancel_order(client: TestClient, paid_event_id: str) -> None:
+    payload = sample_order_payload(paid_event_id)
     create_res = client.post("/api/v1/orders", json=payload)
     order_id = create_res.json()["id"]
 
@@ -72,10 +72,9 @@ def test_cancel_order(client: TestClient) -> None:
     assert "Cannot cancel an order" in repeat_cancel.json()["detail"]
 
 
-def test_list_orders(client: TestClient) -> None:
+def test_list_orders(client: TestClient, paid_event_id: str) -> None:
     user_id = str(uuid4())
-    event_id = str(uuid4())
-    payload = sample_order_payload(event_id=event_id, user_id=user_id)
+    payload = sample_order_payload(event_id=paid_event_id, user_id=user_id)
     client.post("/api/v1/orders", json=payload)
 
     res_all = client.get("/api/v1/orders")

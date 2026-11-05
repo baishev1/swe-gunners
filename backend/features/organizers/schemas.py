@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -19,3 +21,5 @@ class OrganizerProfileResponse(BaseModel):
     payout_recipient_name: str | None
     payout_iban: str | None
     payout_bin: str | None
+    identity_verified_at: datetime | None
+    has_payout_account: bool
