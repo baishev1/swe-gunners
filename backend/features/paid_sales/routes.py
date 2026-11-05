@@ -1,16 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from core import *
-from features.auth.guards import get_current_user
+from features.auth.guards import get_current_user, require_role
 from features.events.guards import owned_event_id_guard
 from features.events.models import Event
 from features.users.models import User
 
 from .guards import *
+from .models import *
 from .schemas import *
 from .service import paid_sales_service
 
 router = APIRouter(prefix="/paid-sales", tags=["Paid sales"])
+# Lives here rather than in features/admin so admin never imports this feature,
+# which imports admin for the activation fee.
+admin_router = APIRouter(
+    prefix="/admin/paid-sales",
+    tags=["Admin"],
+    dependencies=[Depends(require_role("platform_admin"))],
+)
 
 
 @router.get("/checklist", response_model=PaidSalesChecklistResponse)
@@ -57,3 +65,29 @@ def activate_paid_sales(
 ):
     paid_sales_service.activate(db=db, event=event, actor_id=user.id)
     return paid_sales_service.build_checklist(db=db, event=event)
+
+
+@admin_router.get("", response_model=list[PaidSalesActivationResponse])
+def list_paid_sales_activations(status: str | None = None, db: Session = Depends(get_db)):
+    return paid_sales_service.list_activations(db=db, status=status)
+
+
+@admin_router.post("/suspend", response_model=PaidSalesActivationResponse)
+def suspend_paid_sales(
+    data: PaidSalesSuspendRequest,
+    activation: PaidSalesActivation = Depends(suspendable_activation_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return paid_sales_service.suspend(
+        db=db, activation=activation, reason=data.reason, actor_id=admin.id
+    )
+
+
+@admin_router.post("/reinstate", response_model=PaidSalesActivationResponse)
+def reinstate_paid_sales(
+    activation: PaidSalesActivation = Depends(reinstatable_activation_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return paid_sales_service.reinstate(db=db, activation=activation, actor_id=admin.id)
