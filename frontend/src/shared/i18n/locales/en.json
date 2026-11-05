@@ -230,6 +230,39 @@
     "activationFee": "Paid sales activation fee, KZT",
     "activationFeeCurrent": "Current fee: {{fee}}",
     "saved": "Saved.",
-    "save": "Save"
+    "save": "Save",
+    "paidSales": {
+      "tab": "Paid sales",
+      "fee": "Activation fee",
+      "activatedAt": "Activated",
+      "reason": "Reason",
+      "suspend": "Suspend sales",
+      "reinstate": "Reinstate"
+    }
+  },
+  "paidSales": {
+    "title": "Paid ticket sales",
+    "description": "Selling paid tickets for this event requires a one-time activation. Free tickets work without it.",
+    "checklist": "Activation checklist",
+    "stepDone": "(done)",
+    "stepTodo": "(to do)",
+    "paidTicketType": "At least one paid ticket type",
+    "identity": "Identity verified",
+    "verifyIdentity": "Verify identity (demo)",
+    "payoutAccount": "Payout account added",
+    "addPayout": "Add payout details",
+    "fee": "Activation fee: {{fee}}",
+    "payFee": "Pay fee (demo)",
+    "terms": "Paid-event terms accepted",
+    "acceptTerms": "Accept terms",
+    "activate": "Activate paid sales",
+    "activeNotice": "Paid sales are active. Attendees can buy paid tickets for this event.",
+    "suspendedNotice": "A platform admin suspended paid sales for this event: {{reason}}",
+    "simulationNotice": "Demonstration only: identity checks and fee payments are simulated and no real money moves.",
+    "statuses": {
+      "pending": "Not activated",
+      "active": "Active",
+      "suspended": "Suspended"
+    }
   }
 }

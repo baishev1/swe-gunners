@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { type TicketType, type TicketTypePayload, ticketTypeKeys } from '@/entities/ticket-type'
+import { paidSalesKeys } from '@/entities/paid-sales'
 import { apiClient } from '@/shared/api'
 
 export function useCreateTicketType(eventId: string) {
@@ -12,7 +13,10 @@ export function useCreateTicketType(eventId: string) {
           params: { event_id: eventId },
         })
       ).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketTypeKeys.all }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ticketTypeKeys.all })
+      void queryClient.invalidateQueries({ queryKey: paidSalesKeys.all })
+    },
   })
 }
 
@@ -25,6 +29,9 @@ export function useUpdateTicketType() {
           params: { ticket_type_id: id },
         })
       ).data,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketTypeKeys.all }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ticketTypeKeys.all })
+      void queryClient.invalidateQueries({ queryKey: paidSalesKeys.all })
+    },
   })
 }
