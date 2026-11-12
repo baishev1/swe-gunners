@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from httpx import Response
 from sqlalchemy import select
 
 import core
@@ -105,8 +106,10 @@ def admin_headers(client: TestClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
-def create_paid_event(client: TestClient, headers: dict[str, str], price: int = 500000) -> str:
-    """Creates an event with one paid ticket type; paid sales are not activated yet."""
+def create_paid_event(
+    client: TestClient, headers: dict[str, str], price: int = 500000, quantity: int = 100
+) -> str:
+    """Creates a published event with one ticket type; paid sales are not activated yet."""
     venue = client.post(
         "/api/v1/venues", json={"name": "Baluan Sholak", "address": "Abai 44"}, headers=headers
     )
@@ -126,10 +129,27 @@ def create_paid_event(client: TestClient, headers: dict[str, str], price: int = 
     event_id = event.json()["id"]
     client.post(
         f"/api/v1/ticket-types?event_id={event_id}",
-        json={"name": "Standard", "price": price, "quantity": 100},
+        json={"name": "Standard", "price": price, "quantity": quantity},
         headers=headers,
     )
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=headers)
     return event_id
+
+
+def place_order(
+    client: TestClient, headers: dict[str, str], event_id: str, quantity: int = 1
+) -> Response:
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={event_id}").json()[0]["id"]
+    return client.post(
+        "/api/v1/orders",
+        headers=headers,
+        json={
+            "event_id": event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": quantity}],
+        },
+    )
 
 
 def complete_activation_checklist(

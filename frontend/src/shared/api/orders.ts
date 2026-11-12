@@ -13,10 +13,7 @@ export async function getOrderDetail(orderId: string): Promise<Order> {
   return response.data
 }
 
-export async function listOrders(params?: {
-  user_id?: string
-  event_id?: string
-}): Promise<Order[]> {
+export async function listOrders(params?: { event_id?: string }): Promise<Order[]> {
   const response = await apiClient.get<Order[]>('/orders', { params })
   return response.data
 }

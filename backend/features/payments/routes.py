@@ -23,14 +23,5 @@ def simulate_payment(
 
 
 @router.get("/detail", response_model=PaymentResponse)
-def get_payment_detail(
-    order_id: UUID,
-    db: Session = Depends(get_db),
-):
-    payment = payment_service.get_payment_by_order(db=db, order_id=order_id)
-    if not payment:
-        raise HTTPException(
-            status_code=404,
-            detail="Payment not found for order",
-        )
+def get_payment_detail(payment: Payment = Depends(order_payment_guard)):
     return payment

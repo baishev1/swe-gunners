@@ -1,87 +1,126 @@
 from uuid import uuid4
 
+from conftest import create_paid_event, make_headers, place_order
 from fastapi.testclient import TestClient
 
 
-def sample_order_payload(event_id: str | None = None, user_id: str | None = None) -> dict:
-    return {
-        "event_id": event_id or str(uuid4()),
-        "user_id": user_id or str(uuid4()),
-        "customer_name": "Arman Bekov",
-        "customer_email": "arman@example.kz",
-        "items": [
-            {
-                "ticket_type_id": str(uuid4()),
-                "ticket_type_name": "Standard Admission",
-                "unit_price_kzt": 5000,
-                "quantity": 2,
-            },
-            {
-                "ticket_type_id": str(uuid4()),
-                "ticket_type_name": "VIP Pass",
-                "unit_price_kzt": 15000,
-                "quantity": 1,
-            },
-        ],
-    }
-
-
-def test_create_order(client: TestClient, paid_event_id: str) -> None:
-    payload = sample_order_payload(paid_event_id)
-    res = client.post("/api/v1/orders", json=payload)
+def test_create_order_uses_stored_prices(
+    client: TestClient, paid_event_id: str, attendee_headers: dict[str, str]
+) -> None:
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={paid_event_id}").json()[0]["id"]
+    res = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": paid_event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 2, "unit_price_kzt": 1}],
+        },
+    )
     assert res.status_code == 201
     data = res.json()
-    assert data["customer_name"] == payload["customer_name"]
-    assert data["customer_email"] == payload["customer_email"]
     assert data["status"] == "pending"
-    assert data["total_amount_kzt"] == 25000
-    assert len(data["items"]) == 2
-    assert "id" in data
+    assert data["total_amount_kzt"] == 1000000
+    assert data["items"][0]["unit_price_kzt"] == 500000
+    assert data["items"][0]["ticket_type_name"] == "Standard"
+    assert data["user_id"] is not None
+
+    ticket_type = client.get(f"/api/v1/ticket-types/detail?ticket_type_id={ticket_type_id}")
+    assert ticket_type.json()["reserved_count"] == 2
 
 
-def test_get_order_detail(client: TestClient, paid_event_id: str) -> None:
-    payload = sample_order_payload(paid_event_id)
-    create_res = client.post("/api/v1/orders", json=payload)
-    order_id = create_res.json()["id"]
-
-    res = client.get(f"/api/v1/orders/detail?order_id={order_id}")
-    assert res.status_code == 200
-    data = res.json()
-    assert data["id"] == order_id
-    assert len(data["items"]) == 2
+def test_create_order_requires_sign_in(client: TestClient, paid_event_id: str) -> None:
+    assert place_order(client, {}, paid_event_id).status_code == 401
 
 
-def test_get_order_detail_not_found(client: TestClient) -> None:
-    fake_id = uuid4()
-    res = client.get(f"/api/v1/orders/detail?order_id={fake_id}")
+def test_cannot_order_more_than_available(
+    client: TestClient, organizer_headers: dict[str, str], attendee_headers: dict[str, str]
+) -> None:
+    event_id = create_paid_event(client, organizer_headers, price=0, quantity=3)
+
+    res = place_order(client, attendee_headers, event_id, quantity=4)
+    assert res.status_code == 409
+    assert place_order(client, attendee_headers, event_id, quantity=3).status_code == 201
+    assert place_order(client, attendee_headers, event_id).status_code == 409
+
+
+def test_cannot_order_for_unpublished_event(
+    client: TestClient, organizer_headers: dict[str, str], attendee_headers: dict[str, str]
+) -> None:
+    event_id = create_paid_event(client, organizer_headers, price=0)
+    client.post(f"/api/v1/events/unpublish?event_id={event_id}", headers=organizer_headers)
+
+    res = place_order(client, attendee_headers, event_id)
+    assert res.status_code == 400
+    assert res.json()["detail"] == "Event is not open for registration"
+
+
+def test_ticket_type_must_belong_to_the_event(
+    client: TestClient, paid_event_id: str, attendee_headers: dict[str, str]
+) -> None:
+    res = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": paid_event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": str(uuid4()), "quantity": 1}],
+        },
+    )
+    assert res.status_code == 404
+
+
+def test_order_detail_is_visible_to_owner_and_organizer_only(
+    client: TestClient,
+    paid_event_id: str,
+    attendee_headers: dict[str, str],
+    organizer_headers: dict[str, str],
+    other_organizer_headers: dict[str, str],
+) -> None:
+    order_id = place_order(client, attendee_headers, paid_event_id).json()["id"]
+    url = f"/api/v1/orders/detail?order_id={order_id}"
+
+    assert client.get(url, headers=attendee_headers).status_code == 200
+    assert client.get(url, headers=organizer_headers).status_code == 200
+    assert client.get(url, headers=other_organizer_headers).status_code == 404
+    assert client.get(url).status_code == 401
+
+
+def test_get_order_detail_not_found(client: TestClient, attendee_headers: dict[str, str]) -> None:
+    res = client.get(f"/api/v1/orders/detail?order_id={uuid4()}", headers=attendee_headers)
     assert res.status_code == 404
     assert res.json()["detail"] == "Order not found"
 
 
-def test_cancel_order(client: TestClient, paid_event_id: str) -> None:
-    payload = sample_order_payload(paid_event_id)
-    create_res = client.post("/api/v1/orders", json=payload)
-    order_id = create_res.json()["id"]
+def test_cancel_order_releases_reserved_tickets(
+    client: TestClient, paid_event_id: str, attendee_headers: dict[str, str]
+) -> None:
+    order = place_order(client, attendee_headers, paid_event_id, quantity=2).json()
+    ticket_type_id = order["items"][0]["ticket_type_id"]
 
-    res = client.post(f"/api/v1/orders/cancel?order_id={order_id}")
+    res = client.post(f"/api/v1/orders/cancel?order_id={order['id']}", headers=attendee_headers)
     assert res.status_code == 200
     assert res.json()["status"] == "cancelled"
+    ticket_type = client.get(f"/api/v1/ticket-types/detail?ticket_type_id={ticket_type_id}")
+    assert ticket_type.json()["reserved_count"] == 0
 
-    repeat_cancel = client.post(f"/api/v1/orders/cancel?order_id={order_id}")
+    repeat_cancel = client.post(
+        f"/api/v1/orders/cancel?order_id={order['id']}", headers=attendee_headers
+    )
     assert repeat_cancel.status_code == 400
     assert "Cannot cancel an order" in repeat_cancel.json()["detail"]
 
 
-def test_list_orders(client: TestClient, paid_event_id: str) -> None:
-    user_id = str(uuid4())
-    payload = sample_order_payload(event_id=paid_event_id, user_id=user_id)
-    client.post("/api/v1/orders", json=payload)
+def test_list_orders_returns_only_own_orders(
+    client: TestClient, paid_event_id: str, attendee_headers: dict[str, str]
+) -> None:
+    place_order(client, attendee_headers, paid_event_id)
+    other_headers = make_headers(client, "bob@example.com", "attendee")
+    place_order(client, other_headers, paid_event_id)
 
-    res_all = client.get("/api/v1/orders")
-    assert res_all.status_code == 200
-    assert any(o["customer_email"] == "arman@example.kz" for o in res_all.json())
-
-    res_user = client.get(f"/api/v1/orders?user_id={user_id}")
-    assert res_user.status_code == 200
-    assert len(res_user.json()) >= 1
-    assert all(o["user_id"] == user_id for o in res_user.json())
+    mine = client.get("/api/v1/orders", headers=attendee_headers)
+    assert mine.status_code == 200
+    assert len(mine.json()) == 1
+    assert client.get("/api/v1/orders").status_code == 401
