@@ -19,6 +19,8 @@ class RevenueSummary(BaseModel):
     discounts: int
     refunds: int
     net_revenue: int
+    processing_fees: int
+    estimated_payout: int
 
 
 class SalesPoint(BaseModel):

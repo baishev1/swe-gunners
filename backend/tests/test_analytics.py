@@ -56,8 +56,15 @@ def test_analytics_totals(
     client: TestClient,
     organizer_headers: dict[str, str],
     attendee_headers: dict[str, str],
+    admin_headers: dict[str, str],
     paid_event_id: str,
 ) -> None:
+    # Other test modules change the platform rate, so pin it before asserting fees.
+    client.patch(
+        "/api/v1/admin/settings",
+        json={"processing_fee_percent": 3.0},
+        headers=admin_headers,
+    )
     type_id = ticket_type_id(client, paid_event_id, organizer_headers)
     campaign = client.post(
         f"/api/v1/promo/campaigns?event_id={paid_event_id}",
@@ -101,6 +108,8 @@ def test_analytics_totals(
         "discounts": 100000,
         "refunds": 500000,
         "net_revenue": 900000,
+        "processing_fees": 27000,
+        "estimated_payout": 873000,
     }
     assert data["attendance"] == {"checked_in": 1, "absent": 1, "percent_checked_in": 50.0}
 

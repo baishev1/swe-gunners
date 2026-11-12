@@ -12,6 +12,7 @@ from sqlalchemy import select, update
 from core import *
 from features.audit_log.service import audit_log_service
 from features.events.models import Event
+from features.notifications.service import notification_service
 from features.orders.models import Order
 
 from .models import *
@@ -43,6 +44,10 @@ class TicketService:
         db.commit()
         for t in tickets:
             db.refresh(t)
+        event = db.get(Event, order.event_id)
+        notification_service.order_confirmation(
+            order, tickets, event.title if event else "BiletFlow event"
+        )
         return tickets
 
     def list_tickets(

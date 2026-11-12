@@ -133,6 +133,7 @@ def test_platform_settings(client: TestClient) -> None:
     res = client.get("/api/v1/admin/settings", headers=headers)
     assert res.status_code == 200
     assert res.json()["activation_fee"] == 0
+    assert res.json()["processing_fee_percent"] == 3.0
 
     updated = client.patch(
         "/api/v1/admin/settings", json={"activation_fee": 1_500_000}, headers=headers
@@ -143,5 +144,16 @@ def test_platform_settings(client: TestClient) -> None:
         1_500_000
     )
 
+    fees = client.patch(
+        "/api/v1/admin/settings", json={"processing_fee_percent": 2.5}, headers=headers
+    )
+    assert fees.status_code == 200
+    assert fees.json()["processing_fee_percent"] == 2.5
+    assert fees.json()["activation_fee"] == 1_500_000
+
     negative = client.patch("/api/v1/admin/settings", json={"activation_fee": -1}, headers=headers)
     assert negative.status_code == 422
+    too_high = client.patch(
+        "/api/v1/admin/settings", json={"processing_fee_percent": 101}, headers=headers
+    )
+    assert too_high.status_code == 422

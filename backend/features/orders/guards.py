@@ -64,6 +64,25 @@ def cancellable_order_guard(
     return order
 
 
+def refundable_order_guard(
+    order: Order = Depends(valid_order_id),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Order:
+    event = db.get(Event, order.event_id)
+    if event is None or (user.role != "platform_admin" and event.organizer_id != user.id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found",
+        )
+    if order.status != "paid":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot refund an order with status '{order.status}'",
+        )
+    return order
+
+
 def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> OrderCreate:
     event = db.get(Event, data.event_id)
     if not event:

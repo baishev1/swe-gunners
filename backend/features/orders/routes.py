@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
 
 from core import *
+from features.audit_log.guards import event_history_guard
 from features.auth.guards import get_current_user
+from features.events.models import Event
 from features.users.models import User
 
 from .guards import *
@@ -31,6 +33,14 @@ def list_orders(
     return order_service.list_orders(db=db, user_id=user.id, event_id=event_id, status=status)
 
 
+@router.get("/manage", response_model=list[OrderResponse])
+def list_event_orders(
+    event: Event = Depends(event_history_guard),
+    db: Session = Depends(get_db),
+):
+    return order_service.list_orders(db=db, event_id=event.id)
+
+
 @router.get("/detail", response_model=OrderResponse)
 def get_order_detail(order: Order = Depends(accessible_order_guard)):
     return order
@@ -43,3 +53,12 @@ def cancel_order(
     db: Session = Depends(get_db),
 ):
     return order_service.cancel_order(db=db, order=order, actor_id=user.id)
+
+
+@router.post("/refund", response_model=OrderResponse)
+def refund_order(
+    order: Order = Depends(refundable_order_guard),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return order_service.refund_order(db=db, order=order, actor_id=user.id)

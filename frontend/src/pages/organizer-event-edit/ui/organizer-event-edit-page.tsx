@@ -5,6 +5,7 @@ import { useEvent } from '@/entities/event'
 import { EventStatusActions } from '@/features/change-event-status'
 import { EventForm } from '@/features/event-form'
 import { TicketTypeManager } from '@/features/manage-ticket-types'
+import { OrganizerOrdersPanel } from '@/features/organizer-orders'
 import { PaidSalesChecklistCard } from '@/features/paid-sales-activation'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
@@ -73,6 +74,14 @@ export function OrganizerEventEditPage() {
         </CardHeader>
         <CardContent>
           <TicketTypeManager eventId={event.data.id} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('organizerEventEdit.orders')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <OrganizerOrdersPanel eventId={event.data.id} />
         </CardContent>
       </Card>
       <PaidSalesChecklistCard eventId={event.data.id} />

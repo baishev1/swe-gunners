@@ -21,6 +21,8 @@ export interface EventAnalytics {
     discounts: number
     refunds: number
     net_revenue: number
+    processing_fees: number
+    estimated_payout: number
   }
   sales_over_time: { day: string; orders: number; tickets: number; gross_sales: number }[]
   ticket_types: {

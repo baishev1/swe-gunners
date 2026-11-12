@@ -161,7 +161,7 @@ export function EventAnalyticsDashboard({ eventId }: { eventId: string }) {
             <CardHeader>
               <CardTitle>{t('analytics.revenue')}</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-4">
+            <CardContent className="grid gap-3 sm:grid-cols-3">
               <Stat label={t('analytics.gross')} value={formatPrice(data.revenue.gross_sales)} />
               <Stat label={t('analytics.discounts')} value={formatPrice(data.revenue.discounts)} />
               <Stat label={t('analytics.refunds')} value={formatPrice(data.revenue.refunds)} />
@@ -169,6 +169,14 @@ export function EventAnalyticsDashboard({ eventId }: { eventId: string }) {
                 label={t('analytics.net')}
                 value={formatPrice(data.revenue.net_revenue)}
                 hint={t('analytics.netHint')}
+              />
+              <Stat
+                label={t('analytics.processingFees')}
+                value={formatPrice(data.revenue.processing_fees)}
+              />
+              <Stat
+                label={t('analytics.estimatedPayout')}
+                value={formatPrice(data.revenue.estimated_payout)}
               />
             </CardContent>
           </Card>

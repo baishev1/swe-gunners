@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy import select
 
 from core import *
+from features.admin.service import admin_service
 from features.events.models import Event
 from features.orders.models import Order
 from features.promo.models import PromoCampaign, PromoRedemption
@@ -87,6 +88,9 @@ class AnalyticsService:
         refunds = sum(
             line.subtotal - line.discount for line in lines if line.order.status == "refunded"
         )
+        net_revenue = gross - discounts - refunds
+        fee_percent = admin_service.get_settings(db).processing_fee_percent
+        processing_fees = round(net_revenue * fee_percent / 100) if net_revenue > 0 else 0
         checked_in = sum(1 for ticket in tickets if ticket.status == "checked_in")
 
         return EventAnalyticsResponse(
@@ -101,7 +105,9 @@ class AnalyticsService:
                 gross_sales=gross,
                 discounts=discounts,
                 refunds=refunds,
-                net_revenue=gross - discounts - refunds,
+                net_revenue=net_revenue,
+                processing_fees=processing_fees,
+                estimated_payout=net_revenue - processing_fees,
             ),
             sales_over_time=self._sales_over_time(lines, self._zone(event.timezone)),
             ticket_types=[
