@@ -12,6 +12,11 @@
   },
   "home": {
     "tagline": "Event ticketing platform",
+    "browseEvents": "Browse events",
+    "myOrders": "My orders",
+    "myTickets": "My tickets",
+    "admin": "Admin panel",
+    "viewAll": "View all",
     "verifyEmail": "Confirm your email to create and publish events.",
     "resendVerification": "Resend email",
     "verificationSent": "Verification email sent.",
@@ -121,7 +126,8 @@
     "viewPage": "View event page",
     "details": "Event details",
     "ticketTypes": "Ticket types",
-    "orders": "Orders"
+    "orders": "Orders",
+    "attendees": "Attendees"
   },
   "organizerOrders": {
     "created": "Created",
@@ -172,7 +178,7 @@
     "add": "Add ticket type",
     "show": "Show",
     "hide": "Hide",
-    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold of {{quantity}}"
+    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold · {{refunded}} refunded · {{checkedIn}} checked in of {{quantity}}"
   },
   "createVenue": {
     "name": "Venue name",
@@ -380,6 +386,26 @@
       "download": "Download CSV"
     }
   },
+  "eventAttendees": {
+    "title": "Attendees — {{title}}",
+    "summary": "{{total}} registered · {{checkedIn}} checked in",
+    "filterType": "Ticket type",
+    "filterStatus": "Status",
+    "allTypes": "All ticket types",
+    "allStatuses": "All statuses",
+    "attendee": "Attendee",
+    "ticketType": "Ticket type",
+    "status": "Status",
+    "checkedInAt": "Checked in",
+    "registeredAt": "Registered",
+    "empty": "No registrations yet.",
+    "statuses": {
+      "valid": "Valid",
+      "checked_in": "Checked in",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    }
+  },
   "paidSales": {
     "title": "Paid ticket sales",
     "description": "Selling paid tickets for this event requires a one-time activation. Free tickets work without it.",
@@ -403,6 +429,66 @@
       "pending": "Not activated",
       "active": "Active",
       "suspended": "Suspended"
+    }
+  },
+  "support": {
+    "title": "Support",
+    "description": "Your requests and replies from the BiletFlow team.",
+    "newRequest": "New request",
+    "empty": "No support requests yet.",
+    "openFromPage": "You can also open a request from an event, order or ticket page.",
+    "contact": "Contact support",
+    "backToCases": "Back to support",
+    "viewEvent": "View event",
+    "caseUpdated": "Updated {{date}}",
+    "form": {
+      "pageTitle": "New support request",
+      "pageDescription": "Describe the issue and we will reply in this thread.",
+      "title": "Support request",
+      "platformDescription": "This request goes to BiletFlow platform support.",
+      "organizerDescription": "This request goes to the event organizer.",
+      "event": "Event",
+      "category": "Issue category",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Send request",
+      "submitting": "Sending...",
+      "contextRequiredTitle": "Choose where to start",
+      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context."
+    },
+    "categories": {
+      "ticket_delivery": "Ticket delivery",
+      "payment": "Payment",
+      "refund": "Refund",
+      "seating": "Seating",
+      "event_information": "Event information",
+      "check_in": "Check-in",
+      "account": "Account",
+      "activation": "Activation",
+      "technical": "Technical problem"
+    },
+    "statuses": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "waiting_for_customer": "Waiting for customer",
+      "resolved": "Resolved"
+    },
+    "thread": {
+      "title": "Conversation",
+      "empty": "No messages yet.",
+      "you": "You",
+      "participant": "Participant",
+      "replyPlaceholder": "Write a reply...",
+      "send": "Send reply",
+      "sending": "Sending..."
+    },
+    "manage": {
+      "title": "Case management",
+      "status": "Status",
+      "assignedToYou": "Assigned to you",
+      "unassigned": "No assignee",
+      "assignedToStaff": "Assigned to support staff",
+      "assignToMe": "Assign to me"
     }
   }
 }

@@ -14,10 +14,14 @@ import { OrganizerDashboardPage } from '@/pages/organizer-dashboard'
 import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
+import { SupportCasePage } from '@/pages/support-case'
+import { SupportNewPage } from '@/pages/support-new'
+import { SupportPage } from '@/pages/support'
 import { TicketsPage } from '@/pages/tickets'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
 import { OrganizerEventNewPage } from '@/pages/organizer-event-new'
+import { OrganizerEventAttendeesPage } from '@/pages/organizer-event-attendees'
 import { OrganizerEventPromoPage } from '@/pages/organizer-event-promo'
 import { OrganizerEventAnalyticsPage } from '@/pages/organizer-event-analytics'
 import { ROUTES } from '@/shared/config'
@@ -38,6 +42,9 @@ export function AppRouter() {
         <Route path={ROUTES.checkout} element={<CheckoutPage />} />
         <Route path={ROUTES.orders} element={<OrdersPage />} />
         <Route path={ROUTES.tickets} element={<TicketsPage />} />
+        <Route path={ROUTES.support} element={<SupportPage />} />
+        <Route path={ROUTES.supportNew} element={<SupportNewPage />} />
+        <Route path={ROUTES.supportCase} element={<SupportCasePage />} />
       </Route>
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
@@ -49,6 +56,7 @@ export function AppRouter() {
         <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
         <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
         <Route path={ROUTES.organizerEventPromo} element={<OrganizerEventPromoPage />} />
+        <Route path={ROUTES.organizerEventAttendees} element={<OrganizerEventAttendeesPage />} />
         <Route path={ROUTES.organizerEventAnalytics} element={<OrganizerEventAnalyticsPage />} />
       </Route>
       <Route element={<ProtectedRoute role="platform_admin" />}>

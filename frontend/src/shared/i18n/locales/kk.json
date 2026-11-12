@@ -12,6 +12,11 @@
   },
   "home": {
     "tagline": "Іс-шараларға билет сату платформасы",
+    "browseEvents": "Іс-шаралар",
+    "myOrders": "Менің тапсырыстарым",
+    "myTickets": "Менің билеттерім",
+    "admin": "Әкімші панелі",
+    "viewAll": "Барлығын көру",
     "verifyEmail": "Іс-шараларды жасау және жариялау үшін поштаңызды растаңыз.",
     "resendVerification": "Хатты қайта жіберу",
     "verificationSent": "Хат жіберілді.",
@@ -121,7 +126,8 @@
     "viewPage": "Іс-шара беті",
     "details": "Іс-шара туралы",
     "ticketTypes": "Билет түрлері",
-    "orders": "Тапсырыстар"
+    "orders": "Тапсырыстар",
+    "attendees": "Қатысушылар"
   },
   "organizerOrders": {
     "created": "Құрылған",
@@ -172,7 +178,7 @@
     "add": "Билет түрін қосу",
     "show": "Көрсету",
     "hide": "Жасыру",
-    "stats": "Қолжетімді: {{available}} · броньда: {{reserved}} · сатылды: {{sold}} / {{quantity}}"
+    "stats": "Қолжетімді: {{available}} · броньда: {{reserved}} · сатылды: {{sold}} · қайтарылды: {{refunded}} · белгіленген: {{checkedIn}} / {{quantity}}"
   },
   "createVenue": {
     "name": "Алаңның атауы",
@@ -380,6 +386,26 @@
       "download": "CSV жүктеу"
     }
   },
+  "eventAttendees": {
+    "title": "Қатысушылар — {{title}}",
+    "summary": "Тіркелген: {{total}} · белгіленген: {{checkedIn}}",
+    "filterType": "Билет түрі",
+    "filterStatus": "Күйі",
+    "allTypes": "Барлық билет түрлері",
+    "allStatuses": "Барлық күйлер",
+    "attendee": "Қатысушы",
+    "ticketType": "Билет түрі",
+    "status": "Күйі",
+    "checkedInAt": "Белгіленген",
+    "registeredAt": "Тіркелген",
+    "empty": "Тіркеулер әлі жоқ.",
+    "statuses": {
+      "valid": "Жарамды",
+      "checked_in": "Белгіленген",
+      "cancelled": "Бас тартылған",
+      "refunded": "Қайтарылған"
+    }
+  },
   "paidSales": {
     "title": "Ақылы билет сату",
     "description": "Бұл іс-шараға ақылы билет сату үшін бір реттік белсендіру қажет. Тегін билеттер онсыз да жұмыс істейді.",
@@ -403,6 +429,66 @@
       "pending": "Белсендірілмеген",
       "active": "Белсенді",
       "suspended": "Тоқтатылған"
+    }
+  },
+  "support": {
+    "title": "Қолдау",
+    "description": "BiletFlow командасына жіберген өтініштеріңіз және жауаптары.",
+    "newRequest": "Жаңа өтініш",
+    "empty": "Әзірге өтініш жоқ.",
+    "openFromPage": "Өтінішті іс-шара, тапсырыс немесе билет бетінен де ашуға болады.",
+    "contact": "Қолдауға жазу",
+    "backToCases": "Қолдауға оралу",
+    "viewEvent": "Іс-шараны ашу",
+    "caseUpdated": "Жаңартылды: {{date}}",
+    "form": {
+      "pageTitle": "Жаңа өтініш",
+      "pageDescription": "Мәселені сипаттаңыз, біз осы хатта жауап береміз.",
+      "title": "Қолдауға өтініш",
+      "platformDescription": "Өтініш BiletFlow платформасының қолдау қызметіне түседі.",
+      "organizerDescription": "Өтініш іс-шара ұйымдастырушысына түседі.",
+      "event": "Іс-шара",
+      "category": "Өтініш тақырыбы",
+      "subject": "Тақырып",
+      "message": "Хабарлама",
+      "submit": "Өтінішті жіберу",
+      "submitting": "Жіберілуде...",
+      "contextRequiredTitle": "Қайдан бастау керектігін таңдаңыз",
+      "contextRequired": "Қажетті мәліметтерді алу үшін өтінішті іс-шара, тапсырыс немесе билет бетінен ашыңыз."
+    },
+    "categories": {
+      "ticket_delivery": "Билетті жеткізу",
+      "payment": "Төлем",
+      "refund": "Қайтару",
+      "seating": "Орындар",
+      "event_information": "Іс-шара ақпараты",
+      "check_in": "Іс-шараға кіру",
+      "account": "Аккаунт",
+      "activation": "Белсендіру",
+      "technical": "Техникалық мәселе"
+    },
+    "statuses": {
+      "open": "Ашық",
+      "in_progress": "Жұмыста",
+      "waiting_for_customer": "Клиент жауабын күтуде",
+      "resolved": "Шешілді"
+    },
+    "thread": {
+      "title": "Хат алмасу",
+      "empty": "Әзірге хабарлама жоқ.",
+      "you": "Сіз",
+      "participant": "Қатысушы",
+      "replyPlaceholder": "Жауап жазыңыз...",
+      "send": "Жауап жіберу",
+      "sending": "Жіберілуде..."
+    },
+    "manage": {
+      "title": "Өтінішті басқару",
+      "status": "Мәртебе",
+      "assignedToYou": "Сізге тағайындалды",
+      "unassigned": "Орындаушы тағайындалмаған",
+      "assignedToStaff": "Қолдау қызметкеріне тағайындалды",
+      "assignToMe": "Маған тағайындау"
     }
   }
 }

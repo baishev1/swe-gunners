@@ -49,9 +49,10 @@ def get_order_detail(order: Order = Depends(accessible_order_guard)):
 @router.post("/cancel", response_model=OrderResponse)
 def cancel_order(
     order: Order = Depends(cancellable_order_guard),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return order_service.cancel_order(db=db, order=order)
+    return order_service.cancel_order(db=db, order=order, actor_id=user.id)
 
 
 @router.post("/refund", response_model=OrderResponse)

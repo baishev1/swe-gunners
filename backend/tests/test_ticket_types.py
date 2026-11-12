@@ -27,7 +27,9 @@ def create_event(client: TestClient, headers: dict[str, str], capacity: int = 10
         },
         headers=headers,
     )
-    return res.json()["id"]
+    event_id = res.json()["id"]
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=headers)
+    return event_id
 
 
 def test_create_ticket_type(client: TestClient, organizer_headers: dict[str, str]) -> None:
@@ -137,7 +139,13 @@ def test_hidden_ticket_types_not_listed(
     public = client.get(f"/api/v1/ticket-types?event_id={event_id}")
     assert [t["name"] for t in public.json()] == ["Standard"]
 
-    everything = client.get(f"/api/v1/ticket-types?event_id={event_id}&include_hidden=true")
+    anonymous_all = client.get(f"/api/v1/ticket-types?event_id={event_id}&include_hidden=true")
+    assert [t["name"] for t in anonymous_all.json()] == ["Standard"]
+
+    everything = client.get(
+        f"/api/v1/ticket-types?event_id={event_id}&include_hidden=true",
+        headers=organizer_headers,
+    )
     assert len(everything.json()) == 2
 
 

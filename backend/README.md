@@ -280,4 +280,28 @@ messages are logged instead, which is what tests use.
 admins set the rate with `PATCH /admin/settings` (`processing_fee_percent`, default 3%,
 between 0 and 100). The fee applies after discounts and refunds.
 
-Still open: reservations do not expire.
+Cancelling a paid order marks its `valid` tickets `cancelled`, returns the seats
+to sold stock, and records `order_cancelled` in the audit log.
+
+## Event visibility and attendees
+
+`GET /events/detail` and `GET /ticket-types` apply the SRS 4.2 visibility rules:
+organizers and platform admins see every event (that is the pre-publication
+preview); everyone else sees only `published`/`cancelled` events that are `public`
+or `unlisted`. `private` events and `draft`/`unpublished`/`suspended` events return
+404 to non-managers. `unlisted` events are reachable by link but absent from
+`GET /events`. `include_hidden=true` on `GET /ticket-types` only works for the
+event manager.
+
+Orders are also rejected outside the event's `registration_start_time` /
+`registration_end_time` window.
+
+`GET /tickets/event-attendees?event_id=...` lists every issued ticket of an event
+(attendee name/email, ticket type, ticket and order status, check-in time) for the
+event owner and platform admins — the organizer attendee list from SRS 4.4.
+
+`TicketTypeResponse` reports `available`, `reserved_count`, `sold_count`,
+`refunded_count` (refunded plus cancelled tickets), and `checked_in_count` per
+SRS 4.3.
+
+Reservations do not expire yet.

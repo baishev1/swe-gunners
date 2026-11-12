@@ -242,9 +242,20 @@ def test_suspending_the_event_stops_sales(
     admin_headers: dict[str, str],
     attendee_headers: dict[str, str],
 ) -> None:
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={paid_event_id}").json()[0]["id"]
     client.post(f"/api/v1/admin/events/suspend?event_id={paid_event_id}", headers=admin_headers)
 
-    assert place_order(client, attendee_headers, paid_event_id).status_code == 400
+    res = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": paid_event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 1}],
+        },
+    )
+    assert res.status_code == 400
 
 
 def test_only_platform_admins_manage_paid_sales(
