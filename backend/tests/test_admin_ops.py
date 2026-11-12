@@ -10,27 +10,33 @@ from features.orders.models import Order
 
 
 def place_order(
-    client: TestClient, event_id: str, email: str, name: str = "Aigerim", fail: bool = False
+    client: TestClient,
+    headers: dict[str, str],
+    event_id: str,
+    email: str,
+    name: str = "Aigerim",
+    fail: bool = False,
 ) -> str:
+    """Places a two-ticket order on the event's first ticket type, then pays for it."""
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={event_id}").json()[0]["id"]
     order = client.post(
         "/api/v1/orders",
+        headers=headers,
         json={
             "event_id": event_id,
             "customer_name": name,
             "customer_email": email,
-            "items": [
-                {
-                    "ticket_type_id": "00000000-0000-0000-0000-000000000001",
-                    "ticket_type_name": "Standard",
-                    "unit_price_kzt": 250000,
-                    "quantity": 2,
-                }
-            ],
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 2}],
         },
     )
     assert order.status_code == 201, order.json()
     order_id = order.json()["id"]
-    client.post("/api/v1/payments/simulate", json={"order_id": order_id, "simulate_failure": fail})
+    payment = client.post(
+        "/api/v1/payments/simulate",
+        headers=headers,
+        json={"order_id": order_id, "simulate_failure": fail},
+    )
+    assert payment.status_code == 200, payment.json()
     return order_id
 
 
@@ -43,10 +49,15 @@ def test_ops_routes_need_platform_admin(
 
 
 def test_search_orders_and_payments(
-    client: TestClient, admin_headers: dict[str, str], paid_event_id: str
+    client: TestClient,
+    admin_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
 ) -> None:
-    paid = place_order(client, paid_event_id, "dana@example.kz", name="Dana")
-    place_order(client, paid_event_id, "erlan@example.kz", name="Erlan", fail=True)
+    paid = place_order(client, attendee_headers, paid_event_id, "dana@example.kz", name="Dana")
+    place_order(
+        client, attendee_headers, paid_event_id, "erlan@example.kz", name="Erlan", fail=True
+    )
 
     by_email = client.get("/api/v1/admin/orders", params={"q": "dana@"}, headers=admin_headers)
     assert by_email.status_code == 200
@@ -86,10 +97,13 @@ def test_search_orders_and_payments(
 
 
 def test_monitoring_counts_failures_and_refunds(
-    client: TestClient, admin_headers: dict[str, str], paid_event_id: str
+    client: TestClient,
+    admin_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
 ) -> None:
-    refunded = place_order(client, paid_event_id, "refund@example.kz")
-    place_order(client, paid_event_id, "failed@example.kz", fail=True)
+    refunded = place_order(client, attendee_headers, paid_event_id, "refund@example.kz")
+    place_order(client, attendee_headers, paid_event_id, "failed@example.kz", fail=True)
     with core.Session(core.engine) as db:
         order = db.get(Order, UUID(refunded))
         assert order is not None
@@ -101,16 +115,19 @@ def test_monitoring_counts_failures_and_refunds(
     data = res.json()
     assert data["failed_payments"] == 1
     assert data["refunded_orders"] == 1
-    assert data["refunded_amount_kzt"] == 500000
+    assert data["refunded_amount_kzt"] == 1000000
     assert data["pending_orders"] == 1
     assert [p["customer_email"] for p in data["recent_failed_payments"]] == ["failed@example.kz"]
     assert [o["id"] for o in data["recent_refunds"]] == [refunded]
 
 
 def test_export_reports(
-    client: TestClient, admin_headers: dict[str, str], paid_event_id: str
+    client: TestClient,
+    admin_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
 ) -> None:
-    place_order(client, paid_event_id, "csv@example.kz", name="=HYPERLINK(1)")
+    place_order(client, attendee_headers, paid_event_id, "csv@example.kz", name="=HYPERLINK(1)")
 
     res = client.get(
         "/api/v1/admin/reports/export", params={"report": "orders"}, headers=admin_headers
