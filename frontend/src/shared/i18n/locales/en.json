@@ -12,6 +12,11 @@
   },
   "home": {
     "tagline": "Event ticketing platform",
+    "browseEvents": "Browse events",
+    "myOrders": "My orders",
+    "myTickets": "My tickets",
+    "admin": "Admin panel",
+    "viewAll": "View all",
     "verifyEmail": "Confirm your email to create and publish events.",
     "resendVerification": "Resend email",
     "verificationSent": "Verification email sent.",
