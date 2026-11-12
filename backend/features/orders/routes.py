@@ -12,7 +12,7 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def create_order(
-    data: OrderCreate,
+    data: OrderCreate = Depends(paid_sales_open_order_guard),
     db: Session = Depends(get_db),
 ):
     return order_service.create_order(db=db, data=data)

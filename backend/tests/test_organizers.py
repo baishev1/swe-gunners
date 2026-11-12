@@ -30,6 +30,8 @@ def test_organizer_registration_creates_empty_profile(client: TestClient) -> Non
         "payout_recipient_name": None,
         "payout_iban": None,
         "payout_bin": None,
+        "identity_verified_at": None,
+        "has_payout_account": False,
     }
 
 

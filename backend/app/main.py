@@ -11,6 +11,7 @@ from features import (
     events,
     orders,
     organizers,
+    paid_sales,
     payments,
     promo,
     support,
@@ -60,3 +61,5 @@ app.include_router(admin.routes.router, prefix="/api/v1")
 app.include_router(orders.routes.router, prefix="/api/v1")
 app.include_router(tickets.routes.router, prefix="/api/v1")
 app.include_router(payments.routes.router, prefix="/api/v1")
+app.include_router(paid_sales.routes.router, prefix="/api/v1")
+app.include_router(paid_sales.routes.admin_router, prefix="/api/v1")
