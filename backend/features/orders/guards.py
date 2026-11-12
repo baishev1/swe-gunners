@@ -42,12 +42,25 @@ def accessible_order_guard(
     return order
 
 
-def cancellable_order_guard(order: Order = Depends(accessible_order_guard)) -> Order:
+def cancellable_order_guard(
+    order: Order = Depends(accessible_order_guard),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Order:
     if order.status not in ("pending", "paid"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot cancel an order with status '{order.status}'",
         )
+    if order.status == "paid":
+        # Paid cancellations refund tickets back to inventory (SRS 4.9), so only
+        # the organizer or a platform admin may run them — never the buyer.
+        event = db.get(Event, order.event_id)
+        if user.role != "platform_admin" and (event is None or event.organizer_id != user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the organizer can cancel a paid order",
+            )
     return order
 
 

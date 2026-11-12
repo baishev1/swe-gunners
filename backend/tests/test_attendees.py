@@ -93,7 +93,10 @@ def test_paid_order_cancel_restock_and_cancels_tickets(
     assert stats()["sold_count"] == 2
     assert stats()["available"] == 98
 
-    cancel = client.post(f"/api/v1/orders/cancel?order_id={order['id']}", headers=attendee_headers)
+    denied = client.post(f"/api/v1/orders/cancel?order_id={order['id']}", headers=attendee_headers)
+    assert denied.status_code == 403
+
+    cancel = client.post(f"/api/v1/orders/cancel?order_id={order['id']}", headers=organizer_headers)
     assert cancel.status_code == 200
 
     data = stats()

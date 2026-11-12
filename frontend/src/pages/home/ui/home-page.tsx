@@ -30,9 +30,14 @@ export function HomePage() {
         </div>
       )}
       {me?.role === 'organizer' && (
-        <Link to={ROUTES.organizerProfile} className="text-sm underline">
-          {t('home.organizerProfile')}
-        </Link>
+        <>
+          <Link to={ROUTES.organizerDashboard} className="text-sm underline">
+            {t('home.organizerDashboard')}
+          </Link>
+          <Link to={ROUTES.organizerProfile} className="text-sm underline">
+            {t('home.organizerProfile')}
+          </Link>
+        </>
       )}
       <Button variant="outline" onClick={logout}>
         {t('home.signOut')}

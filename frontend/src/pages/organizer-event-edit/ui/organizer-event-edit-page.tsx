@@ -53,6 +53,11 @@ export function OrganizerEventEditPage() {
             {t('organizerEventEdit.attendees')}
           </Link>
         </Button>
+        <Button variant="outline" asChild className="self-start">
+          <Link to={`${ROUTES.organizerEventAnalytics}?event_id=${event.data.id}`}>
+            {t('analytics.open')}
+          </Link>
+        </Button>
       </div>
       <Card>
         <CardHeader>

@@ -9,7 +9,28 @@ import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Skeleton } from '@/shared/ui/skeleton'
 
-const ACTIONS = ['promo_created', 'promo_disabled', 'event_suspended'] as const
+const ACTIONS = [
+  'event_published',
+  'event_unpublished',
+  'event_cancelled',
+  'event_suspended',
+  'event_duplicated',
+  'event_created',
+  'event_capacity_changed',
+  'ticket_type_created',
+  'ticket_price_changed',
+  'ticket_capacity_changed',
+  'promo_created',
+  'promo_disabled',
+  'ticket_checked_in',
+  'ticket_check_in_reversed',
+  'activation_fee_paid',
+  'activation_fee_failed',
+  'paid_terms_accepted',
+  'paid_sales_activated',
+  'paid_sales_suspended',
+  'paid_sales_reinstated',
+] as const
 
 export function EventTimeline({ eventId }: { eventId: string }) {
   const { t } = useTranslation()

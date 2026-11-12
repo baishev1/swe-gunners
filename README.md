@@ -60,6 +60,17 @@ make seed          # demo users and event, dev only
 make up            # full stack in Docker
 ```
 
+For the full stack in Docker, migrate and seed inside the backend container:
+
+```bash
+make up
+docker compose exec backend alembic upgrade head
+docker compose exec backend python -m scripts.seed
+```
+
+After `uv.lock` changes, rebuild with `docker compose up -d --build -V` so the
+backend container gets a fresh virtualenv.
+
 Demo accounts created by `make seed`, all with password `password123`:
 `attendee@biletflow.dev`, `organizer@biletflow.dev`, `eventadmin@biletflow.dev`
 and `admin@biletflow.dev`.
