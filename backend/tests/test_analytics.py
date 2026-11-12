@@ -23,40 +23,40 @@ def ticket_type_id(client: TestClient, event_id: str, headers: dict[str, str]) -
 
 def buy(
     client: TestClient,
+    headers: dict[str, str],
     event_id: str,
     type_id: str,
     quantity: int,
-    price: int = 500000,
     pay: bool = True,
 ) -> str:
+    """Buys as a signed-in attendee; the server prices the order from the ticket type."""
     order = client.post(
         "/api/v1/orders",
+        headers=headers,
         json={
             "event_id": event_id,
             "customer_name": "Aigerim",
             "customer_email": "aigerim@example.kz",
-            "items": [
-                {
-                    "ticket_type_id": type_id,
-                    "ticket_type_name": "Standard",
-                    "unit_price_kzt": price,
-                    "quantity": quantity,
-                }
-            ],
+            "items": [{"ticket_type_id": type_id, "quantity": quantity}],
         },
     )
     assert order.status_code == 201, order.json()
     order_id = order.json()["id"]
     if pay:
         payment = client.post(
-            "/api/v1/payments/simulate", json={"order_id": order_id, "simulate_failure": False}
+            "/api/v1/payments/simulate",
+            headers=headers,
+            json={"order_id": order_id, "simulate_failure": False},
         )
-        assert payment.json()["status"] == "succeeded"
+        assert payment.json()["status"] == "succeeded", payment.json()
     return order_id
 
 
 def test_analytics_totals(
-    client: TestClient, organizer_headers: dict[str, str], paid_event_id: str
+    client: TestClient,
+    organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
 ) -> None:
     type_id = ticket_type_id(client, paid_event_id, organizer_headers)
     campaign = client.post(
@@ -65,9 +65,9 @@ def test_analytics_totals(
         headers=organizer_headers,
     ).json()
 
-    promo_order = buy(client, paid_event_id, type_id, 2)
-    refunded_order = buy(client, paid_event_id, type_id, 1)
-    buy(client, paid_event_id, type_id, 5, pay=False)  # pending, never counted
+    promo_order = buy(client, attendee_headers, paid_event_id, type_id, 2)
+    refunded_order = buy(client, attendee_headers, paid_event_id, type_id, 1)
+    buy(client, attendee_headers, paid_event_id, type_id, 5, pay=False)  # pending, never counted
 
     with core.Session(core.engine) as db:
         db.add(
@@ -124,10 +124,13 @@ def test_analytics_totals(
 
 
 def test_analytics_filters(
-    client: TestClient, organizer_headers: dict[str, str], paid_event_id: str
+    client: TestClient,
+    organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
 ) -> None:
     type_id = ticket_type_id(client, paid_event_id, organizer_headers)
-    buy(client, paid_event_id, type_id, 3)
+    buy(client, attendee_headers, paid_event_id, type_id, 3)
 
     future = (datetime.now(UTC) + timedelta(days=1)).isoformat()
     later = client.get(
