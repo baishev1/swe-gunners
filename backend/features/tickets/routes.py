@@ -16,13 +16,14 @@ router = APIRouter(prefix="/tickets", tags=["Tickets"])
 def list_tickets(
     order_id: UUID | None = None,
     event_id: UUID | None = None,
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    return ticket_service.list_tickets(db=db, order_id=order_id, event_id=event_id)
+    return ticket_service.list_tickets(db=db, user_id=user.id, order_id=order_id, event_id=event_id)
 
 
 @router.get("/detail", response_model=TicketResponse)
-def get_ticket_detail(ticket: Ticket = Depends(valid_ticket_id)):
+def get_ticket_detail(ticket: Ticket = Depends(accessible_ticket_guard)):
     return ticket
 
 
@@ -57,7 +58,7 @@ def undo_check_in(
 
 @router.get("/pdf")
 def download_ticket_pdf(
-    ticket: Ticket = Depends(valid_ticket_id),
+    ticket: Ticket = Depends(accessible_ticket_guard),
     db: Session = Depends(get_db),
 ):
     pdf_bytes = ticket_service.generate_pdf_ticket(db=db, ticket=ticket)

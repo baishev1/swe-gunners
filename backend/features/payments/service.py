@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from core import *
 from features.orders.models import Order
+from features.orders.service import order_service
 from features.tickets.service import ticket_service
 
 from .models import *
@@ -40,7 +41,7 @@ class PaymentService:
             transaction_id=tx_id,
         )
         db.add(payment)
-        order.status = "paid"
+        order_service.confirm_sale(db, order)
         db.commit()
         db.refresh(payment)
 
