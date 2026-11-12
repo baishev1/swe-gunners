@@ -4,13 +4,16 @@ import { AdminPage } from '@/pages/admin'
 import { ForgotPasswordPage } from '@/pages/forgot-password'
 import { EventDetailPage } from '@/pages/event-detail'
 import { EventHistoryPage } from '@/pages/event-history'
+import { CheckoutPage } from '@/pages/checkout'
 import { EventsListPage } from '@/pages/events-list'
 import { HomePage } from '@/pages/home'
 import { LoginPage } from '@/pages/login'
 import { NotFoundPage } from '@/pages/not-found'
+import { OrdersPage } from '@/pages/orders'
 import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
+import { TicketsPage } from '@/pages/tickets'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
 import { OrganizerEventNewPage } from '@/pages/organizer-event-new'
@@ -34,6 +37,9 @@ export function AppRouter() {
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
       </Route>
+      <Route path={ROUTES.checkout} element={<CheckoutPage />} />
+      <Route path={ROUTES.orders} element={<OrdersPage />} />
+      <Route path={ROUTES.tickets} element={<TicketsPage />} />
       <Route path={ROUTES.events} element={<EventsListPage />} />
       <Route path={ROUTES.eventDetail} element={<EventDetailPage />} />
       <Route element={<ProtectedRoute role="organizer" />}>

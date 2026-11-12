@@ -1,3 +1,6 @@
 export { apiClient } from './client'
 export { getErrorMessage } from './errors'
+export * from './orders'
+export * from './payments'
+export * from './tickets'
 export { clearToken, getToken, setToken } from './token'
