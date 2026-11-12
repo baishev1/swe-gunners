@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { useEvent } from '@/entities/event'
 import { useTicketTypes } from '@/entities/ticket-type'
+import { ContactSupportLink } from '@/features/contact-support'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { formatDateTime, formatPrice } from '@/shared/lib/format'
@@ -87,9 +88,14 @@ export function EventDetailPage() {
           </Card>
         ))}
       </div>
-      <Button variant="outline" asChild>
-        <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>{t('eventDetail.edit')}</Link>
-      </Button>
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" asChild>
+          <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>
+            {t('eventDetail.edit')}
+          </Link>
+        </Button>
+        <ContactSupportLink eventId={data.id} category="event_information" />
+      </div>
     </main>
   )
 }

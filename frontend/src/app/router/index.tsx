@@ -13,6 +13,9 @@ import { OrdersPage } from '@/pages/orders'
 import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
+import { SupportCasePage } from '@/pages/support-case'
+import { SupportNewPage } from '@/pages/support-new'
+import { SupportPage } from '@/pages/support'
 import { TicketsPage } from '@/pages/tickets'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
@@ -33,6 +36,9 @@ export function AppRouter() {
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.home} element={<HomePage />} />
         <Route path={ROUTES.eventHistory} element={<EventHistoryPage />} />
+        <Route path={ROUTES.support} element={<SupportPage />} />
+        <Route path={ROUTES.supportNew} element={<SupportNewPage />} />
+        <Route path={ROUTES.supportCase} element={<SupportCasePage />} />
       </Route>
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />

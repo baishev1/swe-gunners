@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { listOrders } from '@/shared/api'
 import { Button } from '@/shared/ui'
 import { OrderCard } from '@/entities/order'
+import { ContactSupportLink } from '@/features/contact-support'
 
 export function OrdersPage() {
   const {
@@ -51,7 +52,12 @@ export function OrdersPage() {
 
       <div className="space-y-4">
         {orders.map((order) => (
-          <OrderCard key={order.id} order={order} />
+          <div key={order.id} className="flex flex-col gap-2">
+            <OrderCard order={order} />
+            <div className="flex justify-end">
+              <ContactSupportLink eventId={order.event_id} category="payment" />
+            </div>
+          </div>
         ))}
       </div>
     </div>

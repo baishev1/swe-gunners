@@ -16,4 +16,7 @@ export const ROUTES = {
   checkout: '/checkout',
   orders: '/orders',
   tickets: '/tickets',
+  support: '/support',
+  supportNew: '/support/new',
+  supportCase: '/support/case',
 } as const

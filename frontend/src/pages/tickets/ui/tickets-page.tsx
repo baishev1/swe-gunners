@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { listTickets } from '@/shared/api'
 import { Button } from '@/shared/ui'
 import { TicketCard } from '@/entities/ticket'
+import { ContactSupportLink } from '@/features/contact-support'
 
 export function TicketsPage() {
   const [searchParams] = useSearchParams()
@@ -55,7 +56,12 @@ export function TicketsPage() {
 
       <div className="grid gap-6">
         {tickets.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} />
+          <div key={ticket.id} className="flex flex-col gap-2">
+            <TicketCard ticket={ticket} />
+            <div className="flex justify-end">
+              <ContactSupportLink eventId={ticket.event_id} category="ticket_delivery" />
+            </div>
+          </div>
         ))}
       </div>
     </div>
