@@ -10,6 +10,7 @@ import { HomePage } from '@/pages/home'
 import { LoginPage } from '@/pages/login'
 import { NotFoundPage } from '@/pages/not-found'
 import { OrdersPage } from '@/pages/orders'
+import { OrganizerDashboardPage } from '@/pages/organizer-dashboard'
 import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
@@ -36,6 +37,7 @@ export function AppRouter() {
       </Route>
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
+        <Route path={ROUTES.organizerDashboard} element={<OrganizerDashboardPage />} />
       </Route>
       <Route path={ROUTES.checkout} element={<CheckoutPage />} />
       <Route path={ROUTES.orders} element={<OrdersPage />} />

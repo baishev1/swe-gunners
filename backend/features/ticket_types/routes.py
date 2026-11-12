@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, status
 
 from core import *
+from features.auth.guards import require_role
+from features.users.models import User
 
 from .guards import *
 from .models import *
@@ -14,9 +16,10 @@ router = APIRouter(prefix="/ticket-types", tags=["Ticket Types"])
 def create_ticket_type(
     data: TicketTypeCreate = Depends(valid_ticket_type_create),
     event: Event = Depends(owned_event_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return ticket_type_service.create_ticket_type(db=db, event=event, data=data)
+    return ticket_type_service.create_ticket_type(db=db, event=event, data=data, actor_id=user.id)
 
 
 @router.get("", response_model=list[TicketTypeResponse])
@@ -39,6 +42,9 @@ def get_ticket_type_detail(ticket_type: TicketType = Depends(valid_ticket_type_i
 def update_ticket_type(
     data: TicketTypeUpdate = Depends(valid_ticket_type_update),
     ticket_type: TicketType = Depends(owned_ticket_type_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return ticket_type_service.update_ticket_type(db=db, ticket_type=ticket_type, data=data)
+    return ticket_type_service.update_ticket_type(
+        db=db, ticket_type=ticket_type, data=data, actor_id=user.id
+    )
