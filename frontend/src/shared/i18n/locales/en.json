@@ -238,6 +238,46 @@
       "reason": "Reason",
       "suspend": "Suspend sales",
       "reinstate": "Reinstate"
+    },
+    "ops": {
+      "orders": "Orders",
+      "payments": "Payments",
+      "monitoring": "Monitoring",
+      "reportsTab": "Reports",
+      "searchOrders": "Email, name, event or order ID",
+      "searchPayments": "Transaction, email or payment ID",
+      "created": "Created",
+      "customer": "Customer",
+      "amount": "Amount",
+      "transaction": "Transaction",
+      "orderStatuses": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
+      },
+      "paymentStatuses": {
+        "succeeded": "Succeeded",
+        "failed": "Failed"
+      },
+      "failedPayments": "Failed payments",
+      "refundedOrders": "Refunded orders",
+      "refundedAmount": "Refunded amount",
+      "cancelledOrders": "Cancelled orders",
+      "pendingOrders": "Awaiting payment",
+      "recentFailedPayments": "Recent failed payments",
+      "recentRefunds": "Recent refunds",
+      "reportsDescription": "Download a CSV of platform records. Leave the dates empty to export everything.",
+      "report": "Report",
+      "reports": {
+        "orders": "Orders",
+        "payments": "Payments",
+        "events": "Events",
+        "users": "Users"
+      },
+      "from": "From",
+      "to": "To",
+      "download": "Download CSV"
     }
   },
   "paidSales": {
