@@ -48,7 +48,7 @@ export function TicketsPage() {
         <div className="text-center py-12 rounded-xl border border-dashed border-border p-8">
           <p className="text-muted-foreground text-sm">No tickets found.</p>
           <Button asChild className="mt-4" size="sm">
-            <Link to="/checkout">Buy Tickets</Link>
+            <Link to="/events">Buy Tickets</Link>
           </Button>
         </div>
       )}

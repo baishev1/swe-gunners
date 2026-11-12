@@ -12,8 +12,9 @@ class OrderItemBase(BaseModel):
     quantity: int = Field(ge=1)
 
 
-class OrderItemCreate(OrderItemBase):
-    pass
+class OrderItemCreate(BaseModel):
+    ticket_type_id: UUID
+    quantity: int = Field(ge=1)
 
 
 class OrderItemResponse(OrderItemBase):
@@ -29,7 +30,6 @@ class OrderBase(BaseModel):
     event_id: UUID
     customer_name: str
     customer_email: str
-    user_id: UUID | None = None
 
 
 class OrderCreate(OrderBase):
@@ -40,6 +40,7 @@ class OrderResponse(OrderBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
+    user_id: UUID | None
     total_amount_kzt: int
     status: str
     created_at: datetime

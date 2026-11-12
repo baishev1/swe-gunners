@@ -87,6 +87,12 @@ export function EventDetailPage() {
           </Card>
         ))}
       </div>
+      {data.status === 'published' &&
+        ticketTypes.data?.some((ticketType) => ticketType.available > 0) && (
+          <Button asChild>
+            <Link to={`${ROUTES.checkout}?event_id=${data.id}`}>{t('eventDetail.getTickets')}</Link>
+          </Button>
+        )}
       <Button variant="outline" asChild>
         <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>{t('eventDetail.edit')}</Link>
       </Button>
