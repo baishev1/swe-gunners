@@ -11,6 +11,7 @@ export const ROUTES = {
   organizerEventNew: '/organizer/events/new',
   organizerEventEdit: '/organizer/events/edit',
   organizerEventPromo: '/organizer/events/promo',
+  organizerEventAnalytics: '/organizer/events/analytics',
   eventHistory: '/events/history',
   admin: '/admin',
   checkout: '/checkout',

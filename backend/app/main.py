@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from core import settings
 from features import (
     admin,
+    analytics,
     audit_log,
     auth,
     checkin,
@@ -63,3 +64,4 @@ app.include_router(tickets.routes.router, prefix="/api/v1")
 app.include_router(payments.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.admin_router, prefix="/api/v1")
+app.include_router(analytics.routes.router, prefix="/api/v1")
