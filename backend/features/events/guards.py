@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status
 
 from core import *
 from features.auth.guards import require_role
+from features.users.dependencies import optional_user
 from features.users.models import User
 from features.venues.models import Venue
 
@@ -45,6 +46,32 @@ def owned_event_id_guard(
     user: User = Depends(require_role("organizer")),
 ) -> Event:
     if event.organizer_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found",
+        )
+    return event
+
+
+def is_event_manager(event: Event, user: User | None) -> bool:
+    return user is not None and (user.id == event.organizer_id or user.role == "platform_admin")
+
+
+def can_view_event(event: Event, user: User | None) -> bool:
+    if is_event_manager(event, user):
+        return True
+    if event.status in ("draft", "unpublished", "suspended"):
+        return False
+    return event.visibility != "private"
+
+
+def viewable_event_guard(
+    event_id: UUID,
+    user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
+) -> Event:
+    event = db.get(Event, event_id)
+    if event is None or not can_view_event(event, user):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found",

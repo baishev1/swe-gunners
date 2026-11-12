@@ -17,6 +17,7 @@ import { TicketsPage } from '@/pages/tickets'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
 import { OrganizerEventNewPage } from '@/pages/organizer-event-new'
+import { OrganizerEventAttendeesPage } from '@/pages/organizer-event-attendees'
 import { OrganizerEventPromoPage } from '@/pages/organizer-event-promo'
 import { ROUTES } from '@/shared/config'
 
@@ -46,6 +47,7 @@ export function AppRouter() {
         <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
         <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
         <Route path={ROUTES.organizerEventPromo} element={<OrganizerEventPromoPage />} />
+        <Route path={ROUTES.organizerEventAttendees} element={<OrganizerEventAttendeesPage />} />
       </Route>
       <Route element={<ProtectedRoute role="platform_admin" />}>
         <Route path={ROUTES.admin} element={<AdminPage />} />

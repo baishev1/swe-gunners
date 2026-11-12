@@ -61,6 +61,18 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
             detail="Event is not open for registration",
         )
 
+    now = time_now()
+    if event.registration_start_time and now < event.registration_start_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration has not opened yet",
+        )
+    if event.registration_end_time and now > event.registration_end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration is closed",
+        )
+
     ticket_type_ids = [item.ticket_type_id for item in data.items]
     if len(set(ticket_type_ids)) != len(ticket_type_ids):
         raise HTTPException(
@@ -78,7 +90,6 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
         )
     }
 
-    now = time_now()
     for item in data.items:
         ticket_type = ticket_types.get(item.ticket_type_id)
         if ticket_type is None:

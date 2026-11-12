@@ -75,6 +75,36 @@ class TicketTypeService:
         )
         return self._update_one(db, stmt)
 
+    def release_sale(self, db: Session, ticket_type_id: UUID, quantity: int) -> bool:
+        stmt = (
+            update(TicketType)
+            .where(TicketType.id == ticket_type_id, TicketType.sold_count >= quantity)
+            .values(sold_count=TicketType.sold_count - quantity)
+        )
+        return self._update_one(db, stmt)
+
+    # refunded_count folds cancelled registrations in: both return the seat to inventory.
+    def attach_ticket_stats(self, db: Session, ticket_types: list[TicketType]) -> list[TicketType]:
+        # Imported lazily: features.tickets pulls in orders, which imports this module.
+        from features.tickets.models import Ticket
+
+        if not ticket_types:
+            return ticket_types
+        rows = db.execute(
+            select(Ticket.ticket_type_id, Ticket.status, func.count())
+            .where(Ticket.ticket_type_id.in_([t.id for t in ticket_types]))
+            .group_by(Ticket.ticket_type_id, Ticket.status)
+        ).all()
+        stats: dict[UUID, dict[str, int]] = {}
+        for ticket_type_id, ticket_status, count in rows:
+            stats.setdefault(ticket_type_id, {})[ticket_status] = count
+        for ticket_type in ticket_types:
+            counts = stats.get(ticket_type.id, {})
+            refunded = counts.get("refunded", 0) + counts.get("cancelled", 0)
+            setattr(ticket_type, "refunded_count", refunded)  # noqa: B010
+            setattr(ticket_type, "checked_in_count", counts.get("checked_in", 0))  # noqa: B010
+        return ticket_types
+
     def _update_one(self, db: Session, stmt: Update) -> bool:
         result = cast(CursorResult[Any], db.execute(stmt))
         return result.rowcount == 1

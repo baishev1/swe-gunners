@@ -29,6 +29,8 @@ export function TicketTypeManager({ eventId }: { eventId: string }) {
                 available: ticketType.available,
                 reserved: ticketType.reserved_count,
                 sold: ticketType.sold_count,
+                refunded: ticketType.refunded_count,
+                checkedIn: ticketType.checked_in_count,
                 quantity: ticketType.quantity,
               })}
             </CardDescription>

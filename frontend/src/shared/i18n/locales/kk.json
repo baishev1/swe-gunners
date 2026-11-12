@@ -98,7 +98,8 @@
   "organizerEventEdit": {
     "viewPage": "Іс-шара беті",
     "details": "Іс-шара туралы",
-    "ticketTypes": "Билет түрлері"
+    "ticketTypes": "Билет түрлері",
+    "attendees": "Қатысушылар"
   },
   "eventForm": {
     "title": "Атауы",
@@ -131,7 +132,7 @@
     "add": "Билет түрін қосу",
     "show": "Көрсету",
     "hide": "Жасыру",
-    "stats": "Қолжетімді: {{available}} · броньда: {{reserved}} · сатылды: {{sold}} / {{quantity}}"
+    "stats": "Қолжетімді: {{available}} · броньда: {{reserved}} · сатылды: {{sold}} · қайтарылды: {{refunded}} · белгіленген: {{checkedIn}} / {{quantity}}"
   },
   "createVenue": {
     "name": "Алаңның атауы",
@@ -239,6 +240,26 @@
       "reason": "Себебі",
       "suspend": "Сатуды тоқтату",
       "reinstate": "Қалпына келтіру"
+    }
+  },
+  "eventAttendees": {
+    "title": "Қатысушылар — {{title}}",
+    "summary": "Тіркелген: {{total}} · белгіленген: {{checkedIn}}",
+    "filterType": "Билет түрі",
+    "filterStatus": "Күйі",
+    "allTypes": "Барлық билет түрлері",
+    "allStatuses": "Барлық күйлер",
+    "attendee": "Қатысушы",
+    "ticketType": "Билет түрі",
+    "status": "Күйі",
+    "checkedInAt": "Белгіленген",
+    "registeredAt": "Тіркелген",
+    "empty": "Тіркеулер әлі жоқ.",
+    "statuses": {
+      "valid": "Жарамды",
+      "checked_in": "Белгіленген",
+      "cancelled": "Бас тартылған",
+      "refunded": "Қайтарылған"
     }
   },
   "paidSales": {

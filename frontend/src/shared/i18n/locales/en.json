@@ -98,7 +98,8 @@
   "organizerEventEdit": {
     "viewPage": "View event page",
     "details": "Event details",
-    "ticketTypes": "Ticket types"
+    "ticketTypes": "Ticket types",
+    "attendees": "Attendees"
   },
   "eventForm": {
     "title": "Title",
@@ -131,7 +132,7 @@
     "add": "Add ticket type",
     "show": "Show",
     "hide": "Hide",
-    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold of {{quantity}}"
+    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold · {{refunded}} refunded · {{checkedIn}} checked in of {{quantity}}"
   },
   "createVenue": {
     "name": "Venue name",
@@ -239,6 +240,26 @@
       "reason": "Reason",
       "suspend": "Suspend sales",
       "reinstate": "Reinstate"
+    }
+  },
+  "eventAttendees": {
+    "title": "Attendees — {{title}}",
+    "summary": "{{total}} registered · {{checkedIn}} checked in",
+    "filterType": "Ticket type",
+    "filterStatus": "Status",
+    "allTypes": "All ticket types",
+    "allStatuses": "All statuses",
+    "attendee": "Attendee",
+    "ticketType": "Ticket type",
+    "status": "Status",
+    "checkedInAt": "Checked in",
+    "registeredAt": "Registered",
+    "empty": "No registrations yet.",
+    "statuses": {
+      "valid": "Valid",
+      "checked_in": "Checked in",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
     }
   },
   "paidSales": {
