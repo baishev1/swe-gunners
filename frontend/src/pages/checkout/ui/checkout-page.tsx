@@ -1,15 +1,12 @@
 import { useSearchParams } from 'react-router-dom'
-import { CheckoutForm, type CheckoutTicketTypeOption } from '@/features/checkout'
-
-const DEFAULT_TICKET_TYPES: CheckoutTicketTypeOption[] = [
-  { id: '11111111-1111-7111-8111-111111111111', name: 'Standard Admission', price_kzt: 5000 },
-  { id: '22222222-2222-7222-8222-222222222222', name: 'VIP Pass', price_kzt: 15000 },
-  { id: '33333333-3333-7333-8333-333333333333', name: 'Student Free Pass', price_kzt: 0 },
-]
+import { useTicketTypes } from '@/entities/ticket-type'
+import { CheckoutForm } from '@/features/checkout'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 export function CheckoutPage() {
   const [searchParams] = useSearchParams()
-  const eventId = searchParams.get('event_id') || '00000000-0000-7000-8000-000000000001'
+  const eventId = searchParams.get('event_id') ?? ''
+  const ticketTypes = useTicketTypes(eventId)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -19,7 +16,16 @@ export function CheckoutPage() {
           Complete your registration to receive your digital QR tickets.
         </p>
       </div>
-      <CheckoutForm eventId={eventId} ticketTypes={DEFAULT_TICKET_TYPES} />
+      {ticketTypes.isPending ? (
+        <Skeleton className="mx-auto h-64 max-w-xl" />
+      ) : (
+        <CheckoutForm
+          eventId={eventId}
+          ticketTypes={(ticketTypes.data ?? [])
+            .filter((t) => t.available > 0)
+            .map((t) => ({ id: t.id, name: t.name, price_kzt: t.price }))}
+        />
+      )}
     </div>
   )
 }
