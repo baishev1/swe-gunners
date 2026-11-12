@@ -39,6 +39,11 @@ export function HomePage() {
           </Link>
         </>
       )}
+      {me && (
+        <Link to={ROUTES.support} className="text-sm underline">
+          {t('support.title')}
+        </Link>
+      )}
       <Button variant="outline" onClick={logout}>
         {t('home.signOut')}
       </Button>
