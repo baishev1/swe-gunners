@@ -278,6 +278,46 @@
       "reason": "Себебі",
       "suspend": "Сатуды тоқтату",
       "reinstate": "Қалпына келтіру"
+    },
+    "ops": {
+      "orders": "Тапсырыстар",
+      "payments": "Төлемдер",
+      "monitoring": "Мониторинг",
+      "reportsTab": "Есептер",
+      "searchOrders": "Email, аты, іс-шара немесе тапсырыс ID",
+      "searchPayments": "Транзакция, email немесе төлем ID",
+      "created": "Құрылды",
+      "customer": "Сатып алушы",
+      "amount": "Сома",
+      "transaction": "Транзакция",
+      "orderStatuses": {
+        "pending": "Төлемді күтуде",
+        "paid": "Төленді",
+        "cancelled": "Бас тартылды",
+        "refunded": "Қайтарылды"
+      },
+      "paymentStatuses": {
+        "succeeded": "Сәтті",
+        "failed": "Қате"
+      },
+      "failedPayments": "Сәтсіз төлемдер",
+      "refundedOrders": "Қайтарылған тапсырыстар",
+      "refundedAmount": "Қайтарым сомасы",
+      "cancelledOrders": "Бас тартылған тапсырыстар",
+      "pendingOrders": "Төлемді күтуде",
+      "recentFailedPayments": "Соңғы сәтсіз төлемдер",
+      "recentRefunds": "Соңғы қайтарымдар",
+      "reportsDescription": "Платформа деректерінің CSV файлын жүктеп алыңыз. Барлығын алу үшін күндерді бос қалдырыңыз.",
+      "report": "Есеп",
+      "reports": {
+        "orders": "Тапсырыстар",
+        "payments": "Төлемдер",
+        "events": "Іс-шаралар",
+        "users": "Пайдаланушылар"
+      },
+      "from": "Бастап",
+      "to": "Дейін",
+      "download": "CSV жүктеу"
     }
   },
   "paidSales": {

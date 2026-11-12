@@ -278,6 +278,46 @@
       "reason": "Причина",
       "suspend": "Приостановить продажи",
       "reinstate": "Возобновить"
+    },
+    "ops": {
+      "orders": "Заказы",
+      "payments": "Платежи",
+      "monitoring": "Мониторинг",
+      "reportsTab": "Отчёты",
+      "searchOrders": "Email, имя, мероприятие или ID заказа",
+      "searchPayments": "Транзакция, email или ID платежа",
+      "created": "Создан",
+      "customer": "Покупатель",
+      "amount": "Сумма",
+      "transaction": "Транзакция",
+      "orderStatuses": {
+        "pending": "Ожидает оплаты",
+        "paid": "Оплачен",
+        "cancelled": "Отменён",
+        "refunded": "Возвращён"
+      },
+      "paymentStatuses": {
+        "succeeded": "Успешно",
+        "failed": "Ошибка"
+      },
+      "failedPayments": "Неудачные платежи",
+      "refundedOrders": "Возвращённые заказы",
+      "refundedAmount": "Сумма возвратов",
+      "cancelledOrders": "Отменённые заказы",
+      "pendingOrders": "Ожидают оплаты",
+      "recentFailedPayments": "Последние неудачные платежи",
+      "recentRefunds": "Последние возвраты",
+      "reportsDescription": "Скачайте CSV с данными платформы. Оставьте даты пустыми, чтобы выгрузить всё.",
+      "report": "Отчёт",
+      "reports": {
+        "orders": "Заказы",
+        "payments": "Платежи",
+        "events": "Мероприятия",
+        "users": "Пользователи"
+      },
+      "from": "С",
+      "to": "По",
+      "download": "Скачать CSV"
     }
   },
   "paidSales": {
