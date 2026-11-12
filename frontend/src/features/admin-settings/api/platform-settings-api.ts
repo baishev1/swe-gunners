@@ -4,6 +4,7 @@ import { apiClient } from '@/shared/api'
 
 export interface PlatformSettings {
   activation_fee: number
+  processing_fee_percent: number
   updated_at: string
 }
 
@@ -19,7 +20,7 @@ export function usePlatformSettings() {
 export function useUpdatePlatformSettings() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (payload: { activation_fee: number }) =>
+    mutationFn: async (payload: { activation_fee: number; processing_fee_percent: number }) =>
       (await apiClient.patch<PlatformSettings>('/admin/settings', payload)).data,
     onSuccess: (settings) => queryClient.setQueryData(platformSettingsKey, settings),
   })

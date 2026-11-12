@@ -120,7 +120,26 @@
   "organizerEventEdit": {
     "viewPage": "Іс-шара беті",
     "details": "Іс-шара туралы",
-    "ticketTypes": "Билет түрлері"
+    "ticketTypes": "Билет түрлері",
+    "orders": "Тапсырыстар"
+  },
+  "organizerOrders": {
+    "created": "Құрылған",
+    "customer": "Сатып алушы",
+    "items": "Позициялар",
+    "total": "Барлығы",
+    "status": "Мәртебесі",
+    "actions": "Әрекеттер",
+    "refund": "Қайтару",
+    "confirmRefund": "Қайтаруды растау",
+    "cancel": "Болдырмау",
+    "empty": "Бұл іс-шарада әзірге тапсырыс жоқ.",
+    "statuses": {
+      "pending": "Төлем күтілуде",
+      "paid": "Төленді",
+      "cancelled": "Бас тартылды",
+      "refunded": "Қайтарылды"
+    }
   },
   "eventForm": {
     "title": "Атауы",
@@ -250,6 +269,8 @@
     "refunds": "Қайтарымдар",
     "net": "Таза түсім",
     "netHint": "KZT-дегі демонстрациялық түсім",
+    "processingFees": "Өңдеу комиссиясы",
+    "estimatedPayout": "Болжамды төлем",
     "salesOverTime": "Уақыт бойынша сатылым",
     "noSales": "Бұл сүзгілер бойынша сатылым жоқ.",
     "ticketsCount_one": "{{count}} билет",
@@ -305,6 +326,8 @@
     "history": "Тарих",
     "activationFee": "Сатуды белсендіру алымы, ₸",
     "activationFeeCurrent": "Ағымдағы алым: {{fee}}",
+    "processingFee": "Өңдеу комиссиясы, %",
+    "processingFeeCurrent": "Ағымдағы комиссия: {{percent}}%",
     "saved": "Сақталды.",
     "save": "Сақтау",
     "paidSales": {
@@ -334,7 +357,8 @@
       },
       "paymentStatuses": {
         "succeeded": "Сәтті",
-        "failed": "Қате"
+        "failed": "Қате",
+        "refunded": "Қайтарылды"
       },
       "failedPayments": "Сәтсіз төлемдер",
       "refundedOrders": "Қайтарылған тапсырыстар",

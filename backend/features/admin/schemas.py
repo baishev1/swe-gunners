@@ -21,8 +21,10 @@ class PlatformSettingResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     activation_fee: int
+    processing_fee_percent: float
     updated_at: datetime
 
 
 class PlatformSettingUpdate(BaseModel):
-    activation_fee: int = Field(ge=0)
+    activation_fee: int | None = Field(default=None, ge=0)
+    processing_fee_percent: float | None = Field(default=None, ge=0, le=100)

@@ -59,7 +59,7 @@ export interface Payment {
   id: string
   order_id: string
   amount_kzt: number
-  status: 'succeeded' | 'failed'
+  status: 'succeeded' | 'failed' | 'refunded'
   provider: string
   transaction_id: string
   created_at: string

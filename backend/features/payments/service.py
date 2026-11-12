@@ -3,6 +3,8 @@ from uuid import uuid4
 from sqlalchemy import select
 
 from core import *
+from features.events.models import Event
+from features.notifications.service import notification_service
 from features.orders.models import Order
 from features.orders.service import order_service
 from features.tickets.service import ticket_service
@@ -31,6 +33,8 @@ class PaymentService:
             db.add(payment)
             db.commit()
             db.refresh(payment)
+            event = db.get(Event, order.event_id)
+            notification_service.payment_failed(order, event.title if event else "BiletFlow event")
             return payment
 
         payment = Payment(

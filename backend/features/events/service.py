@@ -4,6 +4,8 @@ from sqlalchemy import select
 
 from core import *
 from features.audit_log.service import audit_log_service
+from features.notifications.service import notification_service
+from features.orders.models import Order
 
 from .models import *
 from .schemas import *
@@ -56,10 +58,21 @@ class EventService:
         return event
 
     def cancel_event(self, db: Session, event: Event, actor_id: UUID | None = None) -> Event:
+        emails = list(
+            db.scalars(
+                select(Order.customer_email)
+                .where(
+                    Order.event_id == event.id,
+                    Order.status.in_(("paid", "pending")),
+                )
+                .distinct()
+            )
+        )
         event.status = "cancelled"
         self._record(db, event, "event_cancelled", f"Cancelled event {event.title}", actor_id)
         db.commit()
         db.refresh(event)
+        notification_service.event_cancelled(event.title, emails)
         return event
 
     def duplicate_event(self, db: Session, event: Event, actor_id: UUID | None = None) -> Event:

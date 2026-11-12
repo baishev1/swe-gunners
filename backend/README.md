@@ -255,5 +255,29 @@ reserved to sold. Cancelling a pending order releases it.
 payment, ticket detail and PDF are visible to the buyer, the event organizer and
 platform admins; anyone else gets 404. Only the buyer can pay an order.
 
-Still open: reservations do not expire, and cancelling or refunding a paid order
-does not invalidate its tickets yet.
+### Refunds
+
+`POST /orders/refund?order_id=...` lets the event organizer or a platform admin refund a
+paid order in full. The order, its successful payments and all of its tickets move to
+`refunded`, the quantity returns to the ticket type's available stock, an
+`order_refunded` audit entry is written, and the buyer gets an email. Only orders in
+`paid` status can be refunded; a second refund returns 400.
+
+`GET /orders/manage?event_id=...` lists every order for an event to its organizer or a
+platform admin. Attendees keep using `GET /orders`.
+
+### Notifications
+
+Order confirmation with tickets, payment failure, event cancellation and refund emails are
+sent by `features/notifications` after the related database transaction commits, so a mail
+error cannot roll back a payment, refund or cancellation. When `SMTP_HOST` is empty the
+messages are logged instead, which is what tests use.
+
+### Organizer sales and payout
+
+`GET /analytics/event` deducts a configurable processing fee from net revenue and returns
+`processing_fees` and `estimated_payout` next to the existing revenue figures. Platform
+admins set the rate with `PATCH /admin/settings` (`processing_fee_percent`, default 3%,
+between 0 and 100). The fee applies after discounts and refunds.
+
+Still open: reservations do not expire.

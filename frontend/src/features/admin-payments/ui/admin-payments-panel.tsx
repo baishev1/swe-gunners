@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { type AdminPayment, useAdminPayments } from '../api/admin-payments-api'
 
-const STATUSES = ['succeeded', 'failed'] as const
+const STATUSES = ['succeeded', 'failed', 'refunded'] as const
 
 export function AdminPaymentsTable({ payments }: { payments: AdminPayment[] }) {
   const { t } = useTranslation()

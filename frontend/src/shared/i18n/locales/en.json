@@ -120,7 +120,26 @@
   "organizerEventEdit": {
     "viewPage": "View event page",
     "details": "Event details",
-    "ticketTypes": "Ticket types"
+    "ticketTypes": "Ticket types",
+    "orders": "Orders"
+  },
+  "organizerOrders": {
+    "created": "Created",
+    "customer": "Customer",
+    "items": "Items",
+    "total": "Total",
+    "status": "Status",
+    "actions": "Actions",
+    "refund": "Refund",
+    "confirmRefund": "Confirm refund",
+    "cancel": "Cancel",
+    "empty": "No orders for this event yet.",
+    "statuses": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
+    }
   },
   "eventForm": {
     "title": "Title",
@@ -250,6 +269,8 @@
     "refunds": "Refunds",
     "net": "Net revenue",
     "netHint": "Demonstration revenue in KZT",
+    "processingFees": "Processing fees",
+    "estimatedPayout": "Estimated payout",
     "salesOverTime": "Sales over time",
     "noSales": "No sales for these filters.",
     "ticketsCount_one": "{{count}} ticket",
@@ -305,6 +326,8 @@
     "history": "History",
     "activationFee": "Paid sales activation fee, KZT",
     "activationFeeCurrent": "Current fee: {{fee}}",
+    "processingFee": "Processing fee, %",
+    "processingFeeCurrent": "Current processing fee: {{percent}}%",
     "saved": "Saved.",
     "save": "Save",
     "paidSales": {
@@ -334,7 +357,8 @@
       },
       "paymentStatuses": {
         "succeeded": "Succeeded",
-        "failed": "Failed"
+        "failed": "Failed",
+        "refunded": "Refunded"
       },
       "failedPayments": "Failed payments",
       "refundedOrders": "Refunded orders",

@@ -120,7 +120,26 @@
   "organizerEventEdit": {
     "viewPage": "Страница мероприятия",
     "details": "О мероприятии",
-    "ticketTypes": "Типы билетов"
+    "ticketTypes": "Типы билетов",
+    "orders": "Заказы"
+  },
+  "organizerOrders": {
+    "created": "Создан",
+    "customer": "Покупатель",
+    "items": "Позиции",
+    "total": "Итого",
+    "status": "Статус",
+    "actions": "Действия",
+    "refund": "Вернуть",
+    "confirmRefund": "Подтвердить возврат",
+    "cancel": "Отмена",
+    "empty": "У этого мероприятия пока нет заказов.",
+    "statuses": {
+      "pending": "Ожидает оплаты",
+      "paid": "Оплачен",
+      "cancelled": "Отменён",
+      "refunded": "Возвращён"
+    }
   },
   "eventForm": {
     "title": "Название",
@@ -250,6 +269,8 @@
     "refunds": "Возвраты",
     "net": "Чистая выручка",
     "netHint": "Демонстрационная выручка в KZT",
+    "processingFees": "Комиссия за обработку",
+    "estimatedPayout": "Ожидаемая выплата",
     "salesOverTime": "Продажи по времени",
     "noSales": "Нет продаж по этим фильтрам.",
     "ticketsCount_one": "{{count}} билет",
@@ -307,6 +328,8 @@
     "history": "История",
     "activationFee": "Сбор за активацию продаж, ₸",
     "activationFeeCurrent": "Текущий сбор: {{fee}}",
+    "processingFee": "Комиссия за обработку, %",
+    "processingFeeCurrent": "Текущая комиссия: {{percent}}%",
     "saved": "Сохранено.",
     "save": "Сохранить",
     "paidSales": {
@@ -336,7 +359,8 @@
       },
       "paymentStatuses": {
         "succeeded": "Успешно",
-        "failed": "Ошибка"
+        "failed": "Ошибка",
+        "refunded": "Возвращён"
       },
       "failedPayments": "Неудачные платежи",
       "refundedOrders": "Возвращённые заказы",

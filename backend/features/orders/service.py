@@ -1,7 +1,9 @@
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from core import *
+from features.audit_log.service import audit_log_service
+from features.notifications.service import notification_service
 from features.ticket_types.models import TicketType
 from features.ticket_types.service import ticket_type_service
 from features.tickets.service import ticket_service
@@ -74,6 +76,66 @@ class OrderService:
         order.status = "cancelled"
         db.commit()
         db.refresh(order)
+        return order
+
+    def refund_order(self, db: Session, order: Order, actor_id: UUID) -> Order:
+        # Imported here to avoid a cycle: events and payments both import this module.
+        from features.events.models import Event
+        from features.payments.models import Payment
+        from features.tickets.models import Ticket
+
+        changed_id = db.scalar(
+            update(Order)
+            .where(Order.id == order.id, Order.status == "paid")
+            .values(status="refunded")
+            .returning(Order.id)
+            .execution_options(synchronize_session=False)
+        )
+        if changed_id is None:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot refund an order with status '{order.status}'",
+            )
+
+        for item in order.items:
+            db.execute(
+                update(TicketType)
+                .where(
+                    TicketType.id == item.ticket_type_id,
+                    TicketType.sold_count >= item.quantity,
+                )
+                .values(sold_count=TicketType.sold_count - item.quantity)
+                .execution_options(synchronize_session=False)
+            )
+
+        db.execute(
+            update(Ticket)
+            .where(Ticket.order_id == order.id, Ticket.status != "refunded")
+            .values(status="refunded")
+            .execution_options(synchronize_session=False)
+        )
+        db.execute(
+            update(Payment)
+            .where(Payment.order_id == order.id, Payment.status == "succeeded")
+            .values(status="refunded")
+            .execution_options(synchronize_session=False)
+        )
+
+        audit_log_service.record(
+            db,
+            action="order_refunded",
+            entity_type="order",
+            entity_id=order.id,
+            event_id=order.event_id,
+            actor_id=actor_id,
+            description=f"Refunded order {order.id} for {order.total_amount_kzt} tiyn",
+        )
+        db.commit()
+        db.refresh(order)
+
+        event = db.get(Event, order.event_id)
+        notification_service.order_refunded(order, event.title if event else "BiletFlow event")
         return order
 
 

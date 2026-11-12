@@ -84,13 +84,21 @@ class AdminService:
         self, db: Session, data: PlatformSettingUpdate, actor_id: UUID
     ) -> PlatformSetting:
         setting = self.get_settings(db)
-        setting.activation_fee = data.activation_fee
+        changes: list[str] = []
+        if data.activation_fee is not None:
+            setting.activation_fee = data.activation_fee
+            changes.append(f"activation fee to {data.activation_fee} tiyn")
+        if data.processing_fee_percent is not None:
+            setting.processing_fee_percent = data.processing_fee_percent
+            changes.append(f"processing fee to {data.processing_fee_percent}%")
+        if not changes:
+            return setting
         audit_log_service.record(
             db,
             action="settings_updated",
             entity_type="platform_setting",
             entity_id=setting.id,
-            description=f"Set activation fee to {data.activation_fee} tiyn",
+            description=f"Set {', '.join(changes)}",
             actor_id=actor_id,
         )
         db.commit()
