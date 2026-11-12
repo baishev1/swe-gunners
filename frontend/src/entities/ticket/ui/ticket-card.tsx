@@ -1,5 +1,5 @@
 import { Download, QrCode } from 'lucide-react'
-import { getTicketPdfUrl } from '@/shared/api'
+import { downloadTicketPdf } from '@/shared/api'
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui'
 import type { Ticket } from '@/shared/types'
 
@@ -11,8 +11,13 @@ export function TicketCard({ ticket }: TicketCardProps) {
   const isCheckedIn = ticket.status === 'checked_in'
   const isValid = ticket.status === 'valid'
 
-  const handleDownload = () => {
-    window.open(getTicketPdfUrl(ticket.id), '_blank')
+  const handleDownload = async () => {
+    const url = URL.createObjectURL(await downloadTicketPdf(ticket.id))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `ticket-${ticket.id}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
