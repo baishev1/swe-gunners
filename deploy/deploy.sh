@@ -29,6 +29,9 @@ echo "==> Starting services"
 echo "==> Removing dangling images"
 docker image prune -f >/dev/null
 
+echo "==> Trimming build cache"
+docker builder prune -f --keep-storage 1GB >/dev/null
+
 echo "==> Verifying HTTP endpoint"
 curl --fail --silent --show-error --retry 10 --retry-delay 2 \
   http://127.0.0.1/health >/dev/null
