@@ -48,10 +48,13 @@ class TicketService:
     def list_tickets(
         self,
         db: Session,
+        user_id: UUID,
         order_id: UUID | None = None,
         event_id: UUID | None = None,
     ) -> list[Ticket]:
-        stmt = select(Ticket)
+        stmt = (
+            select(Ticket).join(Order, Order.id == Ticket.order_id).where(Order.user_id == user_id)
+        )
         if order_id:
             stmt = stmt.where(Ticket.order_id == order_id)
         if event_id:

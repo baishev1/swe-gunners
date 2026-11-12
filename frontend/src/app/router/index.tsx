@@ -34,13 +34,13 @@ export function AppRouter() {
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.home} element={<HomePage />} />
         <Route path={ROUTES.eventHistory} element={<EventHistoryPage />} />
+        <Route path={ROUTES.checkout} element={<CheckoutPage />} />
+        <Route path={ROUTES.orders} element={<OrdersPage />} />
+        <Route path={ROUTES.tickets} element={<TicketsPage />} />
       </Route>
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
       </Route>
-      <Route path={ROUTES.checkout} element={<CheckoutPage />} />
-      <Route path={ROUTES.orders} element={<OrdersPage />} />
-      <Route path={ROUTES.tickets} element={<TicketsPage />} />
       <Route path={ROUTES.events} element={<EventsListPage />} />
       <Route path={ROUTES.eventDetail} element={<EventDetailPage />} />
       <Route element={<ProtectedRoute role="organizer" />}>
