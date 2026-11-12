@@ -360,7 +360,11 @@ class _ManualCodeFormState extends State<_ManualCodeForm> {
             ? Text(context.l.requiredField)
             : null,
       ),
-      FButton(onPress: _submit, child: Text(context.l.verify)),
+      FButton(
+        builder: fitButtonLabel,
+        onPress: _submit,
+        child: Text(context.l.verify),
+      ),
     ],
   );
 }
