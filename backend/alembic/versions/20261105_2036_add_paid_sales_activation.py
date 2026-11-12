@@ -1,7 +1,7 @@
 """add paid sales activation
 
 Revision ID: adbd85225fc2
-Revises: b20938dea568
+Revises: f3a8c1e5b7d9
 Create Date: 2026-11-05 20:36:11.147790
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 revision: str = "adbd85225fc2"
-down_revision: str | None = "b20938dea568"
+down_revision: str | None = "f3a8c1e5b7d9"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
