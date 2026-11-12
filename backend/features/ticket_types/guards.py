@@ -2,7 +2,8 @@ from fastapi import Depends, HTTPException, status
 
 from core import *
 from features.auth.guards import require_role
-from features.events.guards import owned_event_guard
+from features.events.guards import can_view_event, is_event_manager, owned_event_guard
+from features.users.dependencies import optional_user
 from features.users.models import User
 
 from .models import *
@@ -23,6 +24,34 @@ def valid_event_id(event_id: UUID, db: Session = Depends(get_db)) -> Event:
 def valid_ticket_type_id(ticket_type_id: UUID, db: Session = Depends(get_db)) -> TicketType:
     ticket_type = db.get(TicketType, ticket_type_id)
     if not ticket_type:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket type not found",
+        )
+    return ticket_type
+
+
+def viewable_ticket_types_event(
+    event_id: UUID,
+    user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
+) -> Event:
+    event = db.get(Event, event_id)
+    if event is None or not can_view_event(event, user):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Event not found",
+        )
+    return event
+
+
+def viewable_ticket_type_guard(
+    ticket_type: TicketType = Depends(valid_ticket_type_id),
+    user: User | None = Depends(optional_user),
+) -> TicketType:
+    if not can_view_event(ticket_type.event, user) or (
+        ticket_type.is_hidden and not is_event_manager(ticket_type.event, user)
+    ):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket type not found",

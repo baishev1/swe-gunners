@@ -49,9 +49,19 @@ def test_cannot_order_for_unpublished_event(
     client: TestClient, organizer_headers: dict[str, str], attendee_headers: dict[str, str]
 ) -> None:
     event_id = create_paid_event(client, organizer_headers, price=0)
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={event_id}").json()[0]["id"]
     client.post(f"/api/v1/events/unpublish?event_id={event_id}", headers=organizer_headers)
 
-    res = place_order(client, attendee_headers, event_id)
+    res = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 1}],
+        },
+    )
     assert res.status_code == 400
     assert res.json()["detail"] == "Event is not open for registration"
 

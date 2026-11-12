@@ -120,7 +120,8 @@
   "organizerEventEdit": {
     "viewPage": "Страница мероприятия",
     "details": "О мероприятии",
-    "ticketTypes": "Типы билетов"
+    "ticketTypes": "Типы билетов",
+    "attendees": "Участники"
   },
   "eventForm": {
     "title": "Название",
@@ -153,7 +154,7 @@
     "add": "Добавить тип билета",
     "show": "Показать",
     "hide": "Скрыть",
-    "stats": "Доступно: {{available}} · в резерве: {{reserved}} · продано: {{sold}} из {{quantity}}"
+    "stats": "Доступно: {{available}} · в резерве: {{reserved}} · продано: {{sold}} · возвращено: {{refunded}} · отмечено: {{checkedIn}} из {{quantity}}"
   },
   "createVenue": {
     "name": "Название площадки",
@@ -356,6 +357,26 @@
       "from": "С",
       "to": "По",
       "download": "Скачать CSV"
+    }
+  },
+  "eventAttendees": {
+    "title": "Участники — {{title}}",
+    "summary": "Зарегистрировано: {{total}} · отмечено: {{checkedIn}}",
+    "filterType": "Тип билета",
+    "filterStatus": "Статус",
+    "allTypes": "Все типы билетов",
+    "allStatuses": "Все статусы",
+    "attendee": "Участник",
+    "ticketType": "Тип билета",
+    "status": "Статус",
+    "checkedInAt": "Отмечен",
+    "registeredAt": "Зарегистрирован",
+    "empty": "Регистраций пока нет.",
+    "statuses": {
+      "valid": "Действителен",
+      "checked_in": "Отмечен",
+      "cancelled": "Отменён",
+      "refunded": "Возвращён"
     }
   },
   "paidSales": {

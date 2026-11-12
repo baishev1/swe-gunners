@@ -42,12 +42,25 @@ def accessible_order_guard(
     return order
 
 
-def cancellable_order_guard(order: Order = Depends(accessible_order_guard)) -> Order:
+def cancellable_order_guard(
+    order: Order = Depends(accessible_order_guard),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Order:
     if order.status not in ("pending", "paid"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot cancel an order with status '{order.status}'",
         )
+    if order.status == "paid":
+        # Paid cancellations refund tickets back to inventory (SRS 4.9), so only
+        # the organizer or a platform admin may run them — never the buyer.
+        event = db.get(Event, order.event_id)
+        if user.role != "platform_admin" and (event is None or event.organizer_id != user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the organizer can cancel a paid order",
+            )
     return order
 
 
@@ -59,6 +72,18 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Event is not open for registration",
+        )
+
+    now = time_now()
+    if event.registration_start_time and now < event.registration_start_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration has not opened yet",
+        )
+    if event.registration_end_time and now > event.registration_end_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration is closed",
         )
 
     ticket_type_ids = [item.ticket_type_id for item in data.items]
@@ -78,7 +103,6 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
         )
     }
 
-    now = time_now()
     for item in data.items:
         ticket_type = ticket_types.get(item.ticket_type_id)
         if ticket_type is None:

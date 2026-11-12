@@ -14,5 +14,7 @@ export interface TicketType extends TicketTypePayload {
   event_id: string
   reserved_count: number
   sold_count: number
+  refunded_count: number
+  checked_in_count: number
   available: number
 }

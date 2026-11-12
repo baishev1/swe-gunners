@@ -44,7 +44,7 @@ def get_organizer_dashboard(
 
 
 @router.get("/detail", response_model=EventResponse)
-def get_event_detail(event: Event = Depends(valid_event_id)):
+def get_event_detail(event: Event = Depends(viewable_event_guard)):
     return event
 
 
