@@ -240,7 +240,20 @@ matches the admission timestamp so a stale reversal cannot undo a later entry.
 Failed transitions return 400. Each successful change writes an audit entry with
 the event, ticket, acting user, and timestamp in the same transaction.
 
-Remaining ticket/order work owned by part 3: protect attendee ticket lists,
-details and PDFs, enforce server-side checkout pricing/inventory, and propagate
-cancellations/refunds to ticket records. Scanner checks do not replace those
-ownership and checkout rules.
+## Orders and attendee tickets
+
+Orders, payments and attendee ticket routes require a login token. An order item
+sends only `ticket_type_id` and `quantity`; the name and price come from the
+stored ticket type. The event must be published, the ticket type must belong to
+it, be visible and on sale, and the quantity must respect `max_per_order`.
+
+Creating an order reserves stock with a conditional update and returns 409 when
+not enough is left. A successful payment, or a free order, moves the stock from
+reserved to sold. Cancelling a pending order releases it.
+
+`GET /orders` and `GET /tickets` return only the caller's own records. Order,
+payment, ticket detail and PDF are visible to the buyer, the event organizer and
+platform admins; anyone else gets 404. Only the buyer can pay an order.
+
+Still open: reservations do not expire, and cancelling or refunding a paid order
+does not invalidate its tickets yet.

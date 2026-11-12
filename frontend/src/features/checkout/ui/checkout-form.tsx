@@ -36,15 +36,10 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
 
   const selectedItems: OrderItemCreate[] = ticketTypes
     .filter((t) => (quantities[t.id] || 0) > 0)
-    .map((t) => ({
-      ticket_type_id: t.id,
-      ticket_type_name: t.name,
-      unit_price_kzt: t.price_kzt,
-      quantity: quantities[t.id],
-    }))
+    .map((t) => ({ ticket_type_id: t.id, quantity: quantities[t.id] }))
 
-  const totalAmountKzt = selectedItems.reduce(
-    (sum, item) => sum + item.unit_price_kzt * item.quantity,
+  const totalAmountKzt = ticketTypes.reduce(
+    (sum, t) => sum + t.price_kzt * (quantities[t.id] || 0),
     0,
   )
 

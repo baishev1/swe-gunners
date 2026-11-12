@@ -24,8 +24,6 @@ export interface Order {
 
 export interface OrderItemCreate {
   ticket_type_id: string
-  ticket_type_name: string
-  unit_price_kzt: number
   quantity: number
 }
 
@@ -33,7 +31,6 @@ export interface OrderCreatePayload {
   event_id: string
   customer_name: string
   customer_email: string
-  user_id?: string | null
   items: OrderItemCreate[]
 }
 

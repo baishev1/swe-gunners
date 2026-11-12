@@ -109,7 +109,8 @@
     "noTickets": "No tickets available yet.",
     "left": "{{count}} left",
     "soldOut": "Sold out",
-    "edit": "Edit event"
+    "edit": "Edit event",
+    "getTickets": "Get tickets"
   },
   "organizerEventNew": {
     "title": "New event",
