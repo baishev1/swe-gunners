@@ -43,6 +43,8 @@ class AuthService:
 
     def decode_access_token(self, token: str) -> UUID:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        if "purpose" in payload:
+            raise jwt.InvalidTokenError("Expected an access token")
         return UUID(payload["sub"])
 
     def create_verify_token(self, user: User) -> str:
