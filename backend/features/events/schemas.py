@@ -51,3 +51,10 @@ class EventResponse(EventBase):
     venue: VenueResponse
     created_at: datetime
     updated_at: datetime
+
+
+class OrganizerDashboardResponse(BaseModel):
+    upcoming: list[EventResponse]
+    active: list[EventResponse]
+    completed: list[EventResponse]
+    cancelled: list[EventResponse]

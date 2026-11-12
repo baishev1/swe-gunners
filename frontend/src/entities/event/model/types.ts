@@ -1,4 +1,4 @@
-export type EventStatus = 'draft' | 'published' | 'unpublished' | 'cancelled'
+export type EventStatus = 'draft' | 'published' | 'unpublished' | 'cancelled' | 'suspended'
 
 export type EventVisibility = 'public' | 'unlisted' | 'private'
 
@@ -25,3 +25,7 @@ export interface EventItem extends EventPayload {
   created_at: string
   updated_at: string
 }
+
+export type EventPhase = 'upcoming' | 'active' | 'completed' | 'cancelled'
+
+export type OrganizerDashboard = Record<EventPhase, EventItem[]>

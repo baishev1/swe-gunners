@@ -6,6 +6,7 @@ export const ROUTES = {
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
   organizerProfile: '/organizer/profile',
+  organizerDashboard: '/organizer/events',
   events: '/events',
   eventDetail: '/events/detail',
   organizerEventNew: '/organizer/events/new',

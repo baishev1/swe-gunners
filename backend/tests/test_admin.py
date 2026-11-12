@@ -106,7 +106,7 @@ def test_suspend_event(client: TestClient, organizer_headers: dict[str, str]) ->
     assert event_id not in [e["id"] for e in public]
 
     timeline = client.get(f"/api/v1/audit-log/timeline?event_id={event_id}", headers=headers)
-    assert [e["action"] for e in timeline.json()] == ["event_suspended"]
+    assert [e["action"] for e in timeline.json()] == ["event_published", "event_suspended"]
 
     again = client.post(f"/api/v1/admin/events/suspend?event_id={event_id}", headers=headers)
     assert again.status_code == 400
