@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from core import *
+from features.users.dependencies import active_user
+from features.users.models import User
 
 from .guards import *
 from .models import *
@@ -25,44 +27,32 @@ def get_ticket_detail(ticket: Ticket = Depends(valid_ticket_id)):
 
 
 @router.get("/verify", response_model=TicketVerificationResponse)
-def verify_ticket(qr_token: str, db: Session = Depends(get_db)):
-    ticket = ticket_service.get_ticket_by_qr_token(db=db, qr_token=qr_token)
-    if not ticket:
-        return TicketVerificationResponse(
-            valid=False,
-            status="not_found",
-            ticket=None,
-            message="Ticket not found",
-        )
-    if ticket.status != "valid":
-        return TicketVerificationResponse(
-            valid=False,
-            status=ticket.status,
-            ticket=TicketResponse.model_validate(ticket),
-            message=f"Ticket is {ticket.status}",
-        )
+def verify_ticket(scan: tuple[Ticket | None, str] = Depends(scanned_ticket_status)):
+    ticket, ticket_status = scan
     return TicketVerificationResponse(
-        valid=True,
-        status="valid",
-        ticket=TicketResponse.model_validate(ticket),
-        message="Ticket is valid",
+        valid=ticket_status == "valid",
+        status=ticket_status,
+        ticket=TicketResponse.model_validate(ticket) if ticket is not None else None,
+        message="Ticket is valid" if ticket_status == "valid" else f"Ticket is {ticket_status}",
     )
 
 
 @router.post("/check-in", response_model=TicketResponse)
 def check_in_ticket(
-    ticket: Ticket = Depends(valid_ticket_id),
+    ticket: Ticket = Depends(scanner_ticket),
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    return ticket_service.check_in_ticket(db=db, ticket=ticket)
+    return ticket_service.check_in_ticket(db=db, ticket=ticket, actor_id=user.id)
 
 
 @router.post("/undo-check-in", response_model=TicketResponse)
 def undo_check_in(
-    ticket: Ticket = Depends(valid_ticket_id),
+    ticket: Ticket = Depends(reversible_scanner_ticket),
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    return ticket_service.undo_check_in(db=db, ticket=ticket)
+    return ticket_service.undo_check_in(db=db, ticket=ticket, actor_id=user.id)
 
 
 @router.get("/pdf")

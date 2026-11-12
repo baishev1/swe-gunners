@@ -48,7 +48,7 @@ class CheckInService:
         db.commit()
 
     def list_events(self, db: Session, user: User, limit: int, offset: int) -> list[Event]:
-        stmt = select(Event).where(Event.status != "cancelled")
+        stmt = select(Event).where(Event.status.not_in(["cancelled", "suspended"]))
         if user.role != "platform_admin":
             assigned = select(StaffAssignment.event_id).where(StaffAssignment.user_id == user.id)
             stmt = stmt.where(or_(Event.organizer_id == user.id, Event.id.in_(assigned)))

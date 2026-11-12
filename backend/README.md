@@ -190,14 +190,14 @@ All routes are under `/api/v1/checkin` and require the shared authenticated user
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| GET | `/events` | List the current user's owned/assigned events, excluding cancelled events |
+| GET | `/events` | List the current user's owned/assigned events, excluding cancelled/suspended events |
 | POST | `/staff?event_id=...` | Assign an existing active user to an event |
 | GET | `/staff?event_id=...` | List an event's staff |
 | DELETE | `/staff?event_id=...&assignment_id=...` | Revoke an assignment |
 
 Only the event owner or a `platform_admin` can manage assignments. Lists accept
 `limit` (1–100, default 50) and `offset` (default 0). Platform admins can see all
-non-cancelled events. An assignment request contains:
+events excluding cancelled and suspended ones. An assignment request contains:
 
 ```json
 {
@@ -213,12 +213,34 @@ unique constraint. To change permissions, revoke the assignment and create a new
 one. Revocation removes event and support access on subsequent requests; stored
 support conversations remain intact.
 
-**Ticket integration is pending:** the ticket feature described by part 3 has
-not landed on this branch. `features/checkin/guards.py` supplies `assigned_event`
-for verify/check-in and `undo_check_in_event` for undo. Wire these as dependencies
-on the ticket routes when they arrive. The guards reject unassigned users and
-cancelled events; owners and platform admins may scan and undo without an
-assignment. The ticket handlers must also check that the ticket belongs to the
-selected event, resolve only admission QR tokens, and perform the ticket-status
-transition atomically. The guards alone do not implement QR verification or
-protect routes that have not yet been connected to them.
+## Ticket scanner API
+
+The scanner routes require a login token and the selected `event_id` query
+parameter. Owners and platform admins have scanner/undo access; assigned staff
+can scan and need `can_undo_check_in=true` to reverse entry.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET | `/api/v1/tickets/verify?event_id=...&qr_token=...` | Check an admission QR and its current status |
+| POST | `/api/v1/tickets/check-in?event_id=...&ticket_id=...` | Record admission |
+| POST | `/api/v1/tickets/undo-check-in?event_id=...&ticket_id=...` | Reverse an accidental admission |
+
+The selected event is required even for owners/admins, and the ticket must belong
+to it. Unknown tokens, Campaign QR tokens/links, and tickets from another event
+return `valid=false`, `status=not_found`, and no ticket data from verification.
+Missing authentication returns 401; an inaccessible event or wrong-event ticket
+ID returns 404; insufficient undo permission returns 403. Cancelled/suspended
+events return 400. A ticket's order must exist, match the event, and be paid.
+Verification reports non-paid order status as invalid even when the ticket's
+stored status is still `valid`.
+
+Check-in (`valid` to `checked_in`) and undo (`checked_in` to `valid`) use conditional
+database updates; overlapping requests can change the state only once. Undo also
+matches the admission timestamp so a stale reversal cannot undo a later entry.
+Failed transitions return 400. Each successful change writes an audit entry with
+the event, ticket, acting user, and timestamp in the same transaction.
+
+Remaining ticket/order work owned by part 3: protect attendee ticket lists,
+details and PDFs, enforce server-side checkout pricing/inventory, and propagate
+cancellations/refunds to ticket records. Scanner checks do not replace those
+ownership and checkout rules.

@@ -1,11 +1,14 @@
+from datetime import timedelta
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from core import time_now
 
-def create_free_order(client: TestClient) -> dict:
+
+def create_free_order(client: TestClient, event_id: str | None = None) -> dict:
     payload = {
-        "event_id": str(uuid4()),
+        "event_id": event_id or str(uuid4()),
         "customer_name": "Saule Omarova",
         "customer_email": "saule@example.kz",
         "items": [
@@ -20,6 +23,26 @@ def create_free_order(client: TestClient) -> dict:
     res = client.post("/api/v1/orders", json=payload)
     assert res.status_code == 201
     return res.json()
+
+
+def scanner_order(client: TestClient, headers: dict[str, str]) -> dict:
+    venue = client.post(
+        "/api/v1/venues", headers=headers, json={"name": "Scanner hall", "address": "Almaty"}
+    )
+    event = client.post(
+        "/api/v1/events",
+        headers=headers,
+        json={
+            "venue_id": venue.json()["id"],
+            "title": "Scanner event",
+            "category": "Technology",
+            "capacity": 100,
+            "start_time": time_now().isoformat(),
+            "end_time": (time_now() + timedelta(hours=2)).isoformat(),
+        },
+    )
+    assert event.status_code == 201
+    return create_free_order(client, event_id=event.json()["id"])
 
 
 def test_auto_issue_tickets_on_free_order(client: TestClient) -> None:
@@ -47,46 +70,65 @@ def test_get_ticket_detail(client: TestClient) -> None:
     assert res.json()["id"] == ticket_id
 
 
-def test_verify_ticket_valid_and_not_found(client: TestClient) -> None:
-    order = create_free_order(client)
+def test_verify_ticket_valid_and_not_found(
+    client: TestClient, organizer_headers: dict[str, str]
+) -> None:
+    order = scanner_order(client, organizer_headers)
     tickets = client.get(f"/api/v1/tickets?order_id={order['id']}").json()
     valid_token = tickets[0]["qr_token"]
 
-    verify_res = client.get(f"/api/v1/tickets/verify?qr_token={valid_token}")
+    verify_res = client.get(
+        "/api/v1/tickets/verify",
+        headers=organizer_headers,
+        params={"qr_token": valid_token, "event_id": order["event_id"]},
+    )
     assert verify_res.status_code == 200
     data = verify_res.json()
     assert data["valid"] is True
     assert data["status"] == "valid"
     assert data["ticket"]["id"] == tickets[0]["id"]
 
-    fake_res = client.get("/api/v1/tickets/verify?qr_token=nonexistenttoken")
+    fake_res = client.get(
+        "/api/v1/tickets/verify",
+        headers=organizer_headers,
+        params={"qr_token": "nonexistenttoken", "event_id": order["event_id"]},
+    )
     assert fake_res.status_code == 200
     fake_data = fake_res.json()
     assert fake_data["valid"] is False
     assert fake_data["status"] == "not_found"
 
 
-def test_check_in_and_undo_check_in(client: TestClient) -> None:
-    order = create_free_order(client)
+def test_check_in_and_undo_check_in(client: TestClient, organizer_headers: dict[str, str]) -> None:
+    order = scanner_order(client, organizer_headers)
     tickets = client.get(f"/api/v1/tickets?order_id={order['id']}").json()
     ticket_id = tickets[0]["id"]
     token = tickets[0]["qr_token"]
 
-    check_in_res = client.post(f"/api/v1/tickets/check-in?ticket_id={ticket_id}")
+    params = {"event_id": order["event_id"], "ticket_id": ticket_id}
+    check_in_res = client.post("/api/v1/tickets/check-in", headers=organizer_headers, params=params)
     assert check_in_res.status_code == 200
     assert check_in_res.json()["status"] == "checked_in"
     assert check_in_res.json()["checked_in_at"] is not None
 
-    repeat_check_in = client.post(f"/api/v1/tickets/check-in?ticket_id={ticket_id}")
+    repeat_check_in = client.post(
+        "/api/v1/tickets/check-in", headers=organizer_headers, params=params
+    )
     assert repeat_check_in.status_code == 400
     assert "already checked in" in repeat_check_in.json()["detail"]
 
-    verify_res = client.get(f"/api/v1/tickets/verify?qr_token={token}")
+    verify_res = client.get(
+        "/api/v1/tickets/verify",
+        headers=organizer_headers,
+        params={"event_id": order["event_id"], "qr_token": token},
+    )
     assert verify_res.status_code == 200
     assert verify_res.json()["valid"] is False
     assert verify_res.json()["status"] == "checked_in"
 
-    undo_res = client.post(f"/api/v1/tickets/undo-check-in?ticket_id={ticket_id}")
+    undo_res = client.post(
+        "/api/v1/tickets/undo-check-in", headers=organizer_headers, params=params
+    )
     assert undo_res.status_code == 200
     assert undo_res.json()["status"] == "valid"
     assert undo_res.json()["checked_in_at"] is None
