@@ -42,11 +42,23 @@ export function OrganizerEventEditPage() {
         <Badge variant="outline">{event.data.status}</Badge>
       </div>
       <EventStatusActions event={event.data} />
-      <Button variant="link" asChild className="self-start">
-        <Link to={`${ROUTES.eventDetail}?event_id=${event.data.id}`}>
-          {t('organizerEventEdit.viewPage')}
-        </Link>
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="link" asChild className="self-start">
+          <Link to={`${ROUTES.eventDetail}?event_id=${event.data.id}`}>
+            {t('organizerEventEdit.viewPage')}
+          </Link>
+        </Button>
+        <Button variant="link" asChild className="self-start">
+          <Link to={`${ROUTES.organizerEventAttendees}?event_id=${event.data.id}`}>
+            {t('organizerEventEdit.attendees')}
+          </Link>
+        </Button>
+        <Button variant="outline" asChild className="self-start">
+          <Link to={`${ROUTES.organizerEventAnalytics}?event_id=${event.data.id}`}>
+            {t('analytics.open')}
+          </Link>
+        </Button>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>{t('organizerEventEdit.details')}</CardTitle>

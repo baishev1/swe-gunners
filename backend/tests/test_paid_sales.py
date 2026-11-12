@@ -1,6 +1,6 @@
 from collections.abc import Callable
-from uuid import uuid4
 
+from conftest import place_order
 from fastapi.testclient import TestClient
 
 
@@ -8,22 +8,6 @@ def checklist(client: TestClient, headers: dict[str, str], event_id: str) -> dic
     response = client.get(f"/api/v1/paid-sales/checklist?event_id={event_id}", headers=headers)
     assert response.status_code == 200
     return response.json()
-
-
-def paid_order(event_id: str, ticket_type_id: str | None = None, price: int = 500000) -> dict:
-    return {
-        "event_id": event_id,
-        "customer_name": "Aliya Nurlanova",
-        "customer_email": "aliya@example.kz",
-        "items": [
-            {
-                "ticket_type_id": ticket_type_id or str(uuid4()),
-                "ticket_type_name": "Standard",
-                "unit_price_kzt": price,
-                "quantity": 1,
-            }
-        ],
-    }
 
 
 def test_new_event_starts_with_empty_checklist(
@@ -151,35 +135,62 @@ def test_activation_applies_only_to_the_selected_event(
     organizer_headers: dict[str, str],
     paid_event_id: str,
     make_paid_event: Callable[..., str],
+    attendee_headers: dict[str, str],
 ) -> None:
     other_event_id = make_paid_event()
 
     assert checklist(client, organizer_headers, paid_event_id)["status"] == "active"
     assert checklist(client, organizer_headers, other_event_id)["status"] == "pending"
-    response = client.post("/api/v1/orders", json=paid_order(other_event_id))
+    response = place_order(client, attendee_headers, other_event_id)
     assert response.status_code == 403
 
 
 def test_paid_orders_are_blocked_until_activation(
-    client: TestClient, organizer_headers: dict[str, str], make_paid_event: Callable[..., str]
+    client: TestClient,
+    organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    make_paid_event: Callable[..., str],
 ) -> None:
     event_id = make_paid_event()
 
-    blocked = client.post("/api/v1/orders", json=paid_order(event_id))
+    blocked = place_order(client, attendee_headers, event_id)
     assert blocked.status_code == 403
     assert blocked.json()["detail"] == "Paid ticket sales are not active for this event"
 
-    free = client.post("/api/v1/orders", json=paid_order(event_id, price=0))
+    free_type = client.post(
+        f"/api/v1/ticket-types?event_id={event_id}",
+        json={"name": "Free", "price": 0, "quantity": 10},
+        headers=organizer_headers,
+    ).json()
+    free = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": event_id,
+            "customer_name": "Aliya Nurlanova",
+            "customer_email": "aliya@example.kz",
+            "items": [{"ticket_type_id": free_type["id"], "quantity": 1}],
+        },
+    )
     assert free.status_code == 201
 
 
-def test_zero_price_for_a_paid_ticket_type_is_rejected(
-    client: TestClient, organizer_headers: dict[str, str], make_paid_event: Callable[..., str]
+def test_client_price_cannot_open_a_paid_ticket_type(
+    client: TestClient, attendee_headers: dict[str, str], make_paid_event: Callable[..., str]
 ) -> None:
     event_id = make_paid_event()
     ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={event_id}").json()[0]["id"]
 
-    response = client.post("/api/v1/orders", json=paid_order(event_id, ticket_type_id, price=0))
+    response = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": event_id,
+            "customer_name": "Aliya Nurlanova",
+            "customer_email": "aliya@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 1, "unit_price_kzt": 0}],
+        },
+    )
 
     assert response.status_code == 403
 
@@ -189,8 +200,9 @@ def test_admin_suspension_stops_paid_sales_until_reinstated(
     organizer_headers: dict[str, str],
     paid_event_id: str,
     admin_headers: dict[str, str],
+    attendee_headers: dict[str, str],
 ) -> None:
-    pending_order = client.post("/api/v1/orders", json=paid_order(paid_event_id)).json()
+    pending_order = place_order(client, attendee_headers, paid_event_id).json()
 
     records = client.get("/api/v1/admin/paid-sales?status=active", headers=admin_headers).json()
     assert [r["event_id"] for r in records] == [paid_event_id]
@@ -205,8 +217,12 @@ def test_admin_suspension_stops_paid_sales_until_reinstated(
     assert suspended.json()["status"] == "suspended"
     assert suspended.json()["suspension_reason"] == "Chargeback pattern"
 
-    assert client.post("/api/v1/orders", json=paid_order(paid_event_id)).status_code == 403
-    payment = client.post("/api/v1/payments/simulate", json={"order_id": pending_order["id"]})
+    assert place_order(client, attendee_headers, paid_event_id).status_code == 403
+    payment = client.post(
+        "/api/v1/payments/simulate",
+        headers=attendee_headers,
+        json={"order_id": pending_order["id"]},
+    )
     assert payment.status_code == 403
     reactivate = client.post(
         f"/api/v1/paid-sales/activate?event_id={paid_event_id}", headers=organizer_headers
@@ -217,15 +233,29 @@ def test_admin_suspension_stops_paid_sales_until_reinstated(
         f"/api/v1/admin/paid-sales/reinstate?event_id={paid_event_id}", headers=admin_headers
     )
     assert reinstated.json()["status"] == "active"
-    assert client.post("/api/v1/orders", json=paid_order(paid_event_id)).status_code == 201
+    assert place_order(client, attendee_headers, paid_event_id).status_code == 201
 
 
-def test_suspending_the_event_also_stops_paid_sales(
-    client: TestClient, paid_event_id: str, admin_headers: dict[str, str]
+def test_suspending_the_event_stops_sales(
+    client: TestClient,
+    paid_event_id: str,
+    admin_headers: dict[str, str],
+    attendee_headers: dict[str, str],
 ) -> None:
+    ticket_type_id = client.get(f"/api/v1/ticket-types?event_id={paid_event_id}").json()[0]["id"]
     client.post(f"/api/v1/admin/events/suspend?event_id={paid_event_id}", headers=admin_headers)
 
-    assert client.post("/api/v1/orders", json=paid_order(paid_event_id)).status_code == 403
+    res = client.post(
+        "/api/v1/orders",
+        headers=attendee_headers,
+        json={
+            "event_id": paid_event_id,
+            "customer_name": "Arman Bekov",
+            "customer_email": "arman@example.kz",
+            "items": [{"ticket_type_id": ticket_type_id, "quantity": 1}],
+        },
+    )
+    assert res.status_code == 400
 
 
 def test_only_platform_admins_manage_paid_sales(

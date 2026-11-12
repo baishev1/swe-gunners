@@ -15,6 +15,7 @@
     "verifyEmail": "Подтвердите почту, чтобы создавать и публиковать события.",
     "resendVerification": "Отправить письмо ещё раз",
     "verificationSent": "Письмо отправлено.",
+    "organizerDashboard": "Мои мероприятия",
     "organizerProfile": "Профиль организатора",
     "signOut": "Выйти"
   },
@@ -76,6 +77,27 @@
     "save": "Сохранить",
     "loading": "Загрузка..."
   },
+  "organizerDashboard": {
+    "title": "Мои мероприятия",
+    "newEvent": "Новое мероприятие",
+    "upcoming": "Предстоящие",
+    "active": "Идут сейчас",
+    "completed": "Завершённые",
+    "cancelled": "Отменённые",
+    "empty": "Здесь пока нет мероприятий.",
+    "edit": "Открыть",
+    "history": "История",
+    "duplicate": "Дублировать",
+    "duplicated": "Черновик-копия создан.",
+    "suspended": "Приостановлено платформой",
+    "statuses": {
+      "draft": "Черновик",
+      "published": "Опубликовано",
+      "unpublished": "Снято с публикации",
+      "cancelled": "Отменено",
+      "suspended": "Приостановлено"
+    }
+  },
   "eventsList": {
     "title": "Мероприятия",
     "create": "Создать мероприятие",
@@ -87,7 +109,8 @@
     "noTickets": "Билетов пока нет.",
     "left": "Осталось: {{count}}",
     "soldOut": "Распродано",
-    "edit": "Редактировать мероприятие"
+    "edit": "Редактировать мероприятие",
+    "getTickets": "Купить билеты"
   },
   "organizerEventNew": {
     "title": "Новое мероприятие",
@@ -97,7 +120,8 @@
   "organizerEventEdit": {
     "viewPage": "Страница мероприятия",
     "details": "О мероприятии",
-    "ticketTypes": "Типы билетов"
+    "ticketTypes": "Типы билетов",
+    "attendees": "Участники"
   },
   "eventForm": {
     "title": "Название",
@@ -130,7 +154,7 @@
     "add": "Добавить тип билета",
     "show": "Показать",
     "hide": "Скрыть",
-    "stats": "Доступно: {{available}} · в резерве: {{reserved}} · продано: {{sold}} из {{quantity}}"
+    "stats": "Доступно: {{available}} · в резерве: {{reserved}} · продано: {{sold}} · возвращено: {{refunded}} · отмечено: {{checkedIn}} из {{quantity}}"
   },
   "createVenue": {
     "name": "Название площадки",
@@ -184,12 +208,67 @@
     "to": "По",
     "empty": "Нет действий по этим фильтрам.",
     "actions": {
+      "event_created": "Мероприятие создано",
+      "event_published": "Мероприятие опубликовано",
+      "event_unpublished": "Мероприятие снято с публикации",
+      "event_cancelled": "Мероприятие отменено",
+      "event_duplicated": "Мероприятие продублировано",
+      "event_capacity_changed": "Изменена вместимость",
+      "ticket_type_created": "Добавлен тип билета",
+      "ticket_price_changed": "Изменена цена билета",
+      "ticket_capacity_changed": "Изменено количество билетов",
+      "ticket_checked_in": "Билет отмечен на входе",
+      "ticket_check_in_reversed": "Вход отменён",
+      "activation_fee_paid": "Оплачен сбор за активацию",
+      "activation_fee_failed": "Ошибка оплаты сбора за активацию",
+      "paid_terms_accepted": "Приняты условия платных продаж",
+      "paid_sales_activated": "Платные продажи активированы",
+      "paid_sales_suspended": "Платные продажи приостановлены",
+      "paid_sales_reinstated": "Платные продажи возобновлены",
       "promo_created": "Создана промо-кампания",
       "promo_disabled": "Отключена промо-кампания",
       "event_suspended": "Событие приостановлено",
       "user_suspended": "Пользователь заблокирован",
       "settings_updated": "Настройки изменены"
     }
+  },
+  "analytics": {
+    "title": "Аналитика",
+    "open": "Аналитика",
+    "back": "К мероприятию",
+    "from": "С",
+    "to": "По",
+    "ticketType": "Тип билета",
+    "allTicketTypes": "Все типы билетов",
+    "capacity": "Вместимость",
+    "totalCapacity": "Всего мест",
+    "sold": "Продано",
+    "remaining": "Осталось",
+    "percentSold": "Продано, %",
+    "revenue": "Выручка",
+    "gross": "Валовые продажи",
+    "discounts": "Скидки",
+    "refunds": "Возвраты",
+    "net": "Чистая выручка",
+    "netHint": "Демонстрационная выручка в KZT",
+    "salesOverTime": "Продажи по времени",
+    "noSales": "Нет продаж по этим фильтрам.",
+    "ticketsCount_one": "{{count}} билет",
+    "ticketsCount_few": "{{count}} билета",
+    "ticketsCount_many": "{{count}} билетов",
+    "ticketsCount_other": "{{count}} билета",
+    "byTicketType": "Продажи по типам билетов",
+    "price": "Цена",
+    "checkedIn": "Прошли вход",
+    "campaigns": "Кампании и промокоды",
+    "noCampaigns": "У мероприятия нет промокампаний.",
+    "campaign": "Кампания",
+    "redemptions": "Использований",
+    "tickets": "Билеты",
+    "disabled": "Отключена",
+    "attendance": "Посещаемость",
+    "absent": "Не пришли",
+    "percentCheckedIn": "Прошли вход, %"
   },
   "admin": {
     "title": "Администрирование",
@@ -238,6 +317,66 @@
       "reason": "Причина",
       "suspend": "Приостановить продажи",
       "reinstate": "Возобновить"
+    },
+    "ops": {
+      "orders": "Заказы",
+      "payments": "Платежи",
+      "monitoring": "Мониторинг",
+      "reportsTab": "Отчёты",
+      "searchOrders": "Email, имя, мероприятие или ID заказа",
+      "searchPayments": "Транзакция, email или ID платежа",
+      "created": "Создан",
+      "customer": "Покупатель",
+      "amount": "Сумма",
+      "transaction": "Транзакция",
+      "orderStatuses": {
+        "pending": "Ожидает оплаты",
+        "paid": "Оплачен",
+        "cancelled": "Отменён",
+        "refunded": "Возвращён"
+      },
+      "paymentStatuses": {
+        "succeeded": "Успешно",
+        "failed": "Ошибка"
+      },
+      "failedPayments": "Неудачные платежи",
+      "refundedOrders": "Возвращённые заказы",
+      "refundedAmount": "Сумма возвратов",
+      "cancelledOrders": "Отменённые заказы",
+      "pendingOrders": "Ожидают оплаты",
+      "recentFailedPayments": "Последние неудачные платежи",
+      "recentRefunds": "Последние возвраты",
+      "reportsDescription": "Скачайте CSV с данными платформы. Оставьте даты пустыми, чтобы выгрузить всё.",
+      "report": "Отчёт",
+      "reports": {
+        "orders": "Заказы",
+        "payments": "Платежи",
+        "events": "Мероприятия",
+        "users": "Пользователи"
+      },
+      "from": "С",
+      "to": "По",
+      "download": "Скачать CSV"
+    }
+  },
+  "eventAttendees": {
+    "title": "Участники — {{title}}",
+    "summary": "Зарегистрировано: {{total}} · отмечено: {{checkedIn}}",
+    "filterType": "Тип билета",
+    "filterStatus": "Статус",
+    "allTypes": "Все типы билетов",
+    "allStatuses": "Все статусы",
+    "attendee": "Участник",
+    "ticketType": "Тип билета",
+    "status": "Статус",
+    "checkedInAt": "Отмечен",
+    "registeredAt": "Зарегистрирован",
+    "empty": "Регистраций пока нет.",
+    "statuses": {
+      "valid": "Действителен",
+      "checked_in": "Отмечен",
+      "cancelled": "Отменён",
+      "refunded": "Возвращён"
     }
   },
   "paidSales": {

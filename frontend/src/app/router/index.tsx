@@ -10,6 +10,7 @@ import { HomePage } from '@/pages/home'
 import { LoginPage } from '@/pages/login'
 import { NotFoundPage } from '@/pages/not-found'
 import { OrdersPage } from '@/pages/orders'
+import { OrganizerDashboardPage } from '@/pages/organizer-dashboard'
 import { OrganizerProfilePage } from '@/pages/organizer-profile'
 import { RegisterPage } from '@/pages/register'
 import { ResetPasswordPage } from '@/pages/reset-password'
@@ -20,7 +21,9 @@ import { TicketsPage } from '@/pages/tickets'
 import { VerifyEmailPage } from '@/pages/verify-email'
 import { OrganizerEventEditPage } from '@/pages/organizer-event-edit'
 import { OrganizerEventNewPage } from '@/pages/organizer-event-new'
+import { OrganizerEventAttendeesPage } from '@/pages/organizer-event-attendees'
 import { OrganizerEventPromoPage } from '@/pages/organizer-event-promo'
+import { OrganizerEventAnalyticsPage } from '@/pages/organizer-event-analytics'
 import { ROUTES } from '@/shared/config'
 
 import { ProtectedRoute } from './protected-route'
@@ -36,22 +39,25 @@ export function AppRouter() {
       <Route element={<ProtectedRoute />}>
         <Route path={ROUTES.home} element={<HomePage />} />
         <Route path={ROUTES.eventHistory} element={<EventHistoryPage />} />
+        <Route path={ROUTES.checkout} element={<CheckoutPage />} />
+        <Route path={ROUTES.orders} element={<OrdersPage />} />
+        <Route path={ROUTES.tickets} element={<TicketsPage />} />
         <Route path={ROUTES.support} element={<SupportPage />} />
         <Route path={ROUTES.supportNew} element={<SupportNewPage />} />
         <Route path={ROUTES.supportCase} element={<SupportCasePage />} />
       </Route>
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerProfile} element={<OrganizerProfilePage />} />
+        <Route path={ROUTES.organizerDashboard} element={<OrganizerDashboardPage />} />
       </Route>
-      <Route path={ROUTES.checkout} element={<CheckoutPage />} />
-      <Route path={ROUTES.orders} element={<OrdersPage />} />
-      <Route path={ROUTES.tickets} element={<TicketsPage />} />
       <Route path={ROUTES.events} element={<EventsListPage />} />
       <Route path={ROUTES.eventDetail} element={<EventDetailPage />} />
       <Route element={<ProtectedRoute role="organizer" />}>
         <Route path={ROUTES.organizerEventNew} element={<OrganizerEventNewPage />} />
         <Route path={ROUTES.organizerEventEdit} element={<OrganizerEventEditPage />} />
         <Route path={ROUTES.organizerEventPromo} element={<OrganizerEventPromoPage />} />
+        <Route path={ROUTES.organizerEventAttendees} element={<OrganizerEventAttendeesPage />} />
+        <Route path={ROUTES.organizerEventAnalytics} element={<OrganizerEventAnalyticsPage />} />
       </Route>
       <Route element={<ProtectedRoute role="platform_admin" />}>
         <Route path={ROUTES.admin} element={<AdminPage />} />

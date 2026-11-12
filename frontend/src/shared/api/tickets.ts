@@ -16,6 +16,10 @@ export async function getTicketDetail(ticketId: string): Promise<Ticket> {
   return response.data
 }
 
-export function getTicketPdfUrl(ticketId: string): string {
-  return `/api/tickets/pdf?ticket_id=${ticketId}`
+export async function downloadTicketPdf(ticketId: string): Promise<Blob> {
+  const response = await apiClient.get<Blob>('/tickets/pdf', {
+    params: { ticket_id: ticketId },
+    responseType: 'blob',
+  })
+  return response.data
 }

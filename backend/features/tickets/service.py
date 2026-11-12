@@ -48,16 +48,28 @@ class TicketService:
     def list_tickets(
         self,
         db: Session,
+        user_id: UUID,
         order_id: UUID | None = None,
         event_id: UUID | None = None,
     ) -> list[Ticket]:
-        stmt = select(Ticket)
+        stmt = (
+            select(Ticket).join(Order, Order.id == Ticket.order_id).where(Order.user_id == user_id)
+        )
         if order_id:
             stmt = stmt.where(Ticket.order_id == order_id)
         if event_id:
             stmt = stmt.where(Ticket.event_id == event_id)
         stmt = stmt.order_by(Ticket.created_at.asc())
         return list(db.scalars(stmt).all())
+
+    def list_event_attendees(self, db: Session, event_id: UUID) -> list[tuple[Ticket, str]]:
+        stmt = (
+            select(Ticket, Order.status)
+            .join(Order, Order.id == Ticket.order_id)
+            .where(Ticket.event_id == event_id)
+            .order_by(Ticket.created_at.desc())
+        )
+        return [(ticket, order_status) for ticket, order_status in db.execute(stmt)]
 
     def get_ticket_by_qr_token(self, db: Session, qr_token: str) -> Ticket | None:
         stmt = select(Ticket).where(Ticket.qr_token == qr_token)

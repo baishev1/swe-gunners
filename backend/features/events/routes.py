@@ -35,8 +35,16 @@ def list_my_events(
     return event_service.list_organizer_events(db=db, organizer_id=user.id, status=status)
 
 
+@router.get("/dashboard", response_model=OrganizerDashboardResponse)
+def get_organizer_dashboard(
+    user: User = Depends(require_role("organizer")),
+    db: Session = Depends(get_db),
+):
+    return event_service.organizer_dashboard(db=db, organizer_id=user.id)
+
+
 @router.get("/detail", response_model=EventResponse)
-def get_event_detail(event: Event = Depends(valid_event_id)):
+def get_event_detail(event: Event = Depends(viewable_event_guard)):
     return event
 
 
@@ -44,39 +52,43 @@ def get_event_detail(event: Event = Depends(valid_event_id)):
 def update_event(
     data: EventUpdate = Depends(valid_event_update),
     event: Event = Depends(owned_event_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return event_service.update_event(db=db, event=event, data=data)
+    return event_service.update_event(db=db, event=event, data=data, actor_id=user.id)
 
 
 @router.post("/publish", response_model=EventResponse)
 def publish_event(
-    _: User = Depends(verified_organizer_guard),
+    user: User = Depends(verified_organizer_guard),
     event: Event = Depends(owned_event_guard),
     db: Session = Depends(get_db),
 ):
-    return event_service.publish_event(db=db, event=event)
+    return event_service.publish_event(db=db, event=event, actor_id=user.id)
 
 
 @router.post("/unpublish", response_model=EventResponse)
 def unpublish_event(
     event: Event = Depends(owned_event_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return event_service.unpublish_event(db=db, event=event)
+    return event_service.unpublish_event(db=db, event=event, actor_id=user.id)
 
 
 @router.post("/cancel", response_model=EventResponse)
 def cancel_event(
     event: Event = Depends(owned_event_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return event_service.cancel_event(db=db, event=event)
+    return event_service.cancel_event(db=db, event=event, actor_id=user.id)
 
 
 @router.post("/duplicate", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def duplicate_event(
     event: Event = Depends(owned_event_id_guard),
+    user: User = Depends(require_role("organizer")),
     db: Session = Depends(get_db),
 ):
-    return event_service.duplicate_event(db=db, event=event)
+    return event_service.duplicate_event(db=db, event=event, actor_id=user.id)

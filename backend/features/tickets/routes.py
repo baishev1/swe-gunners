@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 
 from core import *
+from features.checkin.guards import managed_event
+from features.events.models import Event
 from features.users.dependencies import active_user
 from features.users.models import User
 
@@ -16,13 +18,36 @@ router = APIRouter(prefix="/tickets", tags=["Tickets"])
 def list_tickets(
     order_id: UUID | None = None,
     event_id: UUID | None = None,
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    return ticket_service.list_tickets(db=db, order_id=order_id, event_id=event_id)
+    return ticket_service.list_tickets(db=db, user_id=user.id, order_id=order_id, event_id=event_id)
+
+
+@router.get("/event-attendees", response_model=list[EventAttendeeResponse])
+def list_event_attendees(
+    event: Event = Depends(managed_event),
+    db: Session = Depends(get_db),
+):
+    return [
+        EventAttendeeResponse(
+            ticket_id=ticket.id,
+            order_id=ticket.order_id,
+            attendee_name=ticket.attendee_name,
+            attendee_email=ticket.attendee_email,
+            ticket_type_id=ticket.ticket_type_id,
+            ticket_type_name=ticket.ticket_type_name,
+            ticket_status=ticket.status,
+            order_status=order_status,
+            checked_in_at=ticket.checked_in_at,
+            created_at=ticket.created_at,
+        )
+        for ticket, order_status in ticket_service.list_event_attendees(db=db, event_id=event.id)
+    ]
 
 
 @router.get("/detail", response_model=TicketResponse)
-def get_ticket_detail(ticket: Ticket = Depends(valid_ticket_id)):
+def get_ticket_detail(ticket: Ticket = Depends(accessible_ticket_guard)):
     return ticket
 
 
@@ -57,7 +82,7 @@ def undo_check_in(
 
 @router.get("/pdf")
 def download_ticket_pdf(
-    ticket: Ticket = Depends(valid_ticket_id),
+    ticket: Ticket = Depends(accessible_ticket_guard),
     db: Session = Depends(get_db),
 ):
     pdf_bytes = ticket_service.generate_pdf_ticket(db=db, ticket=ticket)

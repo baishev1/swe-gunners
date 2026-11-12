@@ -15,6 +15,7 @@
     "verifyEmail": "Confirm your email to create and publish events.",
     "resendVerification": "Resend email",
     "verificationSent": "Verification email sent.",
+    "organizerDashboard": "My events",
     "organizerProfile": "Organizer profile",
     "signOut": "Sign out"
   },
@@ -76,6 +77,27 @@
     "save": "Save",
     "loading": "Loading..."
   },
+  "organizerDashboard": {
+    "title": "My events",
+    "newEvent": "New event",
+    "upcoming": "Upcoming",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "empty": "No events here yet.",
+    "edit": "Open",
+    "history": "History",
+    "duplicate": "Duplicate",
+    "duplicated": "Draft copy created.",
+    "suspended": "Suspended by platform",
+    "statuses": {
+      "draft": "Draft",
+      "published": "Published",
+      "unpublished": "Unpublished",
+      "cancelled": "Cancelled",
+      "suspended": "Suspended"
+    }
+  },
   "eventsList": {
     "title": "Events",
     "create": "Create event",
@@ -87,7 +109,8 @@
     "noTickets": "No tickets available yet.",
     "left": "{{count}} left",
     "soldOut": "Sold out",
-    "edit": "Edit event"
+    "edit": "Edit event",
+    "getTickets": "Get tickets"
   },
   "organizerEventNew": {
     "title": "New event",
@@ -97,7 +120,8 @@
   "organizerEventEdit": {
     "viewPage": "View event page",
     "details": "Event details",
-    "ticketTypes": "Ticket types"
+    "ticketTypes": "Ticket types",
+    "attendees": "Attendees"
   },
   "eventForm": {
     "title": "Title",
@@ -130,7 +154,7 @@
     "add": "Add ticket type",
     "show": "Show",
     "hide": "Hide",
-    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold of {{quantity}}"
+    "stats": "{{available}} available · {{reserved}} reserved · {{sold}} sold · {{refunded}} refunded · {{checkedIn}} checked in of {{quantity}}"
   },
   "createVenue": {
     "name": "Venue name",
@@ -184,12 +208,65 @@
     "to": "To",
     "empty": "No activity for these filters.",
     "actions": {
+      "event_created": "Event created",
+      "event_published": "Event published",
+      "event_unpublished": "Event unpublished",
+      "event_cancelled": "Event cancelled",
+      "event_duplicated": "Event duplicated",
+      "event_capacity_changed": "Event capacity changed",
+      "ticket_type_created": "Ticket type added",
+      "ticket_price_changed": "Ticket price changed",
+      "ticket_capacity_changed": "Ticket quantity changed",
+      "ticket_checked_in": "Ticket checked in",
+      "ticket_check_in_reversed": "Check-in reversed",
+      "activation_fee_paid": "Activation fee paid",
+      "activation_fee_failed": "Activation fee payment failed",
+      "paid_terms_accepted": "Paid sales terms accepted",
+      "paid_sales_activated": "Paid sales activated",
+      "paid_sales_suspended": "Paid sales suspended",
+      "paid_sales_reinstated": "Paid sales reinstated",
       "promo_created": "Promo campaign created",
       "promo_disabled": "Promo campaign disabled",
       "event_suspended": "Event suspended",
       "user_suspended": "User suspended",
       "settings_updated": "Settings updated"
     }
+  },
+  "analytics": {
+    "title": "Analytics",
+    "open": "Analytics",
+    "back": "Back to event",
+    "from": "From",
+    "to": "To",
+    "ticketType": "Ticket type",
+    "allTicketTypes": "All ticket types",
+    "capacity": "Capacity",
+    "totalCapacity": "Total capacity",
+    "sold": "Sold",
+    "remaining": "Remaining",
+    "percentSold": "Sold, %",
+    "revenue": "Revenue",
+    "gross": "Gross sales",
+    "discounts": "Discounts",
+    "refunds": "Refunds",
+    "net": "Net revenue",
+    "netHint": "Demonstration revenue in KZT",
+    "salesOverTime": "Sales over time",
+    "noSales": "No sales for these filters.",
+    "ticketsCount_one": "{{count}} ticket",
+    "ticketsCount_other": "{{count}} tickets",
+    "byTicketType": "Sales by ticket type",
+    "price": "Price",
+    "checkedIn": "Checked in",
+    "campaigns": "Campaigns and promo codes",
+    "noCampaigns": "No promo campaigns for this event.",
+    "campaign": "Campaign",
+    "redemptions": "Redemptions",
+    "tickets": "Tickets",
+    "disabled": "Disabled",
+    "attendance": "Attendance",
+    "absent": "Not checked in",
+    "percentCheckedIn": "Checked in, %"
   },
   "admin": {
     "title": "Administration",
@@ -238,6 +315,66 @@
       "reason": "Reason",
       "suspend": "Suspend sales",
       "reinstate": "Reinstate"
+    },
+    "ops": {
+      "orders": "Orders",
+      "payments": "Payments",
+      "monitoring": "Monitoring",
+      "reportsTab": "Reports",
+      "searchOrders": "Email, name, event or order ID",
+      "searchPayments": "Transaction, email or payment ID",
+      "created": "Created",
+      "customer": "Customer",
+      "amount": "Amount",
+      "transaction": "Transaction",
+      "orderStatuses": {
+        "pending": "Pending",
+        "paid": "Paid",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
+      },
+      "paymentStatuses": {
+        "succeeded": "Succeeded",
+        "failed": "Failed"
+      },
+      "failedPayments": "Failed payments",
+      "refundedOrders": "Refunded orders",
+      "refundedAmount": "Refunded amount",
+      "cancelledOrders": "Cancelled orders",
+      "pendingOrders": "Awaiting payment",
+      "recentFailedPayments": "Recent failed payments",
+      "recentRefunds": "Recent refunds",
+      "reportsDescription": "Download a CSV of platform records. Leave the dates empty to export everything.",
+      "report": "Report",
+      "reports": {
+        "orders": "Orders",
+        "payments": "Payments",
+        "events": "Events",
+        "users": "Users"
+      },
+      "from": "From",
+      "to": "To",
+      "download": "Download CSV"
+    }
+  },
+  "eventAttendees": {
+    "title": "Attendees — {{title}}",
+    "summary": "{{total}} registered · {{checkedIn}} checked in",
+    "filterType": "Ticket type",
+    "filterStatus": "Status",
+    "allTypes": "All ticket types",
+    "allStatuses": "All statuses",
+    "attendee": "Attendee",
+    "ticketType": "Ticket type",
+    "status": "Status",
+    "checkedInAt": "Checked in",
+    "registeredAt": "Registered",
+    "empty": "No registrations yet.",
+    "statuses": {
+      "valid": "Valid",
+      "checked_in": "Checked in",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded"
     }
   },
   "paidSales": {

@@ -38,6 +38,8 @@ class TicketTypeResponse(TicketTypeBase):
     event_id: UUID
     reserved_count: int
     sold_count: int
+    refunded_count: int
+    checked_in_count: int
     available: int
     created_at: datetime
     updated_at: datetime

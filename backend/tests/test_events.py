@@ -44,10 +44,67 @@ def test_get_event_detail(client: TestClient, organizer_headers: dict[str, str])
     payload = sample_event_payload(create_venue(client, organizer_headers))
     create_res = client.post("/api/v1/events", json=payload, headers=organizer_headers)
     event_id = create_res.json()["id"]
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=organizer_headers)
 
     res = client.get(f"/api/v1/events/detail?event_id={event_id}")
     assert res.status_code == 200
     assert res.json()["id"] == event_id
+
+
+def test_draft_event_detail_is_preview_for_organizer_only(
+    client: TestClient, organizer_headers: dict[str, str]
+) -> None:
+    payload = sample_event_payload(create_venue(client, organizer_headers))
+    event_id = client.post("/api/v1/events", json=payload, headers=organizer_headers).json()["id"]
+
+    assert client.get(f"/api/v1/events/detail?event_id={event_id}").status_code == 404
+    res = client.get(f"/api/v1/events/detail?event_id={event_id}", headers=organizer_headers)
+    assert res.status_code == 200
+    assert res.json()["status"] == "draft"
+
+
+def test_unlisted_event_visible_by_link_only(
+    client: TestClient, organizer_headers: dict[str, str]
+) -> None:
+    payload = sample_event_payload(create_venue(client, organizer_headers))
+    payload["visibility"] = "unlisted"
+    event_id = client.post("/api/v1/events", json=payload, headers=organizer_headers).json()["id"]
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=organizer_headers)
+
+    detail = client.get(f"/api/v1/events/detail?event_id={event_id}")
+    assert detail.status_code == 200
+
+    listing = client.get("/api/v1/events")
+    assert all(e["id"] != event_id for e in listing.json())
+
+
+def test_private_event_hidden_from_public(
+    client: TestClient,
+    organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+) -> None:
+    payload = sample_event_payload(create_venue(client, organizer_headers))
+    payload["visibility"] = "private"
+    event_id = client.post("/api/v1/events", json=payload, headers=organizer_headers).json()["id"]
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=organizer_headers)
+
+    assert client.get(f"/api/v1/events/detail?event_id={event_id}").status_code == 404
+    url = f"/api/v1/events/detail?event_id={event_id}"
+    assert client.get(url, headers=attendee_headers).status_code == 404
+    assert client.get(url, headers=organizer_headers).status_code == 200
+
+
+def test_cancelled_event_stays_visible(
+    client: TestClient, organizer_headers: dict[str, str]
+) -> None:
+    payload = sample_event_payload(create_venue(client, organizer_headers))
+    event_id = client.post("/api/v1/events", json=payload, headers=organizer_headers).json()["id"]
+    client.post(f"/api/v1/events/publish?event_id={event_id}", headers=organizer_headers)
+    client.post(f"/api/v1/events/cancel?event_id={event_id}", headers=organizer_headers)
+
+    res = client.get(f"/api/v1/events/detail?event_id={event_id}")
+    assert res.status_code == 200
+    assert res.json()["status"] == "cancelled"
 
 
 def test_get_event_detail_not_found(client: TestClient, organizer_headers: dict[str, str]) -> None:

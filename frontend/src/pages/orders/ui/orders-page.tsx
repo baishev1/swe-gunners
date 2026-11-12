@@ -25,7 +25,7 @@ export function OrdersPage() {
           </p>
         </div>
         <Button asChild size="sm">
-          <Link to="/checkout">New Order</Link>
+          <Link to="/events">New Order</Link>
         </Button>
       </div>
 
@@ -45,7 +45,7 @@ export function OrdersPage() {
         <div className="text-center py-12 rounded-xl border border-dashed border-border p-8">
           <p className="text-muted-foreground text-sm">No orders found yet.</p>
           <Button asChild className="mt-4" size="sm">
-            <Link to="/checkout">Browse Tickets</Link>
+            <Link to="/events">Browse Tickets</Link>
           </Button>
         </div>
       )}

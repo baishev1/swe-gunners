@@ -4,9 +4,12 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
 
 from core import *
+from features.auth.guards import get_current_user
 from features.checkin.guards import assigned_event, undo_check_in_event
 from features.events.models import Event
+from features.orders.guards import can_access_order
 from features.orders.models import Order
+from features.users.models import User
 
 from .models import *
 from .schemas import *
@@ -15,6 +18,20 @@ from .schemas import *
 def valid_ticket_id(ticket_id: UUID, db: Session = Depends(get_db)) -> Ticket:
     ticket = db.get(Ticket, ticket_id)
     if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        )
+    return ticket
+
+
+def accessible_ticket_guard(
+    ticket: Ticket = Depends(valid_ticket_id),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Ticket:
+    order = db.get(Order, ticket.order_id)
+    if order is None or not can_access_order(db, order, user):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ticket not found",
