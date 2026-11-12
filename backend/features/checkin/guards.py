@@ -64,8 +64,8 @@ def assigned_event(
     )
     if event.organizer_id != user.id and user.role != "platform_admin" and assignment is None:
         raise HTTPException(status_code=404, detail="Event not found")
-    if event.status == "cancelled":
-        raise HTTPException(status_code=400, detail="Cannot check in to a cancelled event")
+    if event.status in {"cancelled", "suspended"}:
+        raise HTTPException(status_code=400, detail=f"Cannot check in to a {event.status} event")
     return event
 
 

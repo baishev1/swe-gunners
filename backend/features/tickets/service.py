@@ -7,9 +7,10 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from core import *
+from features.audit_log.service import audit_log_service
 from features.events.models import Event
 from features.orders.models import Order
 
@@ -62,31 +63,66 @@ class TicketService:
         stmt = select(Ticket).where(Ticket.qr_token == qr_token)
         return db.scalar(stmt)
 
-    def check_in_ticket(self, db: Session, ticket: Ticket) -> Ticket:
-        if ticket.status == "checked_in":
-            raise HTTPException(
-                status_code=400,
-                detail="Ticket is already checked in",
-            )
-        if ticket.status != "valid":
-            raise HTTPException(
-                status_code=400,
-                detail=f"Cannot check in ticket with status '{ticket.status}'",
-            )
-        ticket.status = "checked_in"
-        ticket.checked_in_at = time_now()
-        db.commit()
-        db.refresh(ticket)
-        return ticket
+    def check_in_ticket(self, db: Session, ticket: Ticket, actor_id: UUID) -> Ticket:
+        return self._transition(db, ticket, actor_id, reverse=False)
 
-    def undo_check_in(self, db: Session, ticket: Ticket) -> Ticket:
-        if ticket.status != "checked_in":
-            raise HTTPException(
-                status_code=400,
-                detail="Ticket is not checked in",
+    def undo_check_in(self, db: Session, ticket: Ticket, actor_id: UUID) -> Ticket:
+        return self._transition(db, ticket, actor_id, reverse=True)
+
+    def _transition(self, db: Session, ticket: Ticket, actor_id: UUID, reverse: bool) -> Ticket:
+        expected = "checked_in" if reverse else "valid"
+        target = "valid" if reverse else "checked_in"
+        paid_order = (
+            select(Order.id)
+            .where(
+                Order.id == Ticket.order_id,
+                Order.event_id == Ticket.event_id,
+                Order.status == "paid",
             )
-        ticket.status = "valid"
-        ticket.checked_in_at = None
+            .exists()
+        )
+        active_event = (
+            select(Event.id)
+            .where(
+                Event.id == Ticket.event_id,
+                Event.status.not_in(["cancelled", "suspended"]),
+            )
+            .exists()
+        )
+        # The database checks the current state, even if another scanner changed it
+        # after this request loaded the ticket. The timestamp also protects stale undo requests.
+        stmt = (
+            update(Ticket)
+            .where(
+                Ticket.id == ticket.id,
+                Ticket.event_id == ticket.event_id,
+                Ticket.status == expected,
+                Ticket.checked_in_at == ticket.checked_in_at,
+                paid_order,
+                active_event,
+            )
+            .values(status=target, checked_in_at=None if reverse else time_now())
+            .returning(Ticket.id)
+            .execution_options(synchronize_session=False)
+        )
+        changed_id = db.scalar(stmt)
+        if changed_id is None:
+            db.rollback()
+            detail = (
+                "Ticket is not checked in or is not eligible for admission"
+                if reverse
+                else "Ticket is already checked in or is not eligible for admission"
+            )
+            raise HTTPException(status_code=400, detail=detail)
+        audit_log_service.record(
+            db,
+            action="ticket_check_in_reversed" if reverse else "ticket_checked_in",
+            entity_type="ticket",
+            entity_id=ticket.id,
+            event_id=ticket.event_id,
+            actor_id=actor_id,
+            description="Reversed ticket check-in" if reverse else "Checked in ticket",
+        )
         db.commit()
         db.refresh(ticket)
         return ticket
