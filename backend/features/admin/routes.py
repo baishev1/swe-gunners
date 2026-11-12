@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Response
-from pydantic import AwareDatetime
+from fastapi import APIRouter, Depends
 
 from core import *
 from features.auth.guards import get_current_user, require_role
@@ -64,36 +63,3 @@ def update_settings(
     db: Session = Depends(get_db),
 ):
     return admin_service.update_settings(db=db, data=data, actor_id=admin.id)
-
-
-@router.get("/orders", response_model=list[AdminOrderResponse])
-def search_orders(q: str | None = None, status: str | None = None, db: Session = Depends(get_db)):
-    return admin_service.search_orders(db=db, q=q, status=status)
-
-
-@router.get("/payments", response_model=list[AdminPaymentResponse])
-def search_payments(q: str | None = None, status: str | None = None, db: Session = Depends(get_db)):
-    return admin_service.search_payments(db=db, q=q, status=status)
-
-
-@router.get("/monitoring", response_model=AdminMonitoringResponse)
-def get_monitoring(db: Session = Depends(get_db)):
-    return admin_service.monitoring(db=db)
-
-
-@router.get("/reports/export", response_class=Response)
-def export_report(
-    report: ReportKind = Query(),
-    date_from: AwareDatetime | None = None,
-    date_to: AwareDatetime | None = None,
-    db: Session = Depends(get_db),
-):
-    content = admin_service.export_report(
-        db=db, report=report, date_from=date_from, date_to=date_to
-    )
-    filename = f"biletflow-{report}-{time_now():%Y%m%d}.csv"
-    return Response(
-        content=content,
-        media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
