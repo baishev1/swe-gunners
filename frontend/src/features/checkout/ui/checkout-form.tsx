@@ -8,6 +8,8 @@ import { formatPrice } from '@/shared/lib/format'
 import type { OrderItemCreate } from '@/shared/types'
 import type { ResolvedPromo } from '@/entities/promo-campaign'
 
+import { PromoCodeField } from './promo-code-field'
+
 export interface CheckoutTicketTypeOption {
   id: string
   name: string
@@ -26,6 +28,8 @@ interface CheckoutFormProps {
   ticketTypes: CheckoutTicketTypeOption[]
   promo?: ResolvedPromo | null
   onRemovePromo?: () => void
+  /** Applies a typed promo code; without it the field is hidden. */
+  onApplyPromo?: (code: string) => Promise<void>
   /** Secret from a private event's link; the server checks it again (SRS 4.2). */
   accessToken?: string | null
 }
@@ -52,6 +56,7 @@ export function CheckoutForm({
   ticketTypes,
   promo,
   onRemovePromo,
+  onApplyPromo,
   accessToken,
 }: CheckoutFormProps) {
   const { t } = useTranslation()
@@ -196,8 +201,14 @@ export function CheckoutForm({
                 </span>
                 <span>−{formatPrice(discountKzt)}</span>
               </div>
+              {subtotalKzt > 0 && discountKzt === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('checkout.promoCode.notApplicable')}
+                </p>
+              )}
             </div>
           )}
+          {!promo && onApplyPromo && <PromoCodeField onApply={onApplyPromo} disabled={isLoading} />}
 
           <div className="flex justify-between pt-2 border-t font-semibold text-base">
             <span>{t('checkout.total')}</span>

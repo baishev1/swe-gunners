@@ -167,3 +167,48 @@ test('attendee registers for a private event through its secret link', async ({
   await page.waitForURL(/\/support\/case\?case_id=/)
   await expect(page.getByText(/Ticket #.* · Standard · Valid/)).toBeVisible()
 })
+
+// SRS §4.14: the campaign's code also works when the attendee types it at checkout.
+test('attendee types a promo code at checkout', async ({ page, request }) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const { event, start } = await publishedEvent(request, organizer, {
+    title: `Typed Code Concert ${Date.now()}`,
+    price: 500000,
+  })
+  await activatePaidSales(request, organizer, event.id)
+  const campaign = await api(request, 'post', `/promo/campaigns?event_id=${event.id}`, organizer, {
+    name: 'Radio',
+    discount_type: 'fixed',
+    discount_value: 150000,
+    end_time: start.toISOString(),
+  })
+
+  await signIn(page, 'attendee@biletflow.dev', PASSWORD)
+  await page.goto(`/checkout?event_id=${event.id}`)
+  await page.getByLabel('Promo code').fill('WRONG123')
+  await page.getByRole('button', { name: 'Apply' }).click()
+  await expect(page.getByText('There is no such promo code for this event.')).toBeVisible()
+
+  // Codes are case-insensitive; Enter applies instead of placing the order.
+  await page.getByLabel('Promo code').fill(campaign.code.toLowerCase())
+  await page.getByLabel('Promo code').press('Enter')
+  await expect(page.getByText(`Promo code ${campaign.code}`)).toBeVisible()
+  await expect(page).toHaveURL(/\/checkout\?/)
+
+  await page.getByLabel('Full name').fill('Radio Listener')
+  await page.getByLabel('Email address').fill('attendee@biletflow.dev')
+  // 5000 KZT minus 1500 KZT.
+  await page.getByRole('button', { name: /^Reserve for .*3,?500.* and go to payment$/ }).click()
+  await page.waitForURL(/\/orders$/)
+  await page
+    .getByRole('button', { name: /^Pay .*3,?500.* \(simulation\)$/ })
+    .first()
+    .click()
+  await page.waitForURL(/\/tickets\?order_id=/)
+
+  const orderId = new URL(page.url()).searchParams.get('order_id')
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const order = await api(request, 'get', `/orders/detail?order_id=${orderId}`, attendee)
+  expect(order.discount_kzt).toBe(150000)
+  expect(order.promo_campaign_id).toBe(campaign.id)
+})
