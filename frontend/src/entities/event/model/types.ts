@@ -14,6 +14,7 @@ export interface EventPayload {
   registration_start_time: string | null
   registration_end_time: string | null
   cover_image_url: string | null
+  refund_policy: string | null
 }
 
 export interface EventItem extends EventPayload {

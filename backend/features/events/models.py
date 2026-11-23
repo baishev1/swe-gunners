@@ -21,5 +21,6 @@ class Event(DbBase):
     organizer_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"))
     is_assigned_seating: Mapped[bool] = mapped_column(Boolean, default=False)
     cover_image_url: Mapped[str | None] = mapped_column(String(1000), default=None)
+    refund_policy: Mapped[str | None] = mapped_column(Text, default=None)
 
     venue: Mapped[Venue] = relationship(lazy="joined")

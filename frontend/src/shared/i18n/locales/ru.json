@@ -115,7 +115,8 @@
     "left": "Осталось: {{count}}",
     "soldOut": "Распродано",
     "edit": "Редактировать мероприятие",
-    "getTickets": "Купить билеты"
+    "getTickets": "Купить билеты",
+    "refundPolicy": "Политика возврата"
   },
   "organizerEventNew": {
     "title": "Новое мероприятие",
@@ -163,6 +164,7 @@
     "registrationOpens": "Регистрация открывается",
     "registrationCloses": "Регистрация закрывается",
     "coverImageUrl": "Ссылка на обложку",
+    "refundPolicy": "Политика возврата",
     "saveChanges": "Сохранить изменения",
     "create": "Создать мероприятие"
   },

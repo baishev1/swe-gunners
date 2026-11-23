@@ -115,7 +115,8 @@
     "left": "{{count}} left",
     "soldOut": "Sold out",
     "edit": "Edit event",
-    "getTickets": "Get tickets"
+    "getTickets": "Get tickets",
+    "refundPolicy": "Refund policy"
   },
   "organizerEventNew": {
     "title": "New event",
@@ -163,6 +164,7 @@
     "registrationOpens": "Registration opens",
     "registrationCloses": "Registration closes",
     "coverImageUrl": "Cover image URL",
+    "refundPolicy": "Refund policy",
     "saveChanges": "Save changes",
     "create": "Create event"
   },
