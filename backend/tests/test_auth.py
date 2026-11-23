@@ -187,3 +187,41 @@ def test_verification_email_is_sent_over_smtp(client: TestClient, monkeypatch) -
     assert len(sent) == 1
     assert sent[0]["To"] == USER["email"]
     assert "/verify-email?token=" in sent[0].get_content()
+
+
+def test_smtp_logs_in_over_starttls_when_user_is_set(client: TestClient, monkeypatch) -> None:
+    calls: list[str] = []
+
+    class FakeSMTP:
+        def __init__(self, host: str, port: int) -> None:
+            calls.append(f"connect {host}:{port}")
+
+        def __enter__(self) -> "FakeSMTP":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def starttls(self) -> None:
+            calls.append("starttls")
+
+        def login(self, user: str, password: str) -> None:
+            calls.append(f"login {user}")
+
+        def send_message(self, message: EmailMessage) -> None:
+            calls.append("send")
+
+    monkeypatch.setattr(settings, "SMTP_HOST", "smtp.example.com")
+    monkeypatch.setattr(settings, "SMTP_PORT", 587)
+    monkeypatch.setattr(settings, "SMTP_USER", "mailer@example.com")
+    monkeypatch.setattr(settings, "SMTP_PASSWORD", "secret")
+    monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
+
+    client.post("/api/v1/auth/register", json=USER)
+
+    assert calls == [
+        "connect smtp.example.com:587",
+        "starttls",
+        "login mailer@example.com",
+        "send",
+    ]

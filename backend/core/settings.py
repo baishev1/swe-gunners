@@ -32,6 +32,9 @@ class Settings(BaseSettings):
 
     SMTP_HOST: str = ""
     SMTP_PORT: int = 1025
+    # Empty for Mailpit. Real providers (port 587) need STARTTLS and a login.
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
     MAIL_FROM: str = "no-reply@biletflow.dev"
 
     # Unpaid checkouts hold inventory this long before the reservation is released (SRS 4.6).
