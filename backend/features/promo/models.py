@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from sqlalchemy import Boolean, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -29,6 +31,11 @@ class PromoCampaign(DbBase):
     @property
     def ticket_type_ids(self) -> list[UUID]:
         return [ticket_type.id for ticket_type in self.ticket_types]
+
+    @property
+    def link(self) -> str:
+        query = urlencode({"event_id": self.event_id, "promo": self.qr_token})
+        return f"{settings.FRONTEND_URL}/events/detail?{query}"
 
 
 class PromoCampaignTicketType(DbBase):

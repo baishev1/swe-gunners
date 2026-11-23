@@ -34,6 +34,7 @@ class OrderBase(BaseModel):
 
 class OrderCreate(OrderBase):
     items: list[OrderItemCreate] = Field(min_length=1)
+    promo_code: str | None = Field(default=None, max_length=20)
 
 
 class OrderResponse(OrderBase):
@@ -42,6 +43,8 @@ class OrderResponse(OrderBase):
     id: UUID
     user_id: UUID | None
     total_amount_kzt: int
+    discount_kzt: int = 0
+    promo_campaign_id: UUID | None = None
     status: str
     created_at: datetime
     updated_at: datetime

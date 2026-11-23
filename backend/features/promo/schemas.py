@@ -46,6 +46,8 @@ class PromoCampaignResponse(BaseModel):
     redemption_count: int
     is_disabled: bool
     ticket_type_ids: list[UUID]
+    # The trackable HTTPS link the Campaign QR Code encodes (SRS 4.14).
+    link: str
     created_at: datetime
     updated_at: datetime
 
@@ -58,3 +60,5 @@ class PromoCampaignPublicResponse(BaseModel):
     discount_type: str
     discount_value: int
     end_time: datetime | None
+    # Lets checkout preview the discount; the server recalculates it on the order.
+    ticket_type_ids: list[UUID] = []

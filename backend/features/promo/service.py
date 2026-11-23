@@ -1,5 +1,4 @@
 import secrets
-from urllib.parse import urlencode
 
 import qrcode
 from qrcode.constants import ERROR_CORRECT_M
@@ -87,8 +86,7 @@ class PromoService:
         return campaign
 
     def campaign_link(self, campaign: PromoCampaign) -> str:
-        query = urlencode({"event_id": campaign.event_id, "promo": campaign.qr_token})
-        return f"{settings.FRONTEND_URL}/events/detail?{query}"
+        return campaign.link
 
     def build_qr_svg(self, campaign: PromoCampaign) -> str:
         qr = qrcode.QRCode(error_correction=ERROR_CORRECT_M, border=4)

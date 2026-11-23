@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEvent } from '@/entities/event'
 import { useMe } from '@/entities/session'
 import { useTicketTypes } from '@/entities/ticket-type'
+import { PromoLinkBanner } from '@/features/apply-promo-link'
 import { ContactSupportLink } from '@/features/contact-support'
 import { ReportEventForm } from '@/features/report-event'
 import { getErrorMessage } from '@/shared/api'
@@ -64,6 +65,7 @@ export function EventDetailPage() {
           {data.venue.name}, {data.venue.address}
         </p>
       </div>
+      <PromoLinkBanner eventId={eventId} />
       {data.description && <p className="whitespace-pre-line">{data.description}</p>}
       {data.refund_policy && (
         <div className="flex flex-col gap-2">

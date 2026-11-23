@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 from core import *
 from features.audit_log.service import audit_log_service
 from features.notifications.service import notification_service
+from features.promo.service import promo_service
 from features.ticket_types.models import TicketType
 from features.ticket_types.service import ticket_type_service
 from features.tickets.models import Ticket
@@ -19,7 +20,9 @@ class OrderService:
     def create_order(self, db: Session, data: OrderCreate, user_id: UUID) -> Order:
         # Free stock held by abandoned checkouts before checking availability.
         self.expire_stale_orders(db)
-        order = Order(**data.model_dump(exclude={"items"}), user_id=user_id, total_amount_kzt=0)
+        order = Order(
+            **data.model_dump(exclude={"items", "promo_code"}), user_id=user_id, total_amount_kzt=0
+        )
         db.add(order)
         db.flush()
 
@@ -41,6 +44,9 @@ class OrderService:
                 )
             )
             order.total_amount_kzt += ticket_type.price * item_data.quantity
+
+        if data.promo_code:
+            self._apply_promo(db, order, data.promo_code)
 
         if order.total_amount_kzt == 0:
             self.confirm_sale(db, order)
@@ -98,7 +104,34 @@ class OrderService:
             db.commit()
         return expired
 
+    def _apply_promo(self, db: Session, order: Order, code: str) -> None:
+        """Discounts the order server-side; the guard already checked the code (SRS 4.14)."""
+        campaign = promo_service.find_by_code(db, order.event_id, code)
+        assert campaign is not None
+        eligible = sum(
+            item.unit_price_kzt * item.quantity
+            for item in order.items
+            if promo_service.applies_to(campaign, item.ticket_type_id)
+        )
+        order.promo_campaign_id = campaign.id
+        order.discount_kzt = promo_service.calculate_discount(campaign, eligible)
+        order.total_amount_kzt -= order.discount_kzt
+
     def confirm_sale(self, db: Session, order: Order) -> None:
+        """Moves reserved stock to sold and redeems the order's promo code. Does not commit."""
+        if order.promo_campaign_id is not None:
+            from features.promo.models import PromoCampaign
+
+            campaign = db.get(PromoCampaign, order.promo_campaign_id)
+            redeemed = campaign is not None and promo_service.redeem(
+                db, campaign, order.id, order.discount_kzt
+            )
+            if not redeemed:
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Promo code is no longer available. Start a new order without it.",
+                )
         for item in order.items:
             ticket_type_service.confirm_sale(db, item.ticket_type_id, item.quantity)
         order.status = "paid"

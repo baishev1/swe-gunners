@@ -5,6 +5,7 @@ from core import *
 from features.auth.guards import get_current_user
 from features.events.models import Event
 from features.paid_sales.service import paid_sales_service
+from features.promo.service import promo_service
 from features.ticket_types.models import TicketType
 from features.users.models import User
 
@@ -139,6 +140,21 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"At most {ticket_type.max_per_order} {ticket_type.name} tickets per order",
+            )
+
+    if data.promo_code:
+        campaign = promo_service.find_by_code(db, event.id, data.promo_code)
+        if campaign is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Promo code is not valid"
+            )
+        error = promo_service.redeem_error(campaign)
+        if error:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+        if not any(promo_service.applies_to(campaign, item.ticket_type_id) for item in data.items):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Promo code does not apply to the selected tickets",
             )
     return data
 
