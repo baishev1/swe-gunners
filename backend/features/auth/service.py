@@ -5,7 +5,7 @@ from email.message import EmailMessage
 
 import jwt
 from pwdlib import PasswordHash
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from core import *
 from features.users.models import User
@@ -100,7 +100,7 @@ class AuthService:
         return user
 
     def request_password_reset(self, db: Session, email: str) -> None:
-        user = db.scalar(select(User).where(User.email == email))
+        user = db.scalar(select(User).where(func.lower(User.email) == email))
         if user and user.is_active:
             self.send_password_reset_email(user)
 

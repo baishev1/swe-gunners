@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 import core
 from core import settings
-from features.auth.service import auth_service
+from features.auth.service import auth_service, hasher
 from features.users.models import User
 
 USER = {"email": "ann@example.com", "password": "s3cretpass", "full_name": "Ann"}
@@ -225,3 +225,43 @@ def test_smtp_logs_in_over_starttls_when_user_is_set(client: TestClient, monkeyp
         "login mailer@example.com",
         "send",
     ]
+
+
+def test_email_is_case_insensitive(client: TestClient) -> None:
+    user = {**USER, "email": "Ann.Case@Example.com"}
+
+    registered = client.post("/api/v1/auth/register", json=user)
+    assert registered.json()["email"] == "ann.case@example.com"
+
+    login = client.post(
+        "/api/v1/auth/login", json={"email": "ANN.CASE@example.com", "password": USER["password"]}
+    )
+    assert login.status_code == 200
+
+    duplicate = client.post("/api/v1/auth/register", json={**user, "email": "ann.case@EXAMPLE.com"})
+    assert duplicate.status_code == 409
+
+
+def test_mixed_case_email_stored_earlier_still_matches(client: TestClient, monkeypatch) -> None:
+    with Session(core.engine) as db:
+        db.add(
+            User(
+                email="Old.User@Example.com",
+                password_hash=hasher.hash(USER["password"]),
+                full_name="Old User",
+                role="attendee",
+            )
+        )
+        db.commit()
+    reset_for: list[str] = []
+    monkeypatch.setattr(
+        auth_service, "send_password_reset_email", lambda user: reset_for.append(user.email)
+    )
+
+    login = client.post(
+        "/api/v1/auth/login", json={"email": "old.user@example.com", "password": USER["password"]}
+    )
+    assert login.status_code == 200
+
+    client.post("/api/v1/auth/forgot-password", json={"email": "old.user@example.com"})
+    assert reset_for == ["Old.User@Example.com"]
