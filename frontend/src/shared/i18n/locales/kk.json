@@ -5,7 +5,8 @@
     "password": "Құпиясөз",
     "goToSignIn": "Кіруге өту",
     "backToHome": "Басты бетке",
-    "invalidLink": "Жарамсыз сілтеме"
+    "invalidLink": "Жарамсыз сілтеме",
+    "back": "Артқа"
   },
   "language": {
     "label": "Тіл"

@@ -40,7 +40,7 @@ export function HomePage() {
   ]
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 pb-6 pt-16">
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-8 p-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold">{env.appName}</h1>

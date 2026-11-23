@@ -15,7 +15,6 @@ export function LanguageSwitcher() {
       aria-label={t('language.label')}
       value={i18n.language}
       onValueChange={(value) => value && void i18n.changeLanguage(value)}
-      className="bg-background fixed top-3 right-3"
     >
       {LANGUAGES.map((language) => (
         <ToggleGroupItem key={language} value={language}>
