@@ -19,10 +19,17 @@ import { Textarea } from '@/shared/ui/textarea'
 
 interface SupportCaseFormProps {
   eventId?: string
+  orderId?: string
+  ticketId?: string
   defaultCategory?: SupportCategory
 }
 
-export function SupportCaseForm({ eventId, defaultCategory }: SupportCaseFormProps) {
+export function SupportCaseForm({
+  eventId,
+  orderId,
+  ticketId,
+  defaultCategory,
+}: SupportCaseFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { data: me, isPending: mePending } = useMe()
@@ -61,6 +68,8 @@ export function SupportCaseForm({ eventId, defaultCategory }: SupportCaseFormPro
     mutation.mutate({
       target,
       event_id: eventId ?? null,
+      order_id: orderId ?? null,
+      ticket_id: ticketId ?? null,
       category: String(form.get('category')) as SupportCategory,
       subject: String(form.get('subject')),
       message: String(form.get('message')),
@@ -90,6 +99,19 @@ export function SupportCaseForm({ eventId, defaultCategory }: SupportCaseFormPro
                 ) : (
                   <p className="text-sm">{event.data?.title}</p>
                 )}
+              </Field>
+            )}
+            {(orderId || ticketId) && (
+              <Field>
+                <FieldLabel>{t('support.form.attached')}</FieldLabel>
+                <p className="text-sm">
+                  {[
+                    orderId && t('support.context.order', { number: orderId.slice(0, 8) }),
+                    ticketId && t('support.context.ticket', { number: ticketId.slice(0, 8) }),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
               </Field>
             )}
             <Field>

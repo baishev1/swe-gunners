@@ -42,3 +42,16 @@ export function useSuspendUser() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: adminUserKeys.all }),
   })
 }
+
+export function useReinstateUser() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (userId: string) =>
+      (
+        await apiClient.post<AdminUser>('/admin/users/reinstate', null, {
+          params: { user_id: userId },
+        })
+      ).data,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: adminUserKeys.all }),
+  })
+}

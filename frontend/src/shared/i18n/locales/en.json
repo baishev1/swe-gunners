@@ -268,7 +268,12 @@
       "order_expired": "Reservation expired",
       "staff_assigned": "Check-in staff assigned",
       "staff_removed": "Check-in staff removed",
-      "event_report_reviewed": "Report reviewed"
+      "event_report_reviewed": "Report reviewed",
+      "payment_succeeded": "Payment succeeded",
+      "payment_failed": "Payment failed",
+      "support_status_changed": "Support case status changed",
+      "support_assigned": "Support case assigned",
+      "event_reinstated": "Event restored"
     }
   },
   "analytics": {
@@ -410,7 +415,11 @@
       "reporter": "Reported by",
       "date": "Date",
       "markReviewed": "Mark reviewed"
-    }
+    },
+    "reinstate": "Reinstate",
+    "reinstateEvent": "Restore event",
+    "confirmSuspendUser": "Suspend {{email}}? They will be signed out and can't use BiletFlow until you reinstate them.",
+    "confirmSuspendEvent": "Suspend \"{{title}}\"? Ticket sales and check-in stop until you restore it."
   },
   "eventAttendees": {
     "title": "Attendees — {{title}}",
@@ -480,7 +489,8 @@
       "submit": "Send request",
       "submitting": "Sending...",
       "contextRequiredTitle": "Choose where to start",
-      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context."
+      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context.",
+      "attached": "Attached"
     },
     "categories": {
       "ticket_delivery": "Ticket delivery",
@@ -515,6 +525,12 @@
       "unassigned": "No assignee",
       "assignedToStaff": "Assigned to support staff",
       "assignToMe": "Assign to me"
+    },
+    "context": {
+      "order": "Order #{{number}}",
+      "ticket": "Ticket #{{number}}",
+      "orderLabel": "Order",
+      "ticketLabel": "Ticket"
     }
   },
   "reportEvent": {
@@ -618,5 +634,11 @@
       "invalid": "This account can't be assigned: it is the event owner or is blocked.",
       "generic": "Could not update staff. Try again."
     }
+  },
+  "privateLink": {
+    "title": "Private event link",
+    "description": "This event is private: only people with this link can see it and get tickets. Share it with your guests.",
+    "copy": "Copy link",
+    "copied": "Copied"
   }
 }

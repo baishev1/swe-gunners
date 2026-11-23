@@ -10,7 +10,7 @@ import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
-import { useAdminUsers, useSuspendUser } from '../api/admin-users-api'
+import { useAdminUsers, useReinstateUser, useSuspendUser } from '../api/admin-users-api'
 
 const ROLES = ['attendee', 'organizer', 'event_admin', 'platform_admin'] as const
 
@@ -21,6 +21,7 @@ export function AdminUsersPanel() {
   const [role, setRole] = useState('')
   const users = useAdminUsers(search, role)
   const suspendUser = useSuspendUser()
+  const reinstateUser = useReinstateUser()
   const { data: me } = useMe()
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -56,6 +57,7 @@ export function AdminUsersPanel() {
       </form>
       {users.isError && <FieldError>{getErrorMessage(users.error)}</FieldError>}
       {suspendUser.isError && <FieldError>{getErrorMessage(suspendUser.error)}</FieldError>}
+      {reinstateUser.isError && <FieldError>{getErrorMessage(reinstateUser.error)}</FieldError>}
       <Table>
         <TableHeader>
           <TableRow>
@@ -85,9 +87,24 @@ export function AdminUsersPanel() {
                     variant="outline"
                     size="sm"
                     disabled={suspendUser.isPending}
-                    onClick={() => suspendUser.mutate(user.id)}
+                    onClick={() => {
+                      // Suspension signs the person out everywhere, so ask first.
+                      if (window.confirm(t('admin.confirmSuspendUser', { email: user.email }))) {
+                        suspendUser.mutate(user.id)
+                      }
+                    }}
                   >
                     {t('admin.suspend')}
+                  </Button>
+                )}
+                {!user.is_active && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reinstateUser.isPending}
+                    onClick={() => reinstateUser.mutate(user.id)}
+                  >
+                    {t('admin.reinstate')}
                   </Button>
                 )}
               </TableCell>

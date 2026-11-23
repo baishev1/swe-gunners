@@ -35,6 +35,20 @@ class AdminService:
         db.refresh(user)
         return user
 
+    def reinstate_user(self, db: Session, user: User, actor_id: UUID) -> User:
+        user.is_active = True
+        audit_log_service.record(
+            db,
+            action="user_reinstated",
+            entity_type="user",
+            entity_id=user.id,
+            description=f"Reinstated user {user.email}",
+            actor_id=actor_id,
+        )
+        db.commit()
+        db.refresh(user)
+        return user
+
     def search_events(
         self, db: Session, q: str | None = None, status: str | None = None
     ) -> list[Event]:
@@ -46,6 +60,7 @@ class AdminService:
         return list(db.scalars(stmt.order_by(Event.start_time.desc())).all())
 
     def suspend_event(self, db: Session, event: Event, actor_id: UUID) -> Event:
+        event.status_before_suspension = event.status
         event.status = "suspended"
         audit_log_service.record(
             db,
@@ -53,6 +68,24 @@ class AdminService:
             entity_type="event",
             entity_id=event.id,
             description=f"Suspended event {event.title}",
+            event_id=event.id,
+            actor_id=actor_id,
+        )
+        db.commit()
+        db.refresh(event)
+        return event
+
+    def reinstate_event(self, db: Session, event: Event, actor_id: UUID) -> Event:
+        # Events suspended before the previous status was stored come back unpublished,
+        # so the organizer decides when to sell again.
+        event.status = event.status_before_suspension or "unpublished"
+        event.status_before_suspension = None
+        audit_log_service.record(
+            db,
+            action="event_reinstated",
+            entity_type="event",
+            entity_id=event.id,
+            description=f"Reinstated event {event.title} as {event.status}",
             event_id=event.id,
             actor_id=actor_id,
         )

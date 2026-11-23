@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from core import *
 from features.auth.guards import get_current_user
+from features.events.guards import can_view_event
 from features.events.models import Event
 from features.paid_sales.service import paid_sales_service
 from features.promo.service import promo_service
@@ -84,7 +85,11 @@ def refundable_order_guard(
     return order
 
 
-def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> OrderCreate:
+def valid_order_create(
+    data: OrderCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> OrderCreate:
     event = db.get(Event, data.event_id)
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
@@ -93,6 +98,9 @@ def valid_order_create(data: OrderCreate, db: Session = Depends(get_db)) -> Orde
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Event is not open for registration",
         )
+    # A private event sells only through its secret link (SRS 4.2).
+    if not can_view_event(event, user, data.access_token, db):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
     now = time_now()
     if event.registration_start_time and now < event.registration_start_time:

@@ -36,6 +36,11 @@ const ACTIONS = [
   'staff_assigned',
   'staff_removed',
   'event_report_reviewed',
+  'payment_succeeded',
+  'payment_failed',
+  'support_status_changed',
+  'support_assigned',
+  'event_reinstated',
 ] as const
 
 export function EventTimeline({ eventId }: { eventId: string }) {

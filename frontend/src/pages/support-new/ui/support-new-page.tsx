@@ -13,6 +13,8 @@ export function SupportNewPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? undefined
+  const orderId = searchParams.get('order_id') ?? undefined
+  const ticketId = searchParams.get('ticket_id') ?? undefined
   const category = searchParams.get('category')
 
   return (
@@ -23,6 +25,8 @@ export function SupportNewPage() {
       </div>
       <SupportCaseForm
         eventId={eventId}
+        orderId={orderId}
+        ticketId={ticketId}
         defaultCategory={isSupportCategory(category) ? category : undefined}
       />
       <Link to={ROUTES.support} className="text-sm underline">

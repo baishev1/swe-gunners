@@ -21,7 +21,9 @@ class OrderService:
         # Free stock held by abandoned checkouts before checking availability.
         self.expire_stale_orders(db)
         order = Order(
-            **data.model_dump(exclude={"items", "promo_code"}), user_id=user_id, total_amount_kzt=0
+            **data.model_dump(exclude={"items", "promo_code", "access_token"}),
+            user_id=user_id,
+            total_amount_kzt=0,
         )
         db.add(order)
         db.flush()

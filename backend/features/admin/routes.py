@@ -32,6 +32,15 @@ def suspend_user(
     return admin_service.suspend_user(db=db, user=target, actor_id=admin.id)
 
 
+@router.post("/users/reinstate", response_model=AdminUserResponse)
+def reinstate_user(
+    target: User = Depends(reinstatable_user_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return admin_service.reinstate_user(db=db, user=target, actor_id=admin.id)
+
+
 @router.get("/events", response_model=list[EventResponse])
 def search_events(q: str | None = None, status: str | None = None, db: Session = Depends(get_db)):
     return admin_service.search_events(db=db, q=q, status=status)
@@ -44,6 +53,15 @@ def suspend_event(
     db: Session = Depends(get_db),
 ):
     return admin_service.suspend_event(db=db, event=event, actor_id=admin.id)
+
+
+@router.post("/events/reinstate", response_model=EventResponse)
+def reinstate_event(
+    event: Event = Depends(reinstatable_event_guard),
+    admin: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return admin_service.reinstate_event(db=db, event=event, actor_id=admin.id)
 
 
 @router.get("/promo-campaigns", response_model=list[PromoCampaignResponse])

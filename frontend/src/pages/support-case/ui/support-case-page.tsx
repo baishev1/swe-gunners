@@ -7,7 +7,7 @@ import { SupportCaseActions } from '@/features/manage-support-case'
 import { SupportReplyForm, SupportThread } from '@/features/support-chat'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
-import { formatDateTime } from '@/shared/lib/format'
+import { formatDateTime, formatPrice } from '@/shared/lib/format'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -51,6 +51,32 @@ export function SupportCasePage() {
         </div>
         <h1 className="text-2xl font-semibold">{data.subject}</h1>
         <p className="text-muted-foreground text-sm">{t(`support.categories.${data.category}`)}</p>
+        {(data.order_id || data.ticket_id) && (
+          <dl className="text-muted-foreground grid gap-1 text-sm">
+            {data.order_id && (
+              <div>
+                <dt className="sr-only">{t('support.context.orderLabel')}</dt>
+                <dd>
+                  {t('support.context.order', { number: data.order_id.slice(0, 8) })}
+                  {data.order_status &&
+                    ` · ${t(`organizerOrders.statuses.${data.order_status}`, { defaultValue: data.order_status })}`}
+                  {data.order_total_kzt != null && ` · ${formatPrice(data.order_total_kzt)}`}
+                </dd>
+              </div>
+            )}
+            {data.ticket_id && (
+              <div>
+                <dt className="sr-only">{t('support.context.ticketLabel')}</dt>
+                <dd>
+                  {t('support.context.ticket', { number: data.ticket_id.slice(0, 8) })}
+                  {data.ticket_type_name && ` · ${data.ticket_type_name}`}
+                  {data.ticket_status &&
+                    ` · ${t(`eventAttendees.statuses.${data.ticket_status}`, { defaultValue: data.ticket_status })}`}
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
         {data.event_id && (
           <Link
             to={`${ROUTES.eventDetail}?event_id=${data.event_id}`}
