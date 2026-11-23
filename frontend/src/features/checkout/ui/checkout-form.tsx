@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { createOrder, simulatePayment } from '@/shared/api'
 import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input } from '@/shared/ui'
+import { formatPrice } from '@/shared/lib/format'
 import type { OrderItemCreate } from '@/shared/types'
 
 export interface CheckoutTicketTypeOption {
@@ -15,7 +18,17 @@ interface CheckoutFormProps {
   ticketTypes: CheckoutTicketTypeOption[]
 }
 
+// Backend error details are English, so buyer-facing messages come from the locale files.
+function checkoutErrorKey(error: unknown) {
+  const status = isAxiosError(error) ? error.response?.status : undefined
+  if (status === 400) return 'checkout.errors.notAvailable'
+  if (status === 403) return 'checkout.errors.salesClosed'
+  if (status === 409) return 'checkout.errors.soldOut'
+  return 'checkout.errors.generic'
+}
+
 export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
@@ -48,12 +61,12 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
     setErrorMessage(null)
 
     if (!customerName.trim() || !customerEmail.trim()) {
-      setErrorMessage('Please fill in your name and email address.')
+      setErrorMessage(t('checkout.errors.missingDetails'))
       return
     }
 
     if (selectedItems.length === 0) {
-      setErrorMessage('Please select at least one ticket.')
+      setErrorMessage(t('checkout.errors.noTickets'))
       return
     }
 
@@ -79,11 +92,10 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
       if (payment.status === 'succeeded') {
         navigate(`/tickets?order_id=${order.id}`)
       } else {
-        setErrorMessage('Payment simulation failed. Order remains pending.')
+        setErrorMessage(t('checkout.errors.paymentFailed'))
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An error occurred during checkout.'
-      setErrorMessage(message)
+      setErrorMessage(t(checkoutErrorKey(err)))
     } finally {
       setIsLoading(false)
     }
@@ -93,7 +105,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Select Tickets</CardTitle>
+          <CardTitle>{t('checkout.selectTickets')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {ticketTypes.map((type) => (
@@ -103,13 +115,14 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
             >
               <div>
                 <p className="font-medium text-sm text-foreground">{type.name}</p>
-                <p className="text-muted-foreground text-xs">{type.price_kzt} ₸</p>
+                <p className="text-muted-foreground text-xs">{formatPrice(type.price_kzt)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon-xs"
+                  aria-label={t('checkout.decrease', { name: type.name })}
                   onClick={() => handleQuantityChange(type.id, -1)}
                   disabled={isLoading || (quantities[type.id] || 0) === 0}
                 >
@@ -122,6 +135,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
                   type="button"
                   variant="outline"
                   size="icon-xs"
+                  aria-label={t('checkout.increase', { name: type.name })}
                   onClick={() => handleQuantityChange(type.id, 1)}
                   disabled={isLoading}
                 >
@@ -132,34 +146,42 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
           ))}
 
           <div className="flex justify-between pt-2 border-t font-semibold text-base">
-            <span>Total:</span>
-            <span>{totalAmountKzt} ₸</span>
+            <span>{t('checkout.total')}</span>
+            <span>{formatPrice(totalAmountKzt)}</span>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Attendee Information</CardTitle>
+          <CardTitle>{t('checkout.attendeeInfo')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Full Name</label>
+            <label htmlFor="checkout-name" className="text-xs font-medium text-muted-foreground">
+              {t('checkout.fullName')}
+            </label>
             <Input
+              id="checkout-name"
+              autoComplete="name"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="e.g. Arman Bekov"
+              placeholder={t('checkout.fullNamePlaceholder')}
               required
               disabled={isLoading}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Email Address</label>
+            <label htmlFor="checkout-email" className="text-xs font-medium text-muted-foreground">
+              {t('checkout.email')}
+            </label>
             <Input
+              id="checkout-email"
+              autoComplete="email"
               type="email"
               value={customerEmail}
               onChange={(e) => setCustomerEmail(e.target.value)}
-              placeholder="e.g. arman@example.kz"
+              placeholder={t('checkout.emailPlaceholder')}
               required
               disabled={isLoading}
             />
@@ -167,11 +189,8 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
 
           {totalAmountKzt > 0 && (
             <div className="rounded-md border p-3 bg-muted/20 text-xs text-muted-foreground space-y-2">
-              <p className="font-semibold text-foreground">Demonstration Payment Simulation</p>
-              <p>
-                No real payments are collected. Clicking the button below processes a simulated KZT
-                payment and issues verified QR tickets.
-              </p>
+              <p className="font-semibold text-foreground">{t('checkout.simulationTitle')}</p>
+              <p>{t('checkout.simulationNote')}</p>
               <label className="flex items-center gap-2 pt-1 cursor-pointer">
                 <input
                   type="checkbox"
@@ -179,7 +198,7 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
                   onChange={(e) => setSimulateFailure(e.target.checked)}
                   className="rounded border-input text-primary focus:ring-primary"
                 />
-                <span>Simulate payment failure</span>
+                <span>{t('checkout.simulateFailure')}</span>
               </label>
             </div>
           )}
@@ -193,10 +212,10 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading
-              ? 'Processing...'
+              ? t('checkout.processing')
               : totalAmountKzt === 0
-                ? 'Complete Free Registration'
-                : `Pay ${totalAmountKzt} ₸ (Simulate)`}
+                ? t('checkout.registerFree')
+                : t('checkout.pay', { amount: formatPrice(totalAmountKzt) })}
           </Button>
         </CardFooter>
       </Card>

@@ -16,10 +16,8 @@ export function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Checkout</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Complete your registration to receive your digital QR tickets.
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('checkout.title')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t('checkout.subtitle')}</p>
       </div>
       {refundPolicy && (
         <div className="mx-auto mb-6 max-w-xl rounded-md border p-4 text-sm">
