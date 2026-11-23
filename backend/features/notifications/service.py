@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from core import *
@@ -8,6 +9,9 @@ from features.auth.service import auth_service
 if TYPE_CHECKING:
     from features.orders.models import Order
     from features.tickets.models import Ticket
+
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationService:
@@ -113,8 +117,24 @@ class NotificationService:
     def _case_url(self, case_id: UUID) -> str:
         return f"{settings.FRONTEND_URL}/support/case?case_id={case_id}"
 
+    def event_report_created(
+        self, email: str, event_title: str, category: str, report_id: UUID
+    ) -> None:
+        self._send(
+            email,
+            f"New event report: {event_title}",
+            f"An attendee reported {event_title} ({category.replace('_', ' ')}).\n"
+            f"Report ID: {report_id}\n\n"
+            f"Review it in the admin panel: {settings.FRONTEND_URL}/admin",
+        )
+
     def _send(self, to: str, subject: str, body: str) -> None:
-        auth_service.send_email(to, subject, body)
+        """Sends after the business change is committed, so a mail failure must not fail
+        the request: the order, refund or support message already happened."""
+        try:
+            auth_service.send_email(to, subject, body)
+        except Exception:
+            logger.exception("Could not send email %r to %s", subject, to)
 
     def _money(self, amount: int) -> str:
         return f"{amount / 100:.2f} KZT"

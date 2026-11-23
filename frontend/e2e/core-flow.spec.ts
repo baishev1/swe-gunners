@@ -52,6 +52,10 @@ test('organizer publishes an event and an anonymous visitor finds it', async ({ 
   await page.getByRole('button', { name: 'Publish', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Unpublish' })).toBeVisible()
 
+  // The promo campaigns page is reachable from the event editor.
+  await page.getByRole('link', { name: 'Promo campaigns' }).click()
+  await page.waitForURL(/\/organizer\/events\/promo\?event_id=/)
+
   await page.goto('/')
   await page.getByRole('button', { name: 'Sign out' }).click()
 
@@ -143,7 +147,17 @@ test('attendee buys a paid ticket, asks support and gets in once', async ({ page
   await page.getByPlaceholder('e.g. Arman Bekov').fill('Demo Attendee')
   await page.getByPlaceholder('e.g. arman@example.kz').fill('attendee@biletflow.dev')
   // 5000 tiyn = 50 KZT; the exact currency format depends on the browser's Intl data.
-  await page.getByRole('button', { name: /^Pay .*50.* \(simulation\)$/ }).click()
+  // Checkout reserves the tickets; payment happens from My orders (SRS 4.6).
+  await page.getByRole('button', { name: /^Reserve for .*50.* and go to payment$/ }).click()
+  await page.waitForURL(/\/orders$/)
+  // Newest order first; earlier runs may have left other pending orders.
+  await expect(page.getByText('Awaiting payment').first()).toBeVisible()
+  const [standard] = await api(request, 'get', `/ticket-types?event_id=${event.id}`, attendee)
+  expect(standard.reserved_count).toBe(1)
+  await page
+    .getByRole('button', { name: /^Pay .*50.* \(simulation\)$/ })
+    .first()
+    .click()
 
   await page.waitForURL(/\/tickets\?order_id=/)
   await expect(page.getByText('Valid', { exact: true })).toBeVisible()

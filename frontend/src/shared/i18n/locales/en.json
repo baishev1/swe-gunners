@@ -116,7 +116,8 @@
     "soldOut": "Sold out",
     "edit": "Edit event",
     "getTickets": "Get tickets",
-    "refundPolicy": "Refund policy"
+    "refundPolicy": "Refund policy",
+    "defaultRefundPolicy": "The organizer has not set a refund policy for this event, so the platform rules apply: if the event is cancelled, paid tickets are refunded in full. For any other refund request, contact support from your order."
   },
   "organizerEventNew": {
     "title": "New event",
@@ -128,7 +129,8 @@
     "details": "Event details",
     "ticketTypes": "Ticket types",
     "orders": "Orders",
-    "attendees": "Attendees"
+    "attendees": "Attendees",
+    "promo": "Promo campaigns"
   },
   "organizerOrders": {
     "created": "Created",
@@ -550,7 +552,11 @@
     "pay": "Pay {{amount}} (simulation)",
     "promoApplied": "Promo code {{code}}",
     "removePromo": "Remove",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "remaining": "{{count}} left",
+    "soldOut": "Sold out",
+    "reserve": "Reserve for {{amount}} and go to payment",
+    "holdNote": "No real payments are collected. We hold your tickets for a limited time; you pay on the next step, in My orders."
   },
   "orders": {
     "title": "My orders",
@@ -564,7 +570,12 @@
     "attendee": "Attendee",
     "total": "Total",
     "viewTickets": "View tickets →",
-    "discount": "Discount"
+    "discount": "Discount",
+    "payment": {
+      "title": "Awaiting payment",
+      "heldUntil": "Tickets are reserved until {{time}}.",
+      "expired": "The reservation has expired and the tickets were released. Please place a new order."
+    }
   },
   "tickets": {
     "title": "Digital tickets",

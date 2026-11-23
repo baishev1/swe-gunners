@@ -54,6 +54,11 @@ export function OrganizerEventEditPage() {
             {t('organizerEventEdit.attendees')}
           </Link>
         </Button>
+        <Button variant="link" asChild className="self-start">
+          <Link to={`${ROUTES.organizerEventPromo}?event_id=${event.data.id}`}>
+            {t('organizerEventEdit.promo')}
+          </Link>
+        </Button>
         <Button variant="outline" asChild className="self-start">
           <Link to={`${ROUTES.organizerEventAnalytics}?event_id=${event.data.id}`}>
             {t('analytics.open')}
