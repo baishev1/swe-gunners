@@ -144,7 +144,8 @@
       "pending": "Төлем күтілуде",
       "paid": "Төленді",
       "cancelled": "Бас тартылды",
-      "refunded": "Қайтарылды"
+      "refunded": "Қайтарылды",
+      "expired": "Брондау мерзімі өтті"
     }
   },
   "eventForm": {
@@ -359,7 +360,8 @@
         "pending": "Төлемді күтуде",
         "paid": "Төленді",
         "cancelled": "Бас тартылды",
-        "refunded": "Қайтарылды"
+        "refunded": "Қайтарылды",
+        "expired": "Брондау мерзімі өтті"
       },
       "paymentStatuses": {
         "succeeded": "Сәтті",

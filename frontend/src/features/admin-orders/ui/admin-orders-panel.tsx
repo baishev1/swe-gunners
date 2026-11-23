@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { type AdminOrder, useAdminOrders } from '../api/admin-orders-api'
 
-const STATUSES = ['pending', 'paid', 'cancelled', 'refunded'] as const
+const STATUSES = ['pending', 'paid', 'cancelled', 'refunded', 'expired'] as const
 
 export function AdminOrdersTable({ orders }: { orders: AdminOrder[] }) {
   const { t } = useTranslation()

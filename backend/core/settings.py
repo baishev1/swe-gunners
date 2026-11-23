@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 1025
     MAIL_FROM: str = "no-reply@biletflow.dev"
 
+    # Unpaid checkouts hold inventory this long before the reservation is released (SRS 4.6).
+    ORDER_HOLD_MINUTES: int = 15
+    # How often the background sweeper looks for expired holds; 0 disables it.
+    ORDER_SWEEP_INTERVAL_SECONDS: int = 60
+
     DEFAULT_CURRENCY: str = "KZT"
     DEFAULT_TIMEZONE: str = "Asia/Almaty"
 

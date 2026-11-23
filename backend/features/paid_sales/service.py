@@ -6,8 +6,10 @@ from core import *
 from features.admin.service import admin_service
 from features.audit_log.service import audit_log_service
 from features.events.models import Event
+from features.notifications.service import notification_service
 from features.organizers.models import OrganizerProfile
 from features.ticket_types.models import TicketType
+from features.users.models import User
 
 from .models import *
 from .schemas import *
@@ -143,6 +145,7 @@ class PaidSalesService:
             actor_id=actor_id,
         )
         db.commit()
+        self._notify_payout_status(db, event, "active")
 
     def list_activations(self, db: Session, status: str | None = None) -> list[PaidSalesActivation]:
         stmt = select(PaidSalesActivation)
@@ -167,6 +170,7 @@ class PaidSalesService:
         )
         db.commit()
         db.refresh(activation)
+        self._notify_payout_status(db, activation.event, "suspended", reason)
         return activation
 
     def reinstate(
@@ -186,7 +190,15 @@ class PaidSalesService:
         )
         db.commit()
         db.refresh(activation)
+        self._notify_payout_status(db, activation.event, "reinstated")
         return activation
+
+    def _notify_payout_status(
+        self, db: Session, event: Event, status: str, reason: str | None = None
+    ) -> None:
+        organizer = db.get(User, event.organizer_id)
+        if organizer is not None:
+            notification_service.payout_status_changed(organizer.email, event.title, status, reason)
 
 
 paid_sales_service = PaidSalesService()

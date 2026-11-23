@@ -55,6 +55,64 @@ class NotificationService:
                 "The organizer will contact you about a refund if you paid for a ticket.",
             )
 
+    def event_updated(self, event_title: str, changes: list[str], emails: list[str]) -> None:
+        summary = "\n".join(f"- {change}" for change in changes)
+        for email in emails:
+            self._send(
+                email,
+                f"Event update: {event_title}",
+                f"The organizer changed details of {event_title}:\n{summary}\n\n"
+                "Your tickets stay valid. If you added the event to your calendar, "
+                "please update it.",
+            )
+
+    def payout_status_changed(
+        self, email: str, event_title: str, status: str, reason: str | None = None
+    ) -> None:
+        """Organizer payout status (SRS 4.10). Payouts are simulated in the MVP."""
+        messages = {
+            "active": "Paid ticket sales are now active. Ticket revenue will be paid out to "
+            "your registered payout account (demonstration only, no real money moves).",
+            "suspended": "Paid ticket sales and payouts are suspended by a platform administrator.",
+            "reinstated": "Paid ticket sales and payouts were reinstated.",
+        }
+        body = messages[status]
+        if reason:
+            body += f"\nReason: {reason}"
+        self._send(email, f"Payout status for {event_title}: {status}", body)
+
+    def support_reply(self, email: str, case_subject: str, case_id: UUID, body: str) -> None:
+        preview = body if len(body) <= 300 else body[:297] + "..."
+        self._send(
+            email,
+            f"New reply in support case: {case_subject}",
+            f"{preview}\n\nOpen the conversation: {self._case_url(case_id)}",
+        )
+
+    def support_assigned(
+        self, email: str, case_subject: str, case_id: UUID, assignee_name: str
+    ) -> None:
+        self._send(
+            email,
+            f"Support case assigned: {case_subject}",
+            f"{assignee_name} is now handling your support case.\n\n"
+            f"Open the conversation: {self._case_url(case_id)}",
+        )
+
+    def support_status_changed(
+        self, email: str, case_subject: str, case_id: UUID, status: str
+    ) -> None:
+        label = status.replace("_", " ").capitalize()
+        self._send(
+            email,
+            f"Support case status: {label}",
+            f'Your support case "{case_subject}" is now: {label}.\n\n'
+            f"Open the conversation: {self._case_url(case_id)}",
+        )
+
+    def _case_url(self, case_id: UUID) -> str:
+        return f"{settings.FRONTEND_URL}/support/case?case_id={case_id}"
+
     def _send(self, to: str, subject: str, body: str) -> None:
         auth_service.send_email(to, subject, body)
 

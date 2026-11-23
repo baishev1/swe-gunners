@@ -144,7 +144,8 @@
       "pending": "Pending",
       "paid": "Paid",
       "cancelled": "Cancelled",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "expired": "Expired"
     }
   },
   "eventForm": {
@@ -359,7 +360,8 @@
         "pending": "Pending",
         "paid": "Paid",
         "cancelled": "Cancelled",
-        "refunded": "Refunded"
+        "refunded": "Refunded",
+        "expired": "Expired"
       },
       "paymentStatuses": {
         "succeeded": "Succeeded",
