@@ -130,7 +130,8 @@
     "ticketTypes": "Ticket types",
     "orders": "Orders",
     "attendees": "Attendees",
-    "promo": "Promo campaigns"
+    "promo": "Promo campaigns",
+    "staff": "Check-in staff"
   },
   "organizerOrders": {
     "created": "Created",
@@ -260,7 +261,13 @@
       "promo_disabled": "Promo campaign disabled",
       "event_suspended": "Event suspended",
       "user_suspended": "User suspended",
-      "settings_updated": "Settings updated"
+      "settings_updated": "Settings updated",
+      "order_refunded": "Order refunded",
+      "order_cancelled": "Order cancelled",
+      "order_expired": "Reservation expired",
+      "staff_assigned": "Check-in staff assigned",
+      "staff_removed": "Check-in staff removed",
+      "event_report_reviewed": "Report reviewed"
     }
   },
   "analytics": {
@@ -593,5 +600,22 @@
     "qrAlt": "Admission QR code for ticket {{id}}",
     "qrFailed": "Could not load the QR code. Download the PDF instead.",
     "notAdmissible": "This ticket is no longer valid for entry."
+  },
+  "eventStaff": {
+    "description": "People who scan tickets at the entrance with the BiletFlow Staff app. They need a BiletFlow account; they only see the events you assign them to.",
+    "email": "Staff member's email",
+    "canUndo": "Can undo check-ins",
+    "canSupport": "Can answer support cases for this event",
+    "add": "Assign",
+    "remove": "Remove {{name}}",
+    "empty": "No staff assigned yet.",
+    "undoBadge": "Undo",
+    "supportBadge": "Support",
+    "errors": {
+      "notFound": "No BiletFlow account uses this email. Ask the person to register first.",
+      "duplicate": "This person is already assigned.",
+      "invalid": "This account can't be assigned: it is the event owner or is blocked.",
+      "generic": "Could not update staff. Try again."
+    }
   }
 }

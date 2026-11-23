@@ -106,3 +106,25 @@ test('attendee buys through a campaign link with the discount applied', async ({
   expect(campaignSales.redemptions).toBe(1)
   expect(campaignSales.discounts).toBe(100000)
 })
+
+// SRS §1.2 / §2.3: the organizer assigns check-in staff, who then sees the event in the app.
+test('organizer assigns check-in staff by email', async ({ page, request }) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const { event } = await publishedEvent(request, organizer, {
+    title: `Staffed Event ${Date.now()}`,
+    price: 0,
+  })
+
+  await signIn(page, 'organizer@biletflow.dev', PASSWORD)
+  await page.goto(`/organizer/events/edit?event_id=${event.id}`)
+  await page.getByLabel("Staff member's email").fill('EventAdmin@biletflow.dev')
+  await page.getByRole('button', { name: 'Assign' }).click()
+  await expect(page.getByText('eventadmin@biletflow.dev')).toBeVisible()
+
+  const staff = await apiToken(request, 'eventadmin@biletflow.dev')
+  const assigned = await api(request, 'get', '/checkin/events', staff)
+  expect(assigned.map((e: { id: string }) => e.id)).toContain(event.id)
+
+  await page.getByRole('button', { name: 'Remove eventadmin@biletflow.dev' }).click()
+  await expect(page.getByText('No staff assigned yet.')).toBeVisible()
+})
