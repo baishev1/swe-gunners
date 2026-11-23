@@ -1,21 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { expect, test } from '@playwright/test'
-import type { APIRequestContext, Page } from '@playwright/test'
 
-const PASSWORD = 'password123'
+import { PASSWORD, api, apiToken, signIn } from './support.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('language', 'en'))
 })
-
-async function signIn(page: Page, email: string, password: string) {
-  await page.goto('/login')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(password)
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
-}
 
 function createVerifyToken(userId: string) {
   const script =
@@ -90,27 +81,6 @@ test('attendee registers, verifies the email and signs in', async ({ page }) => 
   await signIn(page, email, PASSWORD)
   await expect(page.getByText('Event ticketing platform')).toBeVisible()
 })
-
-async function apiToken(request: APIRequestContext, email: string) {
-  const response = await request.post('/api/v1/auth/login', {
-    data: { email, password: PASSWORD },
-  })
-  expect(response.ok()).toBeTruthy()
-  const { access_token } = (await response.json()) as { access_token: string }
-  return { Authorization: `Bearer ${access_token}` }
-}
-
-async function api(
-  request: APIRequestContext,
-  method: 'get' | 'post' | 'patch',
-  url: string,
-  headers: Record<string, string>,
-  data?: unknown,
-) {
-  const response = await request[method](`/api/v1${url}`, { headers, data })
-  expect(response.ok(), `${method.toUpperCase()} ${url}: ${await response.text()}`).toBeTruthy()
-  return response.json()
-}
 
 test('attendee buys a paid ticket, asks support and gets in once', async ({ page, request }) => {
   const organizer = await apiToken(request, 'organizer@biletflow.dev')
