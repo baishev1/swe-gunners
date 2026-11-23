@@ -618,5 +618,11 @@
       "invalid": "This account can't be assigned: it is the event owner or is blocked.",
       "generic": "Could not update staff. Try again."
     }
+  },
+  "privateLink": {
+    "title": "Private event link",
+    "description": "This event is private: only people with this link can see it and get tickets. Share it with your guests.",
+    "copy": "Copy link",
+    "copied": "Copied"
   }
 }

@@ -26,6 +26,8 @@ interface CheckoutFormProps {
   ticketTypes: CheckoutTicketTypeOption[]
   promo?: ResolvedPromo | null
   onRemovePromo?: () => void
+  /** Secret from a private event's link; the server checks it again (SRS 4.2). */
+  accessToken?: string | null
 }
 
 // Preview only: the server recalculates the discount when it creates the order (SRS 4.14).
@@ -45,7 +47,13 @@ function checkoutErrorKey(error: unknown) {
   return 'checkout.errors.generic'
 }
 
-export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: CheckoutFormProps) {
+export function CheckoutForm({
+  eventId,
+  ticketTypes,
+  promo,
+  onRemovePromo,
+  accessToken,
+}: CheckoutFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState('')
@@ -102,6 +110,7 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
         customer_email: customerEmail,
         items: selectedItems,
         promo_code: promo?.code ?? null,
+        access_token: accessToken ?? null,
       })
 
       // Free orders are confirmed at once. Paid ones stay reserved (pending) until the

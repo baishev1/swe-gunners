@@ -60,3 +60,9 @@ class OrganizerDashboardResponse(BaseModel):
     active: list[EventResponse]
     completed: list[EventResponse]
     cancelled: list[EventResponse]
+
+
+class EventAccessLinkResponse(BaseModel):
+    """Shareable link for a private event; only its organizer can read it."""
+
+    link: str

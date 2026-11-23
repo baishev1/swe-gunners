@@ -11,8 +11,9 @@ export function CheckoutPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
-  const event = useEvent(eventId)
-  const ticketTypes = useTicketTypes(eventId)
+  const access = searchParams.get('access')
+  const event = useEvent(eventId, access)
+  const ticketTypes = useTicketTypes(eventId, false, access)
   // Events without their own policy show the platform default (SRS 4.9).
   const refundPolicy = event.data?.refund_policy?.trim() || t('eventDetail.defaultRefundPolicy')
   const [promo, setPromo] = useState(() => getAppliedPromo(eventId))
@@ -37,6 +38,7 @@ export function CheckoutPage() {
         <CheckoutForm
           eventId={eventId}
           promo={promo}
+          accessToken={access}
           onRemovePromo={removePromo}
           ticketTypes={(ticketTypes.data ?? []).map((t) => ({
             id: t.id,

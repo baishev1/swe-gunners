@@ -35,6 +35,8 @@ class OrderBase(BaseModel):
 class OrderCreate(OrderBase):
     items: list[OrderItemCreate] = Field(min_length=1)
     promo_code: str | None = Field(default=None, max_length=20)
+    # The secret from a private event's link (SRS 4.2).
+    access_token: str | None = Field(default=None, max_length=64)
 
 
 class OrderResponse(OrderBase):

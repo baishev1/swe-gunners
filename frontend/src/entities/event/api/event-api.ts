@@ -18,11 +18,16 @@ export function useEvents() {
   })
 }
 
-export function useEvent(eventId: string) {
+/** `access` is the secret from a private event's link (SRS 4.2). */
+export function useEvent(eventId: string, access?: string | null) {
   return useQuery({
-    queryKey: eventKeys.detail(eventId),
+    queryKey: [...eventKeys.detail(eventId), access ?? ''],
     queryFn: async () =>
-      (await apiClient.get<EventItem>('/events/detail', { params: { event_id: eventId } })).data,
+      (
+        await apiClient.get<EventItem>('/events/detail', {
+          params: { event_id: eventId, access: access || undefined },
+        })
+      ).data,
     enabled: Boolean(eventId),
   })
 }

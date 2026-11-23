@@ -19,8 +19,9 @@ export function EventDetailPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
-  const event = useEvent(eventId)
-  const ticketTypes = useTicketTypes(eventId)
+  const access = searchParams.get('access')
+  const event = useEvent(eventId, access)
+  const ticketTypes = useTicketTypes(eventId, false, access)
   const me = useMe()
 
   if (event.isPending) {
@@ -102,7 +103,11 @@ export function EventDetailPage() {
       {data.status === 'published' &&
         ticketTypes.data?.some((ticketType) => ticketType.available > 0) && (
           <Button asChild>
-            <Link to={`${ROUTES.checkout}?event_id=${data.id}`}>{t('eventDetail.getTickets')}</Link>
+            <Link
+              to={`${ROUTES.checkout}?event_id=${data.id}${access ? `&access=${encodeURIComponent(access)}` : ''}`}
+            >
+              {t('eventDetail.getTickets')}
+            </Link>
           </Button>
         )}
       <div className="flex flex-wrap gap-3">

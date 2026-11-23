@@ -85,6 +85,13 @@ def cancel_event(
     return event_service.cancel_event(db=db, event=event, actor_id=user.id)
 
 
+@router.get("/access-link", response_model=EventAccessLinkResponse)
+def get_event_access_link(event: Event = Depends(owned_event_id_guard)):
+    return EventAccessLinkResponse(
+        link=f"{settings.FRONTEND_URL}/events/detail?event_id={event.id}&access={event.access_token}"
+    )
+
+
 @router.post("/duplicate", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def duplicate_event(
     event: Event = Depends(owned_event_id_guard),

@@ -33,11 +33,12 @@ def valid_ticket_type_id(ticket_type_id: UUID, db: Session = Depends(get_db)) ->
 
 def viewable_ticket_types_event(
     event_id: UUID,
+    access: str | None = None,
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ) -> Event:
     event = db.get(Event, event_id)
-    if event is None or not can_view_event(event, user):
+    if event is None or not can_view_event(event, user, access, db):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found",
@@ -47,9 +48,11 @@ def viewable_ticket_types_event(
 
 def viewable_ticket_type_guard(
     ticket_type: TicketType = Depends(valid_ticket_type_id),
+    access: str | None = None,
     user: User | None = Depends(optional_user),
+    db: Session = Depends(get_db),
 ) -> TicketType:
-    if not can_view_event(ticket_type.event, user) or (
+    if not can_view_event(ticket_type.event, user, access, db) or (
         ticket_type.is_hidden and not is_event_manager(ticket_type.event, user)
     ):
         raise HTTPException(

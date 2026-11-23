@@ -1,4 +1,7 @@
+import secrets
+
 from fastapi import Depends, HTTPException, status
+from sqlalchemy import select
 
 from core import *
 from features.auth.guards import require_role
@@ -57,21 +60,48 @@ def is_event_manager(event: Event, user: User | None) -> bool:
     return user is not None and (user.id == event.organizer_id or user.role == "platform_admin")
 
 
-def can_view_event(event: Event, user: User | None) -> bool:
+def has_access_token(event: Event, access: str | None) -> bool:
+    return bool(access and event.access_token) and secrets.compare_digest(
+        access or "", event.access_token or ""
+    )
+
+
+def holds_order(db: Session, event: Event, user: User | None) -> bool:
+    # Imported lazily: orders imports this module's models.
+    from features.orders.models import Order
+
+    if user is None:
+        return False
+    return (
+        db.scalar(
+            select(Order.id).where(Order.event_id == event.id, Order.user_id == user.id).limit(1)
+        )
+        is not None
+    )
+
+
+def can_view_event(
+    event: Event, user: User | None, access: str | None = None, db: Session | None = None
+) -> bool:
+    """Public and unlisted events are open by link; private ones need the organizer's secret
+    link, unless the user already has an order for the event (SRS 4.2)."""
     if is_event_manager(event, user):
         return True
     if event.status in ("draft", "unpublished", "suspended"):
         return False
-    return event.visibility != "private"
+    if event.visibility != "private":
+        return True
+    return has_access_token(event, access) or (db is not None and holds_order(db, event, user))
 
 
 def viewable_event_guard(
     event_id: UUID,
+    access: str | None = None,
     user: User | None = Depends(optional_user),
     db: Session = Depends(get_db),
 ) -> Event:
     event = db.get(Event, event_id)
-    if event is None or not can_view_event(event, user):
+    if event is None or not can_view_event(event, user, access, db):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Event not found",

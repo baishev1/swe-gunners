@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from core import *
 from features.checkin.models import StaffAssignment
+from features.events.guards import can_view_event, holds_order
 from features.events.models import Event
 from features.users.models import User
 
@@ -25,12 +26,10 @@ def valid_support_create(
         owns_event = event.organizer_id == user.id
         if data.target == "platform" and not owns_event and user.role != "platform_admin":
             raise HTTPException(status_code=403, detail="Event access denied")
-        # Private-event access will use order/ticket ownership once those models land.
-        if (
-            data.target == "organizer"
-            and not owns_event
-            and user.role != "platform_admin"
-            and (event.visibility != "public" or event.status != "published")
+        # Anyone who can see the event, or already holds an order for it, may ask its
+        # organizer; that includes attendees of private and cancelled events.
+        if data.target == "organizer" and not (
+            can_view_event(event, user, db=db) or holds_order(db, event, user)
         ):
             raise HTTPException(status_code=404, detail="Event not found")
     return data
