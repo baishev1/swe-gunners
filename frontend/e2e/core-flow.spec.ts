@@ -172,12 +172,13 @@ test('attendee buys a paid ticket, asks support and gets in once', async ({ page
   await expect(page.getByText('Standard')).toBeVisible()
   await page.getByPlaceholder('e.g. Arman Bekov').fill('Demo Attendee')
   await page.getByPlaceholder('e.g. arman@example.kz').fill('attendee@biletflow.dev')
-  await page.getByRole('button', { name: 'Pay 5000 ₸ (Simulate)' }).click()
+  // 5000 tiyn = 50 KZT; the exact currency format depends on the browser's Intl data.
+  await page.getByRole('button', { name: /^Pay .*50.* \(simulation\)$/ }).click()
 
   await page.waitForURL(/\/tickets\?order_id=/)
-  await expect(page.getByText('VALID', { exact: true })).toBeVisible()
+  await expect(page.getByText('Valid', { exact: true })).toBeVisible()
   const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Download Printable PDF' }).click()
+  await page.getByRole('button', { name: 'Download printable PDF' }).click()
   expect((await download).suggestedFilename()).toMatch(/^ticket-.+\.pdf$/)
 
   const orderId = new URL(page.url()).searchParams.get('order_id')
