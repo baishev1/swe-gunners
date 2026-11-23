@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { AdminEventReportsPanel } from '@/features/admin-event-reports'
 import { AdminEventsPanel } from '@/features/admin-events'
 import { AdminOrdersPanel } from '@/features/admin-orders'
 import { AdminPaymentsPanel } from '@/features/admin-payments'
@@ -21,6 +22,7 @@ export function AdminPage() {
         <TabsList>
           <TabsTrigger value="users">{t('admin.users')}</TabsTrigger>
           <TabsTrigger value="events">{t('admin.events')}</TabsTrigger>
+          <TabsTrigger value="event-reports">{t('admin.eventReports.tab')}</TabsTrigger>
           <TabsTrigger value="orders">{t('admin.ops.orders')}</TabsTrigger>
           <TabsTrigger value="payments">{t('admin.ops.payments')}</TabsTrigger>
           <TabsTrigger value="monitoring">{t('admin.ops.monitoring')}</TabsTrigger>
@@ -34,6 +36,9 @@ export function AdminPage() {
         </TabsContent>
         <TabsContent value="events">
           <AdminEventsPanel />
+        </TabsContent>
+        <TabsContent value="event-reports">
+          <AdminEventReportsPanel />
         </TabsContent>
         <TabsContent value="orders">
           <AdminOrdersPanel />
