@@ -128,3 +128,42 @@ test('organizer assigns check-in staff by email', async ({ page, request }) => {
   await page.getByRole('button', { name: 'Remove eventadmin@biletflow.dev' }).click()
   await expect(page.getByText('No staff assigned yet.')).toBeVisible()
 })
+
+// SRS §4.2: a private event is reachable only through the organizer's secret link.
+test('attendee registers for a private event through its secret link', async ({
+  page,
+  request,
+}) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const { event } = await publishedEvent(request, organizer, {
+    title: `Private Dinner ${Date.now()}`,
+    price: 0,
+  })
+  await api(request, 'patch', `/events/update?event_id=${event.id}`, organizer, {
+    visibility: 'private',
+  })
+  const { link } = await api(request, 'get', `/events/access-link?event_id=${event.id}`, organizer)
+
+  await signIn(page, 'attendee@biletflow.dev', PASSWORD)
+  // Without the secret the event does not exist for the attendee.
+  const hidden = await request.get(`/api/v1/events/detail?event_id=${event.id}`)
+  expect(hidden.status()).toBe(404)
+
+  const url = new URL(link)
+  await page.goto(`${url.pathname}${url.search}`)
+  await page.getByRole('link', { name: 'Get tickets' }).click()
+  await page.getByLabel('Full name').fill('Private Guest')
+  await page.getByLabel('Email address').fill('attendee@biletflow.dev')
+  await page.getByRole('button', { name: 'Complete free registration' }).click()
+  await page.waitForURL(/\/tickets\?order_id=/)
+  await expect(page.getByText('Valid', { exact: true })).toBeVisible()
+
+  // SRS §4.13: support opened from the ticket carries the ticket and order.
+  await page.getByRole('link', { name: 'Contact support' }).first().click()
+  await expect(page.getByText(/Order #.* · Ticket #/)).toBeVisible()
+  await page.getByLabel('Subject').fill('Dress code')
+  await page.getByLabel('Message').fill('Is there a dress code?')
+  await page.getByRole('button', { name: 'Send request' }).click()
+  await page.waitForURL(/\/support\/case\?case_id=/)
+  await expect(page.getByText(/Ticket #.* · Standard · Valid/)).toBeVisible()
+})

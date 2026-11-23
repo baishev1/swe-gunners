@@ -64,6 +64,7 @@ export function TicketsPage() {
               <ContactSupportLink
                 eventId={ticket.event_id}
                 ticketId={ticket.id}
+                orderId={ticket.order_id}
                 category="ticket_delivery"
               />
             </div>
