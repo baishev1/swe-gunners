@@ -106,11 +106,13 @@ export function EventDetailPage() {
           </Button>
         )}
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" asChild>
-          <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>
-            {t('eventDetail.edit')}
-          </Link>
-        </Button>
+        {me.data?.id === data.organizer_id && (
+          <Button variant="outline" asChild>
+            <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>
+              {t('eventDetail.edit')}
+            </Link>
+          </Button>
+        )}
         <ContactSupportLink eventId={data.id} category="event_information" />
         {me.data && me.data.id !== data.organizer_id && <ReportEventForm eventId={data.id} />}
       </div>
