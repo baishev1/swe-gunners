@@ -1,19 +1,21 @@
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field
 
 from core import *
 
+Email = Annotated[EmailStr, AfterValidator(str.lower)]
+
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: Email
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=1, max_length=255)
     role: Literal["attendee", "organizer"] = "attendee"
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: Email
     password: str
 
 
@@ -37,7 +39,7 @@ class VerifyEmailRequest(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: Email
 
 
 class ResetPasswordRequest(BaseModel):
