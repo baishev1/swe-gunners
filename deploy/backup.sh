@@ -5,6 +5,9 @@ BACKUP_DIR="${BACKUP_DIR:-/opt/swe-gunners/backups}"
 KEEP="${KEEP:-14}"
 CONTAINER="${CONTAINER:-biletflow-postgres-1}"
 
+# Dumps hold user emails and password hashes, and the VM is shared.
+umask 077
+
 mkdir -p "$BACKUP_DIR"
 file="$BACKUP_DIR/biletflow-$(date -u +%Y%m%d-%H%M%S).sql.gz"
 trap 'rm -f "$file.tmp"' EXIT
