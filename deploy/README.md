@@ -1,6 +1,8 @@
 # Deployment
 
-Production runs on the GCE VM at `35.228.54.76` through Docker Compose.
+Production runs on the GCE VM at `35.228.54.76` through Docker Compose and is
+served at `https://35-228-54-76.sslip.io`. sslip.io resolves that name to the IP,
+so no domain has to be bought.
 
 ```
 GitHub Actions (CI + deploy job)
@@ -39,20 +41,32 @@ openssl rand -hex 32
 ```
 
 `CORS_ORIGINS` must be a JSON array, for example
-`["http://35.228.54.76"]`. `SMTP_HOST` can stay empty while no mail provider is
+`["https://35-228-54-76.sslip.io"]`. `SMTP_HOST` can stay empty while no mail provider is
 configured; verification messages are then written to the container log.
 
 ### Host nginx
 
-Requests by IP reach BiletFlow through `deploy/nginx-biletflow.conf`, which is
-the `default_server` on port 80. Other sites on the VM keep their own
-`server_name` blocks. Install it once:
+BiletFlow is reached through `deploy/nginx-biletflow.conf`. Its port 80 block is
+the `default_server` and redirects to HTTPS, so plain requests by IP land here
+too. Other sites on the VM keep their own `server_name` blocks.
+
+Issue the certificate once, before installing the site. The certbot timer
+renews it:
+
+```bash
+sudo certbot certonly --nginx -d 35-228-54-76.sslip.io
+```
+
+Then install or update the site:
 
 ```bash
 sudo cp /opt/swe-gunners/app/deploy/nginx-biletflow.conf /etc/nginx/sites-available/biletflow
-sudo ln -s /etc/nginx/sites-available/biletflow /etc/nginx/sites-enabled/biletflow
+sudo ln -sf /etc/nginx/sites-available/biletflow /etc/nginx/sites-enabled/biletflow
 sudo nginx -t && sudo systemctl reload nginx
 ```
+
+`FRONTEND_URL` and `CORS_ORIGINS` in `.env` must use the HTTPS address. Campaign
+QR codes and email links are built from `FRONTEND_URL`.
 
 ## GitHub configuration
 
@@ -104,8 +118,8 @@ docker compose --env-file /opt/swe-gunners/.env -f docker-compose.prod.yml logs 
 
   Without that rule the site is reachable only from the VM itself, even though
   UFW is open.
-- The site is served over plain HTTP. HTTPS needs a domain name and a
-  certificate on the host nginx (certbot), not in the stack.
+- TLS ends at the host nginx. The stack itself only speaks HTTP on
+  `127.0.0.1:8080`.
 - Docker publishes ports through its own iptables rules, so keep public ports
   declared explicitly in `docker-compose.prod.yml` rather than relying on UFW
   alone.
