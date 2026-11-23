@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, update
 
@@ -15,6 +17,8 @@ from .schemas import *
 
 class OrderService:
     def create_order(self, db: Session, data: OrderCreate, user_id: UUID) -> Order:
+        # Free stock held by abandoned checkouts before checking availability.
+        self.expire_stale_orders(db)
         order = Order(**data.model_dump(exclude={"items"}), user_id=user_id, total_amount_kzt=0)
         db.add(order)
         db.flush()
@@ -47,6 +51,52 @@ class OrderService:
             ticket_service.issue_tickets_for_order(db=db, order=order)
 
         return order
+
+    def hold_expires_at(self, order: Order) -> datetime:
+        return order.created_at + timedelta(minutes=settings.ORDER_HOLD_MINUTES)
+
+    def is_hold_expired(self, order: Order) -> bool:
+        return order.status == "pending" and time_now() >= self.hold_expires_at(order)
+
+    def expire_order(self, db: Session, order: Order) -> bool:
+        """Releases a pending order's reserved stock and marks it expired (SRS 4.6).
+
+        The status flip is a conditional UPDATE so a payment confirming the same
+        order concurrently can't have its reservation released underneath it.
+        """
+        changed_id = db.scalar(
+            update(Order)
+            .where(Order.id == order.id, Order.status == "pending")
+            .values(status="expired")
+            .returning(Order.id)
+            .execution_options(synchronize_session=False)
+        )
+        if changed_id is None:
+            return False
+        for item in order.items:
+            ticket_type_service.release(db, item.ticket_type_id, item.quantity)
+        audit_log_service.record(
+            db,
+            action="order_expired",
+            entity_type="order",
+            entity_id=order.id,
+            event_id=order.event_id,
+            actor_id=None,
+            description=f"Checkout hold expired after {settings.ORDER_HOLD_MINUTES} min; "
+            "reserved tickets released",
+        )
+        return True
+
+    def expire_stale_orders(self, db: Session) -> int:
+        """Expires every pending order whose hold has run out. Commits; returns the count."""
+        cutoff = time_now() - timedelta(minutes=settings.ORDER_HOLD_MINUTES)
+        stale = db.scalars(
+            select(Order).where(Order.status == "pending", Order.created_at <= cutoff)
+        ).all()
+        expired = sum(1 for order in stale if self.expire_order(db, order))
+        if expired:
+            db.commit()
+        return expired
 
     def confirm_sale(self, db: Session, order: Order) -> None:
         for item in order.items:

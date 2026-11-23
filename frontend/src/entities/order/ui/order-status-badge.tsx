@@ -15,6 +15,8 @@ export function OrderStatusBadge({ status }: OrderStatusBadgeProps) {
       return <Badge variant="destructive">Cancelled</Badge>
     case 'refunded':
       return <Badge variant="secondary">Refunded</Badge>
+    case 'expired':
+      return <Badge variant="outline">Expired</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }

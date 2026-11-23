@@ -1,6 +1,6 @@
 export type TicketStatus = 'valid' | 'checked_in' | 'cancelled' | 'refunded'
 
-export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'refunded'
+export type OrderStatus = 'pending' | 'paid' | 'cancelled' | 'refunded' | 'expired'
 
 export interface EventAttendee {
   ticket_id: string

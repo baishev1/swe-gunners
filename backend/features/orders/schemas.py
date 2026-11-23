@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from core import *
 
@@ -46,3 +46,11 @@ class OrderResponse(OrderBase):
     created_at: datetime
     updated_at: datetime
     items: list[OrderItemResponse] = []
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def hold_expires_at(self) -> datetime | None:
+        """When an unpaid checkout releases its tickets; None once the order settles."""
+        if self.status != "pending":
+            return None
+        return self.created_at + timedelta(minutes=settings.ORDER_HOLD_MINUTES)

@@ -16,7 +16,8 @@ export interface Order {
   customer_name: string
   customer_email: string
   total_amount_kzt: number
-  status: 'pending' | 'paid' | 'cancelled' | 'refunded'
+  status: 'pending' | 'paid' | 'cancelled' | 'refunded' | 'expired'
+  hold_expires_at?: string | null
   created_at: string
   updated_at: string
   items: OrderItem[]

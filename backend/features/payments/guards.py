@@ -4,6 +4,7 @@ from core import *
 from features.auth.guards import get_current_user
 from features.orders.guards import accessible_order_guard
 from features.orders.models import Order
+from features.orders.service import order_service
 from features.paid_sales.service import paid_sales_service
 from features.users.models import User
 
@@ -22,6 +23,13 @@ def payable_order_guard(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found",
+        )
+    if order_service.is_hold_expired(order):
+        order_service.expire_order(db, order)
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Checkout time ran out and the tickets were released. Start a new order.",
         )
     if order.status != "pending":
         raise HTTPException(

@@ -145,7 +145,8 @@
       "pending": "Ожидает оплаты",
       "paid": "Оплачен",
       "cancelled": "Отменён",
-      "refunded": "Возвращён"
+      "refunded": "Возвращён",
+      "expired": "Время брони истекло"
     }
   },
   "eventForm": {
@@ -363,7 +364,8 @@
         "pending": "Ожидает оплаты",
         "paid": "Оплачен",
         "cancelled": "Отменён",
-        "refunded": "Возвращён"
+        "refunded": "Возвращён",
+        "expired": "Время брони истекло"
       },
       "paymentStatuses": {
         "succeeded": "Успешно",
