@@ -124,4 +124,31 @@ docker compose --env-file /opt/swe-gunners/.env -f docker-compose.prod.yml logs 
   declared explicitly in `docker-compose.prod.yml` rather than relying on UFW
   alone.
 - PostgreSQL data lives in the `pgdata` Docker volume and survives deploys.
-  Back it up with `docker compose exec postgres pg_dump`.
+  See Backups below.
+
+## Backups
+
+`deploy/backup.sh` dumps the database from the running postgres container to
+`/opt/swe-gunners/backups/biletflow-<UTC time>.sql.gz` and keeps the newest 14
+files. Install the nightly job once:
+
+```bash
+echo '30 2 * * * root /opt/swe-gunners/app/deploy/backup.sh >> /var/log/biletflow-backup.log 2>&1' \
+  | sudo tee /etc/cron.d/biletflow-backup
+sudo /opt/swe-gunners/app/deploy/backup.sh
+```
+
+The dump is made with `--clean --if-exists`, so restoring replaces the current
+data. Stop the backend first so nothing writes during the restore:
+
+```bash
+cd /opt/swe-gunners/app
+docker compose --env-file /opt/swe-gunners/.env -f docker-compose.prod.yml stop backend
+gunzip -c /opt/swe-gunners/backups/biletflow-<time>.sql.gz \
+  | docker exec -i biletflow-postgres-1 sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+docker compose --env-file /opt/swe-gunners/.env -f docker-compose.prod.yml start backend
+```
+
+The backups sit on the same disk as the database, so they cover mistakes and bad
+migrations, not loss of the VM. A GCE snapshot schedule on the boot disk covers
+that case.
