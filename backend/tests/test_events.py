@@ -119,13 +119,18 @@ def test_update_event(client: TestClient, organizer_headers: dict[str, str]) -> 
     create_res = client.post("/api/v1/events", json=payload, headers=organizer_headers)
     event_id = create_res.json()["id"]
 
-    update_payload = {"title": "Updated Title", "capacity": 200}
+    update_payload = {
+        "title": "Updated Title",
+        "capacity": 200,
+        "refund_policy": "Full refund up to 3 days before the event.",
+    }
     res = client.patch(
         f"/api/v1/events/update?event_id={event_id}", json=update_payload, headers=organizer_headers
     )
     assert res.status_code == 200
     assert res.json()["title"] == "Updated Title"
     assert res.json()["capacity"] == 200
+    assert res.json()["refund_policy"] == "Full refund up to 3 days before the event."
 
 
 def test_publish_and_unpublish_event(client: TestClient, organizer_headers: dict[str, str]) -> None:
@@ -166,6 +171,7 @@ def test_cancel_event_and_guard(client: TestClient, organizer_headers: dict[str,
 
 def test_duplicate_event(client: TestClient, organizer_headers: dict[str, str]) -> None:
     payload = sample_event_payload(create_venue(client, organizer_headers))
+    payload["refund_policy"] = "No refunds after the event starts."
     create_res = client.post("/api/v1/events", json=payload, headers=organizer_headers)
     event_id = create_res.json()["id"]
 
@@ -175,6 +181,7 @@ def test_duplicate_event(client: TestClient, organizer_headers: dict[str, str]) 
     assert dup_data["id"] != event_id
     assert dup_data["title"] == f"{payload['title']} (Copy)"
     assert dup_data["status"] == "draft"
+    assert dup_data["refund_policy"] == payload["refund_policy"]
 
 
 def test_list_events(client: TestClient, organizer_headers: dict[str, str]) -> None:
