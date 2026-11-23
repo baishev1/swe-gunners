@@ -56,7 +56,7 @@ make lint          # ruff + mypy + oxlint + tsc
 make format        # ruff format + prettier
 make test          # backend test suite
 make migration m="add events"
-make seed          # demo users and event, dev only
+make seed          # demo users, events, orders and promo code, dev only
 make up            # full stack in Docker
 ```
 
@@ -74,6 +74,19 @@ backend container gets a fresh virtualenv.
 Demo accounts created by `make seed`, all with password `password123`:
 `attendee@biletflow.dev`, `organizer@biletflow.dev`, `eventadmin@biletflow.dev`
 and `admin@biletflow.dev`.
+
+The seed also creates the data each SRS §11 scenario needs (running it again
+changes nothing):
+
+| Event | What it shows |
+|---|---|
+| Открытая лекция: Как запустить стартап в Казахстане | Free event with registrations |
+| BiletFlow Demo Concert | Paid event with completed activation, two ticket types, paid orders, promo code `DEMO20` (20% off) |
+| Jazz Evening Almaty | Completed event with sales and check-ins (history, analytics) |
+| Outdoor Cinema Night | Cancelled event with refunded orders |
+
+`eventadmin@biletflow.dev` is assigned to the concert, the lecture and the jazz
+evening, so the mobile scanner has events to open.
 
 ## Repository layout
 
