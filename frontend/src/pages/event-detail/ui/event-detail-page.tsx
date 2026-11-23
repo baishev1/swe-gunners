@@ -2,8 +2,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { useEvent } from '@/entities/event'
+import { useMe } from '@/entities/session'
 import { useTicketTypes } from '@/entities/ticket-type'
 import { ContactSupportLink } from '@/features/contact-support'
+import { ReportEventForm } from '@/features/report-event'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { formatDateTime, formatPrice } from '@/shared/lib/format'
@@ -18,6 +20,7 @@ export function EventDetailPage() {
   const eventId = searchParams.get('event_id') ?? ''
   const event = useEvent(eventId)
   const ticketTypes = useTicketTypes(eventId)
+  const me = useMe()
 
   if (event.isPending) {
     return (
@@ -107,6 +110,7 @@ export function EventDetailPage() {
           </Link>
         </Button>
         <ContactSupportLink eventId={data.id} category="event_information" />
+        {me.data && me.data.id !== data.organizer_id && <ReportEventForm eventId={data.id} />}
       </div>
     </main>
   )

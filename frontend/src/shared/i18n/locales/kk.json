@@ -386,6 +386,16 @@
       "from": "Бастап",
       "to": "Дейін",
       "download": "CSV жүктеу"
+    },
+    "eventReports": {
+      "tab": "Шағымдар",
+      "open": "Ашық",
+      "reviewed": "Қаралған",
+      "category": "Санат",
+      "reason": "Себеп",
+      "reporter": "Авторы",
+      "date": "Күні",
+      "markReviewed": "Қаралды"
     }
   },
   "eventAttendees": {
@@ -491,6 +501,20 @@
       "unassigned": "Орындаушы тағайындалмаған",
       "assignedToStaff": "Қолдау қызметкеріне тағайындалды",
       "assignToMe": "Маған тағайындау"
+    }
+  },
+  "reportEvent": {
+    "open": "Шағымдану",
+    "category": "Санат",
+    "reason": "Бұл іс-шарада не дұрыс емес?",
+    "submit": "Шағым жіберу",
+    "cancel": "Болдырмау",
+    "sent": "Рақмет. Әкімшілік шағымыңызды қарайды.",
+    "categories": {
+      "fraud": "Алаяқтық",
+      "inappropriate": "Орынсыз мазмұн",
+      "misleading": "Жалған ақпарат",
+      "other": "Басқа"
     }
   }
 }

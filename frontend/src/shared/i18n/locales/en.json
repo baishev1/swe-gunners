@@ -386,6 +386,16 @@
       "from": "From",
       "to": "To",
       "download": "Download CSV"
+    },
+    "eventReports": {
+      "tab": "Reports",
+      "open": "Open",
+      "reviewed": "Reviewed",
+      "category": "Category",
+      "reason": "Reason",
+      "reporter": "Reported by",
+      "date": "Date",
+      "markReviewed": "Mark reviewed"
     }
   },
   "eventAttendees": {
@@ -491,6 +501,20 @@
       "unassigned": "No assignee",
       "assignedToStaff": "Assigned to support staff",
       "assignToMe": "Assign to me"
+    }
+  },
+  "reportEvent": {
+    "open": "Report event",
+    "category": "Category",
+    "reason": "What is wrong with this event?",
+    "submit": "Send report",
+    "cancel": "Cancel",
+    "sent": "Thanks. Platform staff will review your report.",
+    "categories": {
+      "fraud": "Fraud or scam",
+      "inappropriate": "Inappropriate content",
+      "misleading": "Misleading information",
+      "other": "Other"
     }
   }
 }
