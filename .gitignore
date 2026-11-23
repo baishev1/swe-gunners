@@ -247,6 +247,9 @@ minio-data/
 uploads/
 media/
 storage/
+!/mobile/biletflow_staff/lib/core/storage/
+/mobile/biletflow_staff/lib/core/storage/*
+!/mobile/biletflow_staff/lib/core/storage/token_storage.dart
 
 # ---------------------------------------------------------------------------
 # Docker and infrastructure

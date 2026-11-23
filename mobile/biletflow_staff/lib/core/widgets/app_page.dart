@@ -197,7 +197,20 @@ String errorMessage(BuildContext context, Object error) {
           error.requestOptions.extra['requiresAuth'] == false)) {
     return context.l.badCredentials;
   }
-  if (detail == 'event_cancelled') return context.l.eventCancelled;
+  if (detail == 'event_cancelled' ||
+      detail == 'Cannot check in to a cancelled event') {
+    return context.l.eventCancelled;
+  }
+  if (detail == 'Cannot check in to a suspended event') {
+    return context.l.forbidden;
+  }
+  if (error.response?.statusCode == 400 &&
+      [
+        'tickets/check-in',
+        'tickets/undo-check-in',
+      ].contains(error.requestOptions.path)) {
+    return context.l.conflict;
+  }
   return switch (error.response?.statusCode) {
     401 => context.l.unauthorized,
     403 => context.l.forbidden,

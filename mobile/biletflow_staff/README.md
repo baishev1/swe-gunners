@@ -6,10 +6,14 @@ Flutter 3.44.4 / Dart 3.12.2. UI: [Forui](https://forui.dev/docs), state: Riverp
 
 ```sh
 flutter pub get
-flutter run --dart-define=API_BASE_URL=https://your-api.example/api/v1/
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api/v1/
 ```
 
 The default API URL is `http://localhost:8000/api/v1/`. For the Android emulator, pass `http://10.0.2.2:8000/api/v1/`. A physical device needs a reachable server address. HTTP is enabled only in Android debug builds; use HTTPS for production. On iOS, use HTTPS or a local development hostname permitted by ATS.
+
+Run the API and its dependencies from the repository root with `docker compose up -d backend`. Apply database migrations with `docker compose exec backend alembic upgrade head`.
+
+To run the demo without a server, use `flutter run --dart-define=USE_MOCK_API=true`. Guest search and attendance totals are available in demo mode until the staff API exposes those endpoints.
 
 ## Keep it simple
 
@@ -31,18 +35,7 @@ Keep each feature flat: its screen, controller/provider, and models/API function
 
 ## Authentication integration
 
-The backend currently has no authentication endpoint. The signed-out screen is a placeholder; no credentials form or guessed endpoint is wired up yet. Once the real login contract exists, make the login request with the shared Dio and explicitly mark it public:
-
-```dart
-final response = await ref.read(dioProvider).post<Map<String, dynamic>>(
-  'actual-login-path', // Replace with the backend route and request body.
-  data: credentials,
-  options: Options(extra: {'requiresAuth': false}),
-);
-await ref.read(sessionProvider.notifier).saveToken(
-  response.data!['access_token'] as String, // Match the real response field.
-);
-```
+Sign-in sends `email` and `password` to `POST auth/login` and stores the returned `access_token`. Login and password reset explicitly opt out of session handling.
 
 - Startup restores the token before rendering protected UI or sending authenticated requests. It does not require a network check or a new login.
 - Requests to this API automatically include `Authorization: Bearer <token>`. Use relative API paths such as `events`; tokens are not attached to other hosts/paths.
@@ -57,7 +50,7 @@ Android release builds have Internet permission and disable app backups to avoid
 
 ```sh
 flutter analyze
-flutter test
+flutter test --dart-define=USE_MOCK_API=true
 ```
 
 Tests cover restoring sessions, logout, bearer headers, `401` invalidation, public requests, external URLs, network/server failures, and overlapping login/logout or stale responses. Platform Keychain/Keystore behavior still needs a signed-device smoke test.

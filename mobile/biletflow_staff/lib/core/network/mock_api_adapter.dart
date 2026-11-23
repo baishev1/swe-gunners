@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'mock_fixtures.dart';
 
-const useMockApi = bool.fromEnvironment('USE_MOCK_API', defaultValue: true);
+const useMockApi = bool.fromEnvironment('USE_MOCK_API');
 final mockServerProvider = Provider((ref) => MockServer());
 
 enum DemoConnection { normal, offline, serverError }
@@ -43,7 +43,7 @@ class MockServer {
 
   Map<String, dynamic> publicTicket(Map<String, dynamic> ticket) => {
     for (final entry in ticket.entries)
-      if (entry.key != 'qr_code') entry.key: entry.value,
+      if (entry.key != 'qr_token') entry.key: entry.value,
   };
 
   ResponseBody json(Object? data, [int status = 200]) =>
@@ -62,7 +62,7 @@ class MockServer {
       return error(404, 'event_not_found');
     }
     if (id == unassignedEventId || revoked || emptyAssignments) {
-      return error(403, 'event_access_denied');
+      return error(404, 'event_access_denied');
     }
     return null;
   }
@@ -121,9 +121,10 @@ class MockServer {
       if (denied != null) return denied;
       return json(events.firstWhere((e) => e['id'] == id));
     }
-    if (!path.startsWith('checkin/')) return error(404, 'route_not_found');
-    final eventId =
-        (method == 'GET' ? query['event_id'] : body['event_id']) as String?;
+    if (!path.startsWith('checkin/') && !path.startsWith('tickets/')) {
+      return error(404, 'route_not_found');
+    }
+    final eventId = query['event_id'];
     final denied = eventAccess(eventId);
     if (denied != null) return denied;
     final event = events.firstWhere((e) => e['id'] == eventId);
@@ -164,68 +165,41 @@ class MockServer {
           ? error(404, 'ticket_not_found')
           : json(publicTicket(found.first));
     }
-    if (event['status'] == 'cancelled') return error(409, 'event_cancelled');
-    if (path == 'checkin/verify' && method == 'POST') {
-      final code = body['qr_code'];
-      if (code is! String || code.trim().isEmpty) {
-        return error(422, 'invalid_code');
-      }
-      if (code.startsWith('https://') || code.startsWith('http://')) {
-        return json({
-          'result': 'campaign_qr',
-          'ticket': null,
-          'can_check_in': false,
-          'can_undo': false,
-        });
-      }
-      final matches = tickets.where((t) => t['qr_code'] == code);
-      if (matches.isEmpty) {
-        return json({
-          'result': 'invalid',
-          'ticket': null,
-          'can_check_in': false,
-          'can_undo': false,
-        });
-      }
-      final ticket = matches.first;
-      if (ticket['event_id'] != eventId) {
-        return json({
-          'result': 'wrong_event',
-          'ticket': null,
-          'can_check_in': false,
-          'can_undo': false,
-        });
-      }
+    if (event['status'] == 'cancelled') return error(400, 'event_cancelled');
+    if (path == 'tickets/verify' && method == 'GET') {
+      final code = query['qr_token'];
+      if (code == null) return error(422, 'invalid_code');
+      final ticket = tickets
+          .where((t) => t['qr_token'] == code && t['event_id'] == eventId)
+          .firstOrNull;
+      final status = ticket?['status'] ?? 'not_found';
       return json({
-        'result': ticket['status'],
-        'ticket': publicTicket(ticket),
-        'can_check_in': ticket['status'] == 'valid',
-        'can_undo':
-            ticket['status'] == 'checked_in' && ticket['can_undo'] == true,
+        'valid': status == 'valid',
+        'status': status,
+        'ticket': ticket,
+        'message': 'Ticket is $status',
       });
     }
-    if (['checkin/admit', 'checkin/undo'].contains(path) && method == 'POST') {
+    if (['tickets/check-in', 'tickets/undo-check-in'].contains(path) &&
+        method == 'POST') {
       final found = tickets.where(
-        (t) => t['id'] == body['ticket_id'] && t['event_id'] == eventId,
+        (t) => t['id'] == query['ticket_id'] && t['event_id'] == eventId,
       );
       if (found.isEmpty) return error(404, 'ticket_not_found');
       final ticket = found.first;
-      if (path.endsWith('/undo')) {
+      if (path == 'tickets/undo-check-in') {
         if (ticket['can_undo'] != true) return error(403, 'undo_forbidden');
         if (ticket['status'] != 'checked_in') {
-          return error(409, 'not_checked_in');
+          return error(400, 'not_checked_in');
         }
         ticket['status'] = 'valid';
         ticket['checked_in_at'] = null;
       } else {
-        if (ticket['status'] != 'valid') return error(409, 'ticket_not_valid');
+        if (ticket['status'] != 'valid') return error(400, 'ticket_not_valid');
         ticket['status'] = 'checked_in';
         ticket['checked_in_at'] = DateTime.now().toUtc().toIso8601String();
       }
-      return json({
-        'ticket': publicTicket(ticket),
-        'summary': summary(eventId!),
-      });
+      return json(ticket);
     }
     return error(404, 'route_not_found');
   }

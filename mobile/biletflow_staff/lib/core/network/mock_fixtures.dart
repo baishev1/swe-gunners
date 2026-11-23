@@ -76,6 +76,6 @@ List<Map<String, dynamic>> ticketFixtures() => [
       'row': number == 1 ? '2' : null,
       'seat': number == 1 ? '12' : null,
       'can_undo': canUndo,
-      'qr_code': code,
+      'qr_token': code,
     },
 ];
