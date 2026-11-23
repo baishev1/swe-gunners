@@ -224,7 +224,9 @@
     "redemptionsColumn": "Used"
   },
   "promoLink": {
-    "applied": "Promo code {{code}} applied: {{discount}}. The discount is shown at checkout."
+    "applied": "Promo code {{code}} applied: {{discount}}. The discount is shown at checkout.",
+    "invalid": "This promo link is not valid.",
+    "unavailable": "This promo code has expired, is disabled or has run out."
   },
   "timeline": {
     "title": "Activity history",
@@ -545,7 +547,10 @@
     },
     "processing": "Processing...",
     "registerFree": "Complete free registration",
-    "pay": "Pay {{amount}} (simulation)"
+    "pay": "Pay {{amount}} (simulation)",
+    "promoApplied": "Promo code {{code}}",
+    "removePromo": "Remove",
+    "subtotal": "Subtotal"
   },
   "orders": {
     "title": "My orders",
@@ -558,7 +563,8 @@
     "orderNumber": "Order #{{number}}",
     "attendee": "Attendee",
     "total": "Total",
-    "viewTickets": "View tickets →"
+    "viewTickets": "View tickets →",
+    "discount": "Discount"
   },
   "tickets": {
     "title": "Digital tickets",

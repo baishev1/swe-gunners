@@ -6,6 +6,7 @@ import { createOrder, simulatePayment } from '@/shared/api'
 import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input } from '@/shared/ui'
 import { formatPrice } from '@/shared/lib/format'
 import type { OrderItemCreate } from '@/shared/types'
+import type { ResolvedPromo } from '@/entities/promo-campaign'
 
 export interface CheckoutTicketTypeOption {
   id: string
@@ -16,6 +17,16 @@ export interface CheckoutTicketTypeOption {
 interface CheckoutFormProps {
   eventId: string
   ticketTypes: CheckoutTicketTypeOption[]
+  promo?: ResolvedPromo | null
+  onRemovePromo?: () => void
+}
+
+// Preview only: the server recalculates the discount when it creates the order (SRS 4.14).
+function previewDiscount(promo: ResolvedPromo, eligibleSubtotal: number) {
+  if (promo.discount_type === 'percent') {
+    return Math.floor((eligibleSubtotal * promo.discount_value) / 100)
+  }
+  return Math.min(promo.discount_value, eligibleSubtotal)
 }
 
 // Backend error details are English, so buyer-facing messages come from the locale files.
@@ -27,7 +38,7 @@ function checkoutErrorKey(error: unknown) {
   return 'checkout.errors.generic'
 }
 
-export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
+export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: CheckoutFormProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState('')
@@ -51,10 +62,17 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
     .filter((t) => (quantities[t.id] || 0) > 0)
     .map((t) => ({ ticket_type_id: t.id, quantity: quantities[t.id] }))
 
-  const totalAmountKzt = ticketTypes.reduce(
-    (sum, t) => sum + t.price_kzt * (quantities[t.id] || 0),
-    0,
-  )
+  const lineTotal = (t: CheckoutTicketTypeOption) => t.price_kzt * (quantities[t.id] || 0)
+  const subtotalKzt = ticketTypes.reduce((sum, t) => sum + lineTotal(t), 0)
+  const discountKzt = promo
+    ? previewDiscount(
+        promo,
+        ticketTypes
+          .filter((t) => promo.ticket_type_ids.length === 0 || promo.ticket_type_ids.includes(t.id))
+          .reduce((sum, t) => sum + lineTotal(t), 0),
+      )
+    : 0
+  const totalAmountKzt = subtotalKzt - discountKzt
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,9 +95,10 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
         customer_name: customerName,
         customer_email: customerEmail,
         items: selectedItems,
+        promo_code: promo?.code ?? null,
       })
 
-      if (totalAmountKzt === 0) {
+      if (order.status === 'paid') {
         navigate(`/tickets?order_id=${order.id}`)
         return
       }
@@ -144,6 +163,33 @@ export function CheckoutForm({ eventId, ticketTypes }: CheckoutFormProps) {
               </div>
             </div>
           ))}
+
+          {promo && (
+            <div className="space-y-1 border-t pt-2 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>{t('checkout.subtotal')}</span>
+                <span>{formatPrice(subtotalKzt)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2" role="status">
+                <span className="flex items-center gap-2">
+                  {t('checkout.promoApplied', { code: promo.code })}
+                  {onRemovePromo && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0"
+                      onClick={onRemovePromo}
+                      disabled={isLoading}
+                    >
+                      {t('checkout.removePromo')}
+                    </Button>
+                  )}
+                </span>
+                <span>−{formatPrice(discountKzt)}</span>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-between pt-2 border-t font-semibold text-base">
             <span>{t('checkout.total')}</span>

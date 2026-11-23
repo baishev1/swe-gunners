@@ -1,7 +1,7 @@
+import { isAxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 
 import { formatDiscount } from '@/entities/promo-campaign'
-import { getErrorMessage } from '@/shared/api'
 
 import { usePromoLink } from '../model/use-promo-link'
 
@@ -12,7 +12,9 @@ export function PromoLinkBanner({ eventId }: { eventId: string }) {
   if (promo.isError) {
     return (
       <p role="alert" className="text-destructive text-sm">
-        {getErrorMessage(promo.error)}
+        {isAxiosError(promo.error) && promo.error.response?.status === 404
+          ? t('promoLink.invalid')
+          : t('promoLink.unavailable')}
       </p>
     )
   }

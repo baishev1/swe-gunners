@@ -10,6 +10,9 @@ class Order(DbBase):
     customer_name: Mapped[str] = mapped_column(String(255))
     customer_email: Mapped[str] = mapped_column(String(255))
     total_amount_kzt: Mapped[int] = mapped_column(Integer, default=0)
+    # Promo campaign applied at checkout (SRS 4.14); redeemed when the order is confirmed.
+    promo_campaign_id: Mapped[UUID | None] = mapped_column(default=None)
+    discount_kzt: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     status: Mapped[str] = mapped_column(String(20), default="pending")
 
     items: Mapped[list["OrderItem"]] = relationship(

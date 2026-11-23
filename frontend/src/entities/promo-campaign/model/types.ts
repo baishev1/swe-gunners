@@ -26,4 +26,5 @@ export interface ResolvedPromo {
   discount_type: DiscountType
   discount_value: number
   end_time: string | null
+  ticket_type_ids: string[]
 }

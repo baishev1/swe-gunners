@@ -38,6 +38,12 @@ export function OrderCard({ order }: OrderCardProps) {
             </div>
           ))}
         </div>
+        {(order.discount_kzt ?? 0) > 0 && (
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{t('orders.discount')}</span>
+            <span>−{formatPrice(order.discount_kzt ?? 0)}</span>
+          </div>
+        )}
         <div className="flex justify-between border-t pt-2 text-sm font-semibold">
           <span>{t('orders.total')}</span>
           <span>{formatPrice(order.total_amount_kzt)}</span>

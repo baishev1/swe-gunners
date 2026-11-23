@@ -18,6 +18,8 @@ export interface Order {
   total_amount_kzt: number
   status: 'pending' | 'paid' | 'cancelled' | 'refunded' | 'expired'
   hold_expires_at?: string | null
+  discount_kzt?: number
+  promo_campaign_id?: string | null
   created_at: string
   updated_at: string
   items: OrderItem[]
@@ -33,6 +35,7 @@ export interface OrderCreatePayload {
   customer_name: string
   customer_email: string
   items: OrderItemCreate[]
+  promo_code?: string | null
 }
 
 export interface Ticket {

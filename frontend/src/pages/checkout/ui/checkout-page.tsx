@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useEvent } from '@/entities/event'
 import { useTicketTypes } from '@/entities/ticket-type'
+import { clearAppliedPromo, getAppliedPromo } from '@/features/apply-promo-link'
 import { CheckoutForm } from '@/features/checkout'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -12,6 +14,11 @@ export function CheckoutPage() {
   const event = useEvent(eventId)
   const ticketTypes = useTicketTypes(eventId)
   const refundPolicy = event.data?.refund_policy
+  const [promo, setPromo] = useState(() => getAppliedPromo(eventId))
+  const removePromo = () => {
+    clearAppliedPromo(eventId)
+    setPromo(null)
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -30,6 +37,8 @@ export function CheckoutPage() {
       ) : (
         <CheckoutForm
           eventId={eventId}
+          promo={promo}
+          onRemovePromo={removePromo}
           ticketTypes={(ticketTypes.data ?? [])
             .filter((t) => t.available > 0)
             .map((t) => ({ id: t.id, name: t.name, price_kzt: t.price }))}

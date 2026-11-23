@@ -58,3 +58,5 @@ class PromoCampaignPublicResponse(BaseModel):
     discount_type: str
     discount_value: int
     end_time: datetime | None
+    # Lets checkout preview the discount; the server recalculates it on the order.
+    ticket_type_ids: list[UUID] = []

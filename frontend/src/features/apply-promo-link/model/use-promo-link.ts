@@ -4,21 +4,40 @@ import { useSearchParams } from 'react-router-dom'
 import type { ResolvedPromo } from '@/entities/promo-campaign'
 import { apiClient } from '@/shared/api'
 
-const storageKey = (eventId: string) => `promo_code:${eventId}`
+const storageKey = (eventId: string) => `promo:${eventId}`
 
-export function getAppliedPromoCode(eventId: string) {
+function isResolvedPromo(value: unknown): value is ResolvedPromo {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as ResolvedPromo).code === 'string' &&
+    Array.isArray((value as ResolvedPromo).ticket_type_ids)
+  )
+}
+
+/** The promo a Campaign QR link applied to this event in the current tab, if any. */
+export function getAppliedPromo(eventId: string): ResolvedPromo | null {
   try {
-    return sessionStorage.getItem(storageKey(eventId))
+    const parsed: unknown = JSON.parse(sessionStorage.getItem(storageKey(eventId)) ?? 'null')
+    return isResolvedPromo(parsed) ? parsed : null
   } catch {
     return null
   }
 }
 
-function rememberPromoCode(promo: ResolvedPromo) {
+export function clearAppliedPromo(eventId: string) {
   try {
-    sessionStorage.setItem(storageKey(promo.event_id), promo.code)
+    sessionStorage.removeItem(storageKey(eventId))
   } catch {
-    // The banner still shows the code; checkout just will not prefill it.
+    // Nothing stored, nothing to clear.
+  }
+}
+
+function rememberPromo(promo: ResolvedPromo) {
+  try {
+    sessionStorage.setItem(storageKey(promo.event_id), JSON.stringify(promo))
+  } catch {
+    // The banner still shows the code; checkout just will not apply it.
   }
 }
 
@@ -31,7 +50,7 @@ export function usePromoLink() {
     queryFn: async () => {
       const promo = (await apiClient.get<ResolvedPromo>('/promo/resolve', { params: { token } }))
         .data
-      rememberPromoCode(promo)
+      rememberPromo(promo)
       return promo
     },
     enabled: Boolean(token),
