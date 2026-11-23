@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { listTickets } from '@/shared/api'
 import { Button } from '@/shared/ui'
@@ -6,6 +7,7 @@ import { TicketCard } from '@/entities/ticket'
 import { ContactSupportLink } from '@/features/contact-support'
 
 export function TicketsPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const orderId = searchParams.get('order_id') || undefined
   const eventId = searchParams.get('event_id') || undefined
@@ -23,33 +25,33 @@ export function TicketsPage() {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Digital Tickets</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Present these QR codes at check-in or download them as PDF.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {t('tickets.title')}
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('tickets.subtitle')}</p>
         </div>
         <Button asChild variant="outline" size="sm">
-          <Link to="/orders">My Orders</Link>
+          <Link to="/orders">{t('tickets.myOrders')}</Link>
         </Button>
       </div>
 
       {isLoading && (
         <div className="text-center py-12 text-sm text-muted-foreground">
-          Loading your tickets...
+          {t('tickets.loading')}
         </div>
       )}
 
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-          Failed to load tickets.
+          {t('tickets.loadFailed')}
         </div>
       )}
 
       {!isLoading && !error && tickets.length === 0 && (
         <div className="text-center py-12 rounded-xl border border-dashed border-border p-8">
-          <p className="text-muted-foreground text-sm">No tickets found.</p>
+          <p className="text-muted-foreground text-sm">{t('tickets.empty')}</p>
           <Button asChild className="mt-4" size="sm">
-            <Link to="/events">Buy Tickets</Link>
+            <Link to="/events">{t('tickets.buy')}</Link>
           </Button>
         </div>
       )}

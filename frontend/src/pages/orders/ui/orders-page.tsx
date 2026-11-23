@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { listOrders } from '@/shared/api'
 import { Button } from '@/shared/ui'
@@ -6,6 +7,7 @@ import { OrderCard } from '@/entities/order'
 import { ContactSupportLink } from '@/features/contact-support'
 
 export function OrdersPage() {
+  const { t } = useTranslation()
   const {
     data: orders = [],
     isLoading,
@@ -19,33 +21,29 @@ export function OrdersPage() {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">My Orders</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Review past purchases and registrations.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{t('orders.title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('orders.subtitle')}</p>
         </div>
         <Button asChild size="sm">
-          <Link to="/events">New Order</Link>
+          <Link to="/events">{t('orders.newOrder')}</Link>
         </Button>
       </div>
 
       {isLoading && (
-        <div className="text-center py-12 text-sm text-muted-foreground">
-          Loading your orders...
-        </div>
+        <div className="text-center py-12 text-sm text-muted-foreground">{t('orders.loading')}</div>
       )}
 
       {error && (
         <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive">
-          Failed to load orders.
+          {t('orders.loadFailed')}
         </div>
       )}
 
       {!isLoading && !error && orders.length === 0 && (
         <div className="text-center py-12 rounded-xl border border-dashed border-border p-8">
-          <p className="text-muted-foreground text-sm">No orders found yet.</p>
+          <p className="text-muted-foreground text-sm">{t('orders.empty')}</p>
           <Button asChild className="mt-4" size="sm">
-            <Link to="/events">Browse Tickets</Link>
+            <Link to="/events">{t('orders.browse')}</Link>
           </Button>
         </div>
       )}

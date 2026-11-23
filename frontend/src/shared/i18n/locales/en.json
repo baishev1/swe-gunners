@@ -518,5 +518,60 @@
       "misleading": "Misleading information",
       "other": "Other"
     }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "subtitle": "Complete your registration to receive your digital QR tickets.",
+    "selectTickets": "Select tickets",
+    "decrease": "Fewer {{name}} tickets",
+    "increase": "More {{name}} tickets",
+    "total": "Total",
+    "attendeeInfo": "Attendee information",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "e.g. Arman Bekov",
+    "email": "Email address",
+    "emailPlaceholder": "e.g. arman@example.kz",
+    "simulationTitle": "Demonstration payment simulation",
+    "simulationNote": "No real payments are collected. The button below processes a simulated KZT payment and issues verified QR tickets.",
+    "simulateFailure": "Simulate payment failure",
+    "errors": {
+      "missingDetails": "Please fill in your name and email address.",
+      "noTickets": "Please select at least one ticket.",
+      "paymentFailed": "Payment simulation failed. The order is still waiting for payment.",
+      "notAvailable": "This order can't be placed right now. Check the ticket quantity and sale dates.",
+      "salesClosed": "Paid ticket sales are not open for this event yet.",
+      "soldOut": "Not enough tickets left, or your checkout time ran out. Please start a new order.",
+      "generic": "Something went wrong during checkout."
+    },
+    "processing": "Processing...",
+    "registerFree": "Complete free registration",
+    "pay": "Pay {{amount}} (simulation)"
+  },
+  "orders": {
+    "title": "My orders",
+    "subtitle": "Review past purchases and registrations.",
+    "newOrder": "New order",
+    "loading": "Loading your orders...",
+    "loadFailed": "Failed to load orders.",
+    "empty": "No orders yet.",
+    "browse": "Browse events",
+    "orderNumber": "Order #{{number}}",
+    "attendee": "Attendee",
+    "total": "Total",
+    "viewTickets": "View tickets →"
+  },
+  "tickets": {
+    "title": "Digital tickets",
+    "subtitle": "Show these QR codes at check-in or download them as PDF.",
+    "myOrders": "My orders",
+    "loading": "Loading your tickets...",
+    "loadFailed": "Failed to load tickets.",
+    "empty": "No tickets yet.",
+    "buy": "Buy tickets",
+    "id": "ID: {{id}}",
+    "attendee": "Attendee",
+    "email": "Email",
+    "showQr": "Show this QR code at the venue entrance",
+    "downloadPdf": "Download printable PDF"
   }
 }
