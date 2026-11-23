@@ -480,7 +480,8 @@
       "submit": "Send request",
       "submitting": "Sending...",
       "contextRequiredTitle": "Choose where to start",
-      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context."
+      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context.",
+      "attached": "Attached"
     },
     "categories": {
       "ticket_delivery": "Ticket delivery",
@@ -515,6 +516,12 @@
       "unassigned": "No assignee",
       "assignedToStaff": "Assigned to support staff",
       "assignToMe": "Assign to me"
+    },
+    "context": {
+      "order": "Order #{{number}}",
+      "ticket": "Ticket #{{number}}",
+      "orderLabel": "Order",
+      "ticketLabel": "Ticket"
     }
   },
   "reportEvent": {

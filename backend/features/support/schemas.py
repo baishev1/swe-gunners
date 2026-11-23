@@ -27,14 +27,18 @@ class SupportCaseCreate(BaseModel):
 
     target: Literal["organizer", "platform"]
     event_id: UUID | None = None
+    # Opening a case from an order or ticket attaches it; the event follows from it.
+    order_id: UUID | None = None
+    ticket_id: UUID | None = None
     category: SupportCategory
     subject: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
     message: MessageBody
 
     @model_validator(mode="after")
     def require_event_for_organizer(self) -> "SupportCaseCreate":
-        if self.target == "organizer" and self.event_id is None:
-            raise ValueError("An organizer support case requires an event_id")
+        has_context = self.event_id or self.order_id or self.ticket_id
+        if self.target == "organizer" and not has_context:
+            raise ValueError("An organizer support case requires an event, order or ticket")
         return self
 
 
@@ -56,6 +60,12 @@ class SupportCaseResponse(BaseModel):
     id: UUID
     requester_id: UUID
     event_id: UUID | None
+    order_id: UUID | None = None
+    ticket_id: UUID | None = None
+    order_status: str | None = None
+    order_total_kzt: int | None = None
+    ticket_type_name: str | None = None
+    ticket_status: str | None = None
     assignee_id: UUID | None
     target: Literal["organizer", "platform"]
     category: SupportCategory

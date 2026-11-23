@@ -61,7 +61,11 @@ export function TicketsPage() {
           <div key={ticket.id} className="flex flex-col gap-2">
             <TicketCard ticket={ticket} />
             <div className="flex justify-end">
-              <ContactSupportLink eventId={ticket.event_id} category="ticket_delivery" />
+              <ContactSupportLink
+                eventId={ticket.event_id}
+                ticketId={ticket.id}
+                category="ticket_delivery"
+              />
             </div>
           </div>
         ))}

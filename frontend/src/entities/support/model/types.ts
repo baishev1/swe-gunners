@@ -29,6 +29,12 @@ export interface SupportCase {
   id: string
   requester_id: string
   event_id: string | null
+  order_id?: string | null
+  ticket_id?: string | null
+  order_status?: string | null
+  order_total_kzt?: number | null
+  ticket_type_name?: string | null
+  ticket_status?: string | null
   assignee_id: string | null
   target: SupportTarget
   category: SupportCategory
@@ -49,6 +55,8 @@ export interface SupportMessage {
 export interface SupportCaseCreate {
   target: SupportTarget
   event_id?: string | null
+  order_id?: string | null
+  ticket_id?: string | null
   category: SupportCategory
   subject: string
   message: string

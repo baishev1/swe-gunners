@@ -55,7 +55,7 @@ export function OrdersPage() {
             <OrderCard order={order} />
             {order.status === 'pending' && <PayOrderPanel order={order} />}
             <div className="flex justify-end">
-              <ContactSupportLink eventId={order.event_id} category="payment" />
+              <ContactSupportLink eventId={order.event_id} orderId={order.id} category="payment" />
             </div>
           </div>
         ))}
