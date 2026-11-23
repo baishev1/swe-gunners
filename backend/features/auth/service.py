@@ -80,6 +80,9 @@ class AuthService:
         message["Subject"] = subject
         message.set_content(body)
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
+            if settings.SMTP_USER:
+                smtp.starttls()
+                smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             smtp.send_message(message)
 
     def send_verification_email(self, user: User) -> None:

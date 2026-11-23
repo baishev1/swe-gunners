@@ -17,7 +17,8 @@ container.
 
 Verification and password reset emails go to `SMTP_HOST`. Start Mailpit with
 `docker compose up -d mailpit` and read them at http://localhost:8025. With `SMTP_HOST`
-empty the message is written to the log instead.
+empty the message is written to the log instead. `SMTP_USER` and `SMTP_PASSWORD`
+are only for real providers: when set, the connection uses STARTTLS and logs in.
 
 ## Layout
 

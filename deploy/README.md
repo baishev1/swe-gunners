@@ -44,6 +44,10 @@ openssl rand -hex 32
 `["https://35-228-54-76.sslip.io"]`. `SMTP_HOST` can stay empty while no mail provider is
 configured; verification messages are then written to the container log.
 
+For a real provider set `SMTP_HOST`, `SMTP_PORT=587`, `SMTP_USER`,
+`SMTP_PASSWORD` and a `MAIL_FROM` the provider accepts. With `SMTP_USER` set
+the backend switches to STARTTLS and logs in.
+
 ### Host nginx
 
 BiletFlow is reached through `deploy/nginx-biletflow.conf`. Its port 80 block is
