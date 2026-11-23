@@ -1,8 +1,12 @@
-from sqlalchemy import or_, select
+from contextlib import suppress
+
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from core import *
 from features.events.models import Event
+from features.orders.models import Order
+from features.tickets.models import Ticket
 from features.users.models import User
 
 from .models import *
@@ -55,6 +59,49 @@ class CheckInService:
         return list(
             db.scalars(stmt.order_by(Event.start_time, Event.id).limit(limit).offset(offset))
         )
+
+    def undoable_event_ids(self, db: Session, user: User, events: list[Event]) -> set[UUID]:
+        if user.role == "platform_admin":
+            return {event.id for event in events}
+        owned = {event.id for event in events if event.organizer_id == user.id}
+        granted = db.scalars(
+            select(StaffAssignment.event_id).where(
+                StaffAssignment.user_id == user.id,
+                StaffAssignment.can_undo_check_in.is_(True),
+            )
+        )
+        return owned | set(granted)
+
+    def search_attendees(
+        self, db: Session, event: Event, q: str | None, limit: int, offset: int
+    ) -> list[tuple[Ticket, str]]:
+        stmt = (
+            select(Ticket, Order.status)
+            .join(Order, Order.id == Ticket.order_id)
+            .where(Ticket.event_id == event.id)
+        )
+        if q:
+            pattern = f"%{q}%"
+            matches: list[ColumnElement[bool]] = [
+                Ticket.attendee_name.ilike(pattern),
+                Ticket.attendee_email.ilike(pattern),
+            ]
+            with suppress(ValueError):
+                matches.append(Ticket.id == UUID(q))
+            stmt = stmt.where(or_(*matches))
+        stmt = stmt.order_by(Ticket.attendee_name, Ticket.id).limit(limit).offset(offset)
+        return [(ticket, order_status) for ticket, order_status in db.execute(stmt)]
+
+    def summary(self, db: Session, event: Event) -> tuple[int, int]:
+        registered, checked_in = db.execute(
+            select(
+                func.count().filter(Ticket.status.in_(["valid", "checked_in"])),
+                func.count().filter(Ticket.status == "checked_in"),
+            )
+            .join(Order, Order.id == Ticket.order_id)
+            .where(Ticket.event_id == event.id, Order.status == "paid")
+        ).one()
+        return registered, checked_in
 
 
 checkin_service = CheckInService()
