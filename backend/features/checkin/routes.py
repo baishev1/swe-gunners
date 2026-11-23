@@ -68,9 +68,10 @@ def get_summary(event: Event = Depends(assigned_event), db: Session = Depends(ge
 def assign_staff(
     data: StaffAssignmentCreate = Depends(valid_staff_assignment),
     event: Event = Depends(managed_event),
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    return checkin_service.assign_staff(db, event, data)
+    return checkin_service.assign_staff(db, event, data, user.id)
 
 
 @router.get("/staff", response_model=list[StaffAssignmentResponse])
@@ -86,6 +87,7 @@ def list_staff(
 @router.delete("/staff", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_staff(
     assignment: StaffAssignment = Depends(managed_assignment),
+    user: User = Depends(active_user),
     db: Session = Depends(get_db),
 ):
-    checkin_service.revoke_staff(db, assignment)
+    checkin_service.revoke_staff(db, assignment, user.id)

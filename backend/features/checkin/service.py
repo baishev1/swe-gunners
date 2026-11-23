@@ -4,6 +4,7 @@ from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from core import *
+from features.audit_log.service import audit_log_service
 from features.events.models import Event
 from features.orders.models import Order
 from features.tickets.models import Ticket
@@ -15,11 +16,22 @@ from .schemas import *
 
 class CheckInService:
     def assign_staff(
-        self, db: Session, event: Event, data: StaffAssignmentCreate
+        self, db: Session, event: Event, data: StaffAssignmentCreate, actor_id: UUID | None = None
     ) -> StaffAssignment:
-        assignment = StaffAssignment(**data.model_dump(), event_id=event.id)
+        assignment = StaffAssignment(**data.model_dump(exclude={"email"}), event_id=event.id)
         db.add(assignment)
         try:
+            db.flush()
+            staff = db.get(User, assignment.user_id)
+            audit_log_service.record(
+                db,
+                action="staff_assigned",
+                entity_type="staff_assignment",
+                entity_id=assignment.id,
+                description=f"Assigned {staff.email if staff else assignment.user_id} to check-in",
+                event_id=event.id,
+                actor_id=actor_id,
+            )
             db.commit()
         except IntegrityError:
             db.rollback()
@@ -47,7 +59,18 @@ class CheckInService:
         )
         return list(db.scalars(stmt).all())
 
-    def revoke_staff(self, db: Session, assignment: StaffAssignment) -> None:
+    def revoke_staff(
+        self, db: Session, assignment: StaffAssignment, actor_id: UUID | None = None
+    ) -> None:
+        audit_log_service.record(
+            db,
+            action="staff_removed",
+            entity_type="staff_assignment",
+            entity_id=assignment.id,
+            description=f"Removed {assignment.user_email} from check-in",
+            event_id=assignment.event_id,
+            actor_id=actor_id,
+        )
         db.delete(assignment)
         db.commit()
 

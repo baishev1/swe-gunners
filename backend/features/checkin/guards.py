@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from core import *
 from features.events.models import Event
@@ -26,7 +26,17 @@ def valid_staff_assignment(
     event: Event = Depends(managed_event),
     db: Session = Depends(get_db),
 ) -> StaffAssignmentCreate:
-    user = db.get(User, data.user_id)
+    if data.email:
+        email = data.email.strip().lower()
+        user = db.scalar(select(User).where(func.lower(User.email) == email))
+        if user is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No BiletFlow account uses this email. Ask the person to register first.",
+            )
+        data = data.model_copy(update={"user_id": user.id, "email": None})
+    else:
+        user = db.get(User, data.user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_active:
