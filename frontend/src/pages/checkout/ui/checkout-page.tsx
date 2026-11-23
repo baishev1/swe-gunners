@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useEvent } from '@/entities/event'
 import { useTicketTypes } from '@/entities/ticket-type'
-import { clearAppliedPromo, getAppliedPromo } from '@/features/apply-promo-link'
+import { applyPromoCode, clearAppliedPromo, getAppliedPromo } from '@/features/apply-promo-link'
 import { CheckoutForm } from '@/features/checkout'
 import { Skeleton } from '@/shared/ui/skeleton'
 
@@ -21,6 +21,7 @@ export function CheckoutPage() {
     clearAppliedPromo(eventId)
     setPromo(null)
   }
+  const applyPromo = async (code: string) => setPromo(await applyPromoCode(eventId, code))
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -40,6 +41,7 @@ export function CheckoutPage() {
           promo={promo}
           accessToken={access}
           onRemovePromo={removePromo}
+          onApplyPromo={applyPromo}
           ticketTypes={(ticketTypes.data ?? []).map((t) => ({
             id: t.id,
             name: t.name,

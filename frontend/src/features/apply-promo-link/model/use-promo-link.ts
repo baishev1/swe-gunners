@@ -41,6 +41,15 @@ function rememberPromo(promo: ResolvedPromo) {
   }
 }
 
+/** Checks a code typed at checkout and remembers it like a Campaign QR link does. */
+export async function applyPromoCode(eventId: string, code: string): Promise<ResolvedPromo> {
+  const promo = (
+    await apiClient.get<ResolvedPromo>('/promo/validate', { params: { event_id: eventId, code } })
+  ).data
+  rememberPromo(promo)
+  return promo
+}
+
 export function usePromoLink() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('promo') ?? ''

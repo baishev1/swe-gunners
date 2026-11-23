@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import select
 
 from core import *
@@ -73,6 +73,24 @@ def valid_qr_token(token: str, db: Session = Depends(get_db)) -> PromoCampaign:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Promo link is not valid",
         )
+    return campaign
+
+
+def redeemable_code_guard(
+    event_id: UUID,
+    code: str = Query(min_length=1, max_length=20),
+    db: Session = Depends(get_db),
+) -> PromoCampaign:
+    """A code typed at checkout: the same checks as a Campaign QR link (SRS 4.14)."""
+    campaign = promo_service.find_by_code(db, event_id, code)
+    if not campaign:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Promo code is not valid for this event",
+        )
+    error = promo_service.redeem_error(campaign)
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
     return campaign
 
 
