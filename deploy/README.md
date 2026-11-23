@@ -10,11 +10,12 @@ GitHub Actions (CI + deploy job)
 /opt/swe-gunners/.env  ← production secrets, never overwritten
         │  docker compose -f docker-compose.prod.yml
         ▼
-frontend (nginx :80) ──/api──▶ backend (uvicorn) ──▶ postgres
+host nginx :80 ──▶ frontend (127.0.0.1:8080) ──/api──▶ backend ──▶ postgres
 ```
 
-Only port 80 is published publicly; PostgreSQL and the API stay on the internal
-Docker network.
+The VM is shared with another site, so the host nginx owns port 80 and the
+stack publishes only `127.0.0.1:8080`. PostgreSQL and the API stay on the
+internal Docker network.
 
 ## One-time server setup
 
@@ -40,6 +41,18 @@ openssl rand -hex 32
 `CORS_ORIGINS` must be a JSON array, for example
 `["http://35.228.54.76"]`. `SMTP_HOST` can stay empty while no mail provider is
 configured; verification messages are then written to the container log.
+
+### Host nginx
+
+Requests by IP reach BiletFlow through `deploy/nginx-biletflow.conf`, which is
+the `default_server` on port 80. Other sites on the VM keep their own
+`server_name` blocks. Install it once:
+
+```bash
+sudo cp /opt/swe-gunners/app/deploy/nginx-biletflow.conf /etc/nginx/sites-available/biletflow
+sudo ln -s /etc/nginx/sites-available/biletflow /etc/nginx/sites-enabled/biletflow
+sudo nginx -t && sudo systemctl reload nginx
+```
 
 ## GitHub configuration
 
@@ -91,8 +104,8 @@ docker compose --env-file /opt/swe-gunners/.env -f docker-compose.prod.yml logs 
 
   Without that rule the site is reachable only from the VM itself, even though
   UFW is open.
-- The stack binds to port 80 only. Add a domain and a TLS terminator (Caddy,
-  nginx + certbot, or a GCP load balancer) before serving real users over HTTPS.
+- The site is served over plain HTTP. HTTPS needs a domain name and a
+  certificate on the host nginx (certbot), not in the stack.
 - Docker publishes ports through its own iptables rules, so keep public ports
   declared explicitly in `docker-compose.prod.yml` rather than relying on UFW
   alone.

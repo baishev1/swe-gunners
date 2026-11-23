@@ -34,6 +34,6 @@ docker builder prune -f --reserved-space 1GB --min-free-space 2GB >/dev/null
 
 echo "==> Verifying HTTP endpoint"
 curl --fail --silent --show-error --retry 10 --retry-delay 2 \
-  http://127.0.0.1/health >/dev/null
+  http://127.0.0.1:8080/health >/dev/null
 
 echo "==> Deployed $(date -u +%Y-%m-%dT%H:%M:%SZ)"
