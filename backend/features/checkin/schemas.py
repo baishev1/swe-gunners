@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from core import *
+from features.events.schemas import EventResponse
 
 
 class StaffAssignmentCreate(BaseModel):
@@ -23,3 +24,13 @@ class StaffAssignmentResponse(BaseModel):
     can_manage_support: bool
     created_at: datetime
     updated_at: datetime
+
+
+class AssignedEventResponse(EventResponse):
+    can_undo_check_in: bool
+
+
+class CheckInSummaryResponse(BaseModel):
+    event_id: UUID
+    registered: int
+    checked_in: int
