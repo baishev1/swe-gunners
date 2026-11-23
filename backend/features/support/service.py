@@ -78,7 +78,7 @@ class SupportService:
                 action="support_status_changed",
                 entity_type="support_case",
                 entity_id=case.id,
-                description=f"Support case \"{case.subject}\": {case.status} -> {data.status}",
+                description=f'Support case "{case.subject}": {case.status} -> {data.status}',
                 event_id=case.event_id,
                 actor_id=actor_id,
             )
@@ -101,7 +101,7 @@ class SupportService:
                 action="support_assigned",
                 entity_type="support_case",
                 entity_id=case.id,
-                description=f"{user.full_name} took support case \"{case.subject}\"",
+                description=f'{user.full_name} took support case "{case.subject}"',
                 event_id=case.event_id,
                 actor_id=user.id,
             )

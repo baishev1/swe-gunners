@@ -40,6 +40,7 @@ const ACTIONS = [
   'payment_failed',
   'support_status_changed',
   'support_assigned',
+  'event_reinstated',
 ] as const
 
 export function EventTimeline({ eventId }: { eventId: string }) {

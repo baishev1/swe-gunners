@@ -272,7 +272,8 @@
       "payment_succeeded": "Оплата прошла",
       "payment_failed": "Оплата не прошла",
       "support_status_changed": "Статус обращения изменён",
-      "support_assigned": "Обращение взято в работу"
+      "support_assigned": "Обращение взято в работу",
+      "event_reinstated": "Событие восстановлено"
     }
   },
   "analytics": {
@@ -416,7 +417,11 @@
       "reporter": "Автор",
       "date": "Дата",
       "markReviewed": "Рассмотрено"
-    }
+    },
+    "reinstate": "Разблокировать",
+    "reinstateEvent": "Восстановить событие",
+    "confirmSuspendUser": "Заблокировать {{email}}? Пользователь выйдет из системы и не сможет пользоваться BiletFlow, пока вы его не разблокируете.",
+    "confirmSuspendEvent": "Заблокировать «{{title}}»? Продажа билетов и проход на вход остановятся, пока вы не восстановите событие."
   },
   "eventAttendees": {
     "title": "Участники — {{title}}",

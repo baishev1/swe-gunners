@@ -12,7 +12,7 @@ import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
-import { useAdminEvents, useSuspendEvent } from '../api/admin-events-api'
+import { useAdminEvents, useReinstateEvent, useSuspendEvent } from '../api/admin-events-api'
 
 const STATUSES = ['draft', 'published', 'unpublished', 'cancelled', 'suspended'] as const
 
@@ -23,6 +23,7 @@ export function AdminEventsPanel() {
   const [status, setStatus] = useState('')
   const events = useAdminEvents(search, status)
   const suspendEvent = useSuspendEvent()
+  const reinstateEvent = useReinstateEvent()
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -57,6 +58,7 @@ export function AdminEventsPanel() {
       </form>
       {events.isError && <FieldError>{getErrorMessage(events.error)}</FieldError>}
       {suspendEvent.isError && <FieldError>{getErrorMessage(suspendEvent.error)}</FieldError>}
+      {reinstateEvent.isError && <FieldError>{getErrorMessage(reinstateEvent.error)}</FieldError>}
       <Table>
         <TableHeader>
           <TableRow>
@@ -87,9 +89,23 @@ export function AdminEventsPanel() {
                     variant="outline"
                     size="sm"
                     disabled={suspendEvent.isPending}
-                    onClick={() => suspendEvent.mutate(event.id)}
+                    onClick={() => {
+                      if (window.confirm(t('admin.confirmSuspendEvent', { title: event.title }))) {
+                        suspendEvent.mutate(event.id)
+                      }
+                    }}
                   >
                     {t('admin.suspendEvent')}
+                  </Button>
+                )}
+                {event.status === 'suspended' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={reinstateEvent.isPending}
+                    onClick={() => reinstateEvent.mutate(event.id)}
+                  >
+                    {t('admin.reinstateEvent')}
                   </Button>
                 )}
               </TableCell>

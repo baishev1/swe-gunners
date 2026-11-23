@@ -272,7 +272,8 @@
       "payment_succeeded": "Payment succeeded",
       "payment_failed": "Payment failed",
       "support_status_changed": "Support case status changed",
-      "support_assigned": "Support case assigned"
+      "support_assigned": "Support case assigned",
+      "event_reinstated": "Event restored"
     }
   },
   "analytics": {
@@ -414,7 +415,11 @@
       "reporter": "Reported by",
       "date": "Date",
       "markReviewed": "Mark reviewed"
-    }
+    },
+    "reinstate": "Reinstate",
+    "reinstateEvent": "Restore event",
+    "confirmSuspendUser": "Suspend {{email}}? They will be signed out and can't use BiletFlow until you reinstate them.",
+    "confirmSuspendEvent": "Suspend \"{{title}}\"? Ticket sales and check-in stop until you restore it."
   },
   "eventAttendees": {
     "title": "Attendees — {{title}}",

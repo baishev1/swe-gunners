@@ -272,7 +272,8 @@
       "payment_succeeded": "Төлем өтті",
       "payment_failed": "Төлем өтпеді",
       "support_status_changed": "Өтініш мәртебесі өзгерді",
-      "support_assigned": "Өтініш жұмысқа алынды"
+      "support_assigned": "Өтініш жұмысқа алынды",
+      "event_reinstated": "Іс-шара қалпына келтірілді"
     }
   },
   "analytics": {
@@ -414,7 +415,11 @@
       "reporter": "Авторы",
       "date": "Күні",
       "markReviewed": "Қаралды"
-    }
+    },
+    "reinstate": "Бұғаттан шығару",
+    "reinstateEvent": "Іс-шараны қалпына келтіру",
+    "confirmSuspendUser": "{{email}} бұғаттау керек пе? Пайдаланушы жүйеден шығып, сіз бұғаттан шығарғанша BiletFlow-ты пайдалана алмайды.",
+    "confirmSuspendEvent": "«{{title}}» бұғаттау керек пе? Сіз қалпына келтіргенше билет сату мен кіру тоқтатылады."
   },
   "eventAttendees": {
     "title": "Қатысушылар — {{title}}",

@@ -34,6 +34,24 @@ def suspendable_user_guard(
     return target
 
 
+def reinstatable_user_guard(target: User = Depends(valid_user_id)) -> User:
+    if target.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not suspended",
+        )
+    return target
+
+
+def reinstatable_event_guard(event: Event = Depends(valid_event_id)) -> Event:
+    if event.status != "suspended":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Event is not suspended",
+        )
+    return event
+
+
 def suspendable_event_guard(event: Event = Depends(valid_event_id)) -> Event:
     if event.status in ("suspended", "cancelled"):
         raise HTTPException(
