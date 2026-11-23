@@ -37,6 +37,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
     toDateTimeInput(event?.registration_end_time ?? null),
   )
   const [coverImageUrl, setCoverImageUrl] = useState(event?.cover_image_url ?? '')
+  const [refundPolicy, setRefundPolicy] = useState(event?.refund_policy ?? '')
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -53,6 +54,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         registration_start_time: fromDateTimeInput(registrationStart),
         registration_end_time: fromDateTimeInput(registrationEnd),
         cover_image_url: coverImageUrl || null,
+        refund_policy: refundPolicy || null,
       },
       { onSuccess: (saved) => onSaved?.(saved) },
     )
@@ -177,6 +179,14 @@ export function EventForm({ event, onSaved }: EventFormProps) {
             type="url"
             value={coverImageUrl}
             onChange={(e) => setCoverImageUrl(e.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="event-refund-policy">{t('eventForm.refundPolicy')}</FieldLabel>
+          <Textarea
+            id="event-refund-policy"
+            value={refundPolicy}
+            onChange={(e) => setRefundPolicy(e.target.value)}
           />
         </Field>
         {saveEvent.isError && <FieldError>{getErrorMessage(saveEvent.error)}</FieldError>}

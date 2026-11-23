@@ -136,6 +136,7 @@ class EventService:
             organizer_id=event.organizer_id,
             is_assigned_seating=event.is_assigned_seating,
             cover_image_url=event.cover_image_url,
+            refund_policy=event.refund_policy,
         )
         db.add(new_event)
         db.flush()

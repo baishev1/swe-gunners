@@ -115,7 +115,8 @@
     "left": "Қалды: {{count}}",
     "soldOut": "Сатылып кетті",
     "edit": "Іс-шараны өзгерту",
-    "getTickets": "Билет алу"
+    "getTickets": "Билет алу",
+    "refundPolicy": "Қайтару саясаты"
   },
   "organizerEventNew": {
     "title": "Жаңа іс-шара",
@@ -164,6 +165,7 @@
     "registrationOpens": "Тіркеу басталады",
     "registrationCloses": "Тіркеу аяқталады",
     "coverImageUrl": "Мұқаба суретінің сілтемесі",
+    "refundPolicy": "Қайтару саясаты",
     "saveChanges": "Өзгерістерді сақтау",
     "create": "Іс-шара жасау"
   },
@@ -386,6 +388,16 @@
       "from": "Бастап",
       "to": "Дейін",
       "download": "CSV жүктеу"
+    },
+    "eventReports": {
+      "tab": "Шағымдар",
+      "open": "Ашық",
+      "reviewed": "Қаралған",
+      "category": "Санат",
+      "reason": "Себеп",
+      "reporter": "Авторы",
+      "date": "Күні",
+      "markReviewed": "Қаралды"
     }
   },
   "eventAttendees": {
@@ -491,6 +503,20 @@
       "unassigned": "Орындаушы тағайындалмаған",
       "assignedToStaff": "Қолдау қызметкеріне тағайындалды",
       "assignToMe": "Маған тағайындау"
+    }
+  },
+  "reportEvent": {
+    "open": "Шағымдану",
+    "category": "Санат",
+    "reason": "Бұл іс-шарада не дұрыс емес?",
+    "submit": "Шағым жіберу",
+    "cancel": "Болдырмау",
+    "sent": "Рақмет. Әкімшілік шағымыңызды қарайды.",
+    "categories": {
+      "fraud": "Алаяқтық",
+      "inappropriate": "Орынсыз мазмұн",
+      "misleading": "Жалған ақпарат",
+      "other": "Басқа"
     }
   }
 }

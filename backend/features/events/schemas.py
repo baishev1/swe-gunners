@@ -20,6 +20,7 @@ class EventBase(BaseModel):
     registration_start_time: datetime | None = None
     registration_end_time: datetime | None = None
     cover_image_url: str | None = None
+    refund_policy: str | None = None
 
 
 class EventCreate(EventBase):
@@ -40,6 +41,7 @@ class EventUpdate(BaseModel):
     registration_start_time: datetime | None = None
     registration_end_time: datetime | None = None
     cover_image_url: str | None = None
+    refund_policy: str | None = None
 
 
 class EventResponse(EventBase):

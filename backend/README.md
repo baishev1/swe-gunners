@@ -305,3 +305,15 @@ event owner and platform admins — the organizer attendee list from SRS 4.4.
 SRS 4.3.
 
 Reservations do not expire yet.
+
+## Event reports
+
+Any signed-in user can report an event with `POST /event-reports?event_id=...`
+and a body of `category` (`fraud`, `inappropriate`, `misleading`, `other`) and
+`reason`. Reports start as `open`.
+
+Platform admins list them with `GET /admin/event-reports` (optional `status`) and
+mark one done with `POST /admin/event-reports/review?report_id=...`. Suspending
+the event itself goes through the existing `POST /admin/events/suspend`. Only the
+review is written to the audit log, so the reporter is not shown in the
+organizer's event timeline.

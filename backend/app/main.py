@@ -9,6 +9,7 @@ from features import (
     audit_log,
     auth,
     checkin,
+    event_reports,
     events,
     operations,
     orders,
@@ -67,3 +68,5 @@ app.include_router(payments.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.admin_router, prefix="/api/v1")
 app.include_router(analytics.routes.router, prefix="/api/v1")
+app.include_router(event_reports.routes.router, prefix="/api/v1")
+app.include_router(event_reports.routes.admin_router, prefix="/api/v1")
