@@ -274,6 +274,11 @@ paid order in full. The order, its successful payments and all of its tickets mo
 `order_refunded` audit entry is written, and the buyer gets an email. Only orders in
 `paid` status can be refunded; a second refund returns 400.
 
+Cancelling an event (`POST /events/cancel`) settles its open orders the same way:
+paid orders with a non-zero total are refunded, and pending or free orders are
+cancelled, releasing their stock. Buyers get the cancellation email, plus the refund
+email for paid orders. This backs the default refund policy shown on the event page.
+
 `GET /orders/manage?event_id=...` lists every order for an event to its organizer or a
 platform admin. Attendees keep using `GET /orders`.
 

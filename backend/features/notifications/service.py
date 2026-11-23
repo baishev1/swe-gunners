@@ -56,7 +56,7 @@ class NotificationService:
                 email,
                 f"Event cancelled: {event_title}",
                 f"{event_title} has been cancelled.\n"
-                "The organizer will contact you about a refund if you paid for a ticket.",
+                "Paid tickets have been refunded in full and free registrations are cancelled.",
             )
 
     def event_updated(self, event_title: str, changes: list[str], emails: list[str]) -> None:

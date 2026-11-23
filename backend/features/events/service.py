@@ -104,16 +104,24 @@ class EventService:
         return event
 
     def cancel_event(self, db: Session, event: Event, actor_id: UUID | None = None) -> Event:
-        emails = list(
+        # Imported here to avoid a cycle: orders imports the events models.
+        from features.orders.service import order_service
+
+        open_orders = list(
             db.scalars(
-                select(Order.customer_email)
-                .where(
+                select(Order).where(
                     Order.event_id == event.id,
                     Order.status.in_(("paid", "pending")),
                 )
-                .distinct()
             )
         )
+        emails = sorted({order.customer_email for order in open_orders})
+        # The platform refund policy promises a full refund when an event is cancelled.
+        for order in open_orders:
+            if order.status == "paid" and order.total_amount_kzt > 0:
+                order_service.refund_order(db, order, actor_id)
+            else:
+                order_service.cancel_order(db, order, actor_id)
         event.status = "cancelled"
         self._record(db, event, "event_cancelled", f"Cancelled event {event.title}", actor_id)
         db.commit()

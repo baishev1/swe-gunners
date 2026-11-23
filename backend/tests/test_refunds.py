@@ -105,3 +105,31 @@ def test_organizer_lists_event_orders(
     assert client.get(url, headers=attendee_headers).status_code == 404
     assert client.get(url, headers=other_organizer_headers).status_code == 404
     assert client.get(url, headers=admin_headers).status_code == 200
+
+
+def test_cancelling_event_refunds_paid_and_cancels_pending_orders(
+    client: TestClient,
+    organizer_headers: dict[str, str],
+    attendee_headers: dict[str, str],
+    paid_event_id: str,
+) -> None:
+    paid = place_order(client, attendee_headers, paid_event_id, quantity=2).json()
+    pay_order(client, attendee_headers, paid["id"])
+    pending = place_order(client, attendee_headers, paid_event_id).json()
+
+    res = client.post(f"/api/v1/events/cancel?event_id={paid_event_id}", headers=organizer_headers)
+    assert res.status_code == 200
+    assert res.json()["status"] == "cancelled"
+
+    orders = client.get(
+        f"/api/v1/orders/manage?event_id={paid_event_id}", headers=organizer_headers
+    ).json()
+    assert {o["id"]: o["status"] for o in orders} == {
+        paid["id"]: "refunded",
+        pending["id"]: "cancelled",
+    }
+    tickets = client.get(f"/api/v1/tickets?order_id={paid['id']}", headers=attendee_headers).json()
+    assert [t["status"] for t in tickets] == ["refunded", "refunded"]
+    ticket_type = client.get(f"/api/v1/ticket-types?event_id={paid_event_id}").json()[0]
+    assert ticket_type["sold_count"] == 0
+    assert ticket_type["reserved_count"] == 0
