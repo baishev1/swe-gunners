@@ -578,6 +578,9 @@
     "attendee": "Attendee",
     "email": "Email",
     "showQr": "Show this QR code at the venue entrance",
-    "downloadPdf": "Download printable PDF"
+    "downloadPdf": "Download printable PDF",
+    "qrAlt": "Admission QR code for ticket {{id}}",
+    "qrFailed": "Could not load the QR code. Download the PDF instead.",
+    "notAdmissible": "This ticket is no longer valid for entry."
   }
 }

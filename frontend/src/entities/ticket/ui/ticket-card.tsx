@@ -1,7 +1,9 @@
-import { Download, QrCode } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { downloadTicketPdf } from '@/shared/api'
+import { downloadTicketPdf, getTicketQrSvg } from '@/shared/api'
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui'
+import { Skeleton } from '@/shared/ui/skeleton'
 import type { Ticket } from '@/shared/types'
 
 interface TicketCardProps {
@@ -12,6 +14,14 @@ export function TicketCard({ ticket }: TicketCardProps) {
   const { t } = useTranslation()
   const isCheckedIn = ticket.status === 'checked_in'
   const isValid = ticket.status === 'valid'
+  // Cancelled and refunded tickets no longer admit anyone, so they show no QR (SRS 4.9).
+  const isAdmissible = isValid || isCheckedIn
+  const qr = useQuery({
+    queryKey: ['ticket-qr', ticket.id],
+    queryFn: () => getTicketQrSvg(ticket.id),
+    enabled: isAdmissible,
+    staleTime: Infinity,
+  })
 
   const handleDownload = async () => {
     const url = URL.createObjectURL(await downloadTicketPdf(ticket.id))
@@ -48,11 +58,23 @@ export function TicketCard({ ticket }: TicketCardProps) {
         </div>
 
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center">
-          <QrCode className="size-24 text-foreground/80 mb-2 stroke-[1.5]" />
-          <p className="text-[11px] font-mono text-muted-foreground break-all px-2">
-            {ticket.qr_token.slice(0, 24)}...
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">{t('tickets.showQr')}</p>
+          {!isAdmissible ? (
+            <p className="text-muted-foreground text-sm">{t('tickets.notAdmissible')}</p>
+          ) : qr.data ? (
+            <>
+              {/* White padding keeps the quiet zone when the page is in dark mode. */}
+              <img
+                src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qr.data)}`}
+                alt={t('tickets.qrAlt', { id: ticket.id })}
+                className="size-56 rounded-md bg-white p-2"
+              />
+              <p className="text-muted-foreground mt-2 text-xs">{t('tickets.showQr')}</p>
+            </>
+          ) : qr.isError ? (
+            <p className="text-destructive text-sm">{t('tickets.qrFailed')}</p>
+          ) : (
+            <Skeleton className="size-56" />
+          )}
         </div>
       </CardContent>
       <CardFooter className="border-t bg-muted/10 pt-3">

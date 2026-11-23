@@ -9,6 +9,15 @@ export async function listTickets(params?: {
   return response.data
 }
 
+/** Admission QR as SVG markup; it encodes the same token as the printable PDF. */
+export async function getTicketQrSvg(ticketId: string): Promise<string> {
+  const response = await apiClient.get<string>('/tickets/qr', {
+    params: { ticket_id: ticketId },
+    responseType: 'text',
+  })
+  return response.data
+}
+
 export async function getTicketDetail(ticketId: string): Promise<Ticket> {
   const response = await apiClient.get<Ticket>('/tickets/detail', {
     params: { ticket_id: ticketId },

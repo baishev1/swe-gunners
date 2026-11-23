@@ -101,10 +101,6 @@ mobile app, printing and the deployed environment.
 
 Known before the manual run (found while preparing it):
 
-- **The on-screen ticket has no real QR code.** `TicketCard` shows a generic
-  QR icon and the first characters of the token; only the PDF carries the
-  scannable code. Criterion #3 ("receive a QR-code ticket") and scanning a
-  ticket from a phone screen fail until the card renders the real QR.
 - The fixed language switcher overlaps the header button on **My tickets** and
   **My orders** at narrow widths (the home page was fixed separately).
 - In Kazakh, the browser formats dates as "2026 M11 23" and prices as

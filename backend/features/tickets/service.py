@@ -1,6 +1,8 @@
 import secrets
 from io import BytesIO
 
+import qrcode
+from qrcode.constants import ERROR_CORRECT_M
 from reportlab.graphics.barcode.qr import QrCodeWidget
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
@@ -75,6 +77,29 @@ class TicketService:
             .order_by(Ticket.created_at.desc())
         )
         return [(ticket, order_status) for ticket, order_status in db.execute(stmt)]
+
+    def build_qr_svg(self, ticket: Ticket) -> str:
+        """Admission QR for the on-screen ticket; encodes the same token as the PDF (SRS 4.7).
+
+        Plain black on white, unlike the purple captioned Campaign QR (SRS 4.14).
+        """
+        qr = qrcode.QRCode(error_correction=ERROR_CORRECT_M, border=4)
+        qr.add_data(ticket.qr_token)
+        qr.make(fit=True)
+        matrix = qr.get_matrix()
+        path = "".join(
+            f"M{x},{y}h1v1h-1z"
+            for y, row in enumerate(matrix)
+            for x, is_dark in enumerate(row)
+            if is_dark
+        )
+        size = len(matrix)
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" '
+            f'shape-rendering="crispEdges">'
+            f'<rect width="100%" height="100%" fill="#ffffff"/>'
+            f'<path d="{path}" fill="#000000"/></svg>'
+        )
 
     def get_ticket_by_qr_token(self, db: Session, qr_token: str) -> Ticket | None:
         stmt = select(Ticket).where(Ticket.qr_token == qr_token)

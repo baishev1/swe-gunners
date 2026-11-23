@@ -1,5 +1,9 @@
+from types import SimpleNamespace
+
 from conftest import create_paid_event, make_headers, place_order
 from fastapi.testclient import TestClient
+
+from features.tickets.service import ticket_service
 
 
 def create_free_order(
@@ -146,3 +150,25 @@ def test_tickets_are_private_to_the_order_owner(
         ).status_code
         == 200
     )
+
+
+def test_ticket_qr_svg_encodes_the_admission_token(
+    client: TestClient, organizer_headers: dict[str, str], attendee_headers: dict[str, str]
+) -> None:
+    order = create_free_order(client, organizer_headers, attendee_headers)
+    ticket = client.get(f"/api/v1/tickets?order_id={order['id']}", headers=attendee_headers).json()[
+        0
+    ]
+
+    res = client.get(f"/api/v1/tickets/qr?ticket_id={ticket['id']}", headers=attendee_headers)
+
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("image/svg+xml")
+    # Same token the PDF and the scanner use, drawn in black (not the purple Campaign QR).
+    expected = ticket_service.build_qr_svg(SimpleNamespace(qr_token=ticket["qr_token"]))  # type: ignore[arg-type]
+    assert res.text == expected
+    assert 'fill="#000000"' in res.text
+
+    other_headers = make_headers(client, "qr-other@example.com", "attendee")
+    other = client.get(f"/api/v1/tickets/qr?ticket_id={ticket['id']}", headers=other_headers)
+    assert other.status_code == 404

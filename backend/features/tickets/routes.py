@@ -80,6 +80,17 @@ def undo_check_in(
     return ticket_service.undo_check_in(db=db, ticket=ticket, actor_id=user.id)
 
 
+@router.get("/qr")
+def get_ticket_qr(ticket: Ticket = Depends(accessible_ticket_guard)):
+    from fastapi.responses import Response
+
+    return Response(
+        content=ticket_service.build_qr_svg(ticket),
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
+
+
 @router.get("/pdf")
 def download_ticket_pdf(
     ticket: Ticket = Depends(accessible_ticket_guard),
