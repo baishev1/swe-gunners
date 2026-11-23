@@ -62,6 +62,12 @@ export function EventDetailPage() {
         </p>
       </div>
       {data.description && <p className="whitespace-pre-line">{data.description}</p>}
+      {data.refund_policy && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-semibold">{t('eventDetail.refundPolicy')}</h2>
+          <p className="text-muted-foreground text-sm whitespace-pre-line">{data.refund_policy}</p>
+        </div>
+      )}
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">{t('eventDetail.tickets')}</h2>
         {ticketTypes.data?.length === 0 && (

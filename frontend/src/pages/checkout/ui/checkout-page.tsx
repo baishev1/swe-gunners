@@ -1,12 +1,17 @@
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import { useEvent } from '@/entities/event'
 import { useTicketTypes } from '@/entities/ticket-type'
 import { CheckoutForm } from '@/features/checkout'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export function CheckoutPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
+  const event = useEvent(eventId)
   const ticketTypes = useTicketTypes(eventId)
+  const refundPolicy = event.data?.refund_policy
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -16,6 +21,12 @@ export function CheckoutPage() {
           Complete your registration to receive your digital QR tickets.
         </p>
       </div>
+      {refundPolicy && (
+        <div className="mx-auto mb-6 max-w-xl rounded-md border p-4 text-sm">
+          <p className="font-medium">{t('eventDetail.refundPolicy')}</p>
+          <p className="text-muted-foreground mt-1 whitespace-pre-line">{refundPolicy}</p>
+        </div>
+      )}
       {ticketTypes.isPending ? (
         <Skeleton className="mx-auto h-64 max-w-xl" />
       ) : (
