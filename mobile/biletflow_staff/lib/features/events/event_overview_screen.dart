@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/localization/locale_provider.dart';
+import '../../core/network/mock_api_adapter.dart';
 import '../../core/widgets/app_page.dart';
 import '../attendees/attendees_screen.dart';
 import '../check_in/scanner_screen.dart';
@@ -46,17 +47,18 @@ class _EventOverviewScreenState extends ConsumerState<EventOverviewScreen> {
             icon: const Icon(Icons.qr_code_scanner_rounded),
             label: context.l.scanTab,
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.people_outline_rounded),
-            selectedIcon: const Icon(Icons.people_rounded),
-            label: context.l.guestsTab,
-          ),
+          if (useMockApi)
+            NavigationDestination(
+              icon: const Icon(Icons.people_outline_rounded),
+              selectedIcon: const Icon(Icons.people_rounded),
+              label: context.l.guestsTab,
+            ),
         ],
       ),
       onRefresh: _tab == 0
           ? () async {
-              ref.invalidate(summaryProvider(widget.eventId));
-              ref.invalidate(eventProvider(widget.eventId));
+              if (useMockApi) ref.invalidate(summaryProvider(widget.eventId));
+              ref.invalidate(eventsProvider);
               try {
                 await ref.read(eventProvider(widget.eventId).future);
               } catch (_) {
@@ -67,7 +69,7 @@ class _EventOverviewScreenState extends ConsumerState<EventOverviewScreen> {
       children: [
         RequestView<StaffEvent>(
           value: event,
-          retry: () => ref.invalidate(eventProvider(widget.eventId)),
+          retry: () => ref.invalidate(eventsProvider),
           builder: (event) => switch (_tab) {
             1 => ScannerScreen(
               key: ValueKey('scan-${event.id}'),
@@ -108,90 +110,91 @@ class _Overview extends ConsumerWidget {
           context.l.eventCancelled,
           style: TextStyle(color: context.theme.colors.error),
         ),
-      RequestView<Map<String, dynamic>>(
-        value: ref.watch(summaryProvider(event.id)),
-        retry: () => ref.invalidate(summaryProvider(event.id)),
-        builder: (summary) {
-          final registered = summary['registered'] as int,
-              checkedIn = summary['checked_in'] as int;
-          final number = NumberFormat.decimalPattern(
-            Localizations.localeOf(context).languageCode,
-          );
-          return InfoCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 20,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        context.l.attendance,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    Icon(
-                      Icons.people_outline_rounded,
-                      color: context.theme.colors.primary,
-                      size: 20,
-                    ),
-                  ],
-                ),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  spacing: 12,
-                  children: [
-                    Text(
-                      number.format(checkedIn),
-                      style: TextStyle(
-                        fontSize: 56,
-                        height: 1,
-                        letterSpacing: -2,
-                        fontWeight: FontWeight.w600,
-                        color: context.theme.colors.primary,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text(
-                        context.l.admittedLabel,
-                        style: TextStyle(
-                          color: context.theme.colors.mutedForeground,
+      if (useMockApi)
+        RequestView<Map<String, dynamic>>(
+          value: ref.watch(summaryProvider(event.id)),
+          retry: () => ref.invalidate(summaryProvider(event.id)),
+          builder: (summary) {
+            final registered = summary['registered'] as int,
+                checkedIn = summary['checked_in'] as int;
+            final number = NumberFormat.decimalPattern(
+              Localizations.localeOf(context).languageCode,
+            );
+            return InfoCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 20,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          context.l.attendance,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                Semantics(
-                  label: context.l.ofRegistered(number.format(registered)),
-                  child: LinearProgressIndicator(
-                    value: registered == 0 ? 0 : checkedIn / registered,
-                    minHeight: 6,
-                    borderRadius: BorderRadius.circular(3),
-                    backgroundColor: context.theme.colors.secondary,
+                      Icon(
+                        Icons.people_outline_rounded,
+                        color: context.theme.colors.primary,
+                        size: 20,
+                      ),
+                    ],
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _Count(
-                        label: context.l.registered,
-                        value: number.format(registered),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    spacing: 12,
+                    children: [
+                      Text(
+                        number.format(checkedIn),
+                        style: TextStyle(
+                          fontSize: 56,
+                          height: 1,
+                          letterSpacing: -2,
+                          fontWeight: FontWeight.w600,
+                          color: context.theme.colors.primary,
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: _Count(
-                        label: context.l.remaining,
-                        value: number.format(registered - checkedIn),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          context.l.admittedLabel,
+                          style: TextStyle(
+                            color: context.theme.colors.mutedForeground,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+                  Semantics(
+                    label: context.l.ofRegistered(number.format(registered)),
+                    child: LinearProgressIndicator(
+                      value: registered == 0 ? 0 : checkedIn / registered,
+                      minHeight: 6,
+                      borderRadius: BorderRadius.circular(3),
+                      backgroundColor: context.theme.colors.secondary,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _Count(
+                          label: context.l.registered,
+                          value: number.format(registered),
+                        ),
+                      ),
+                      Expanded(
+                        child: _Count(
+                          label: context.l.remaining,
+                          value: number.format(registered - checkedIn),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       FButton(
         builder: fitButtonLabel,
         size: .lg,

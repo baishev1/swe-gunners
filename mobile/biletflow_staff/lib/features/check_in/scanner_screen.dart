@@ -100,7 +100,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
       setState(() => _cameraEnabled = false);
       await openPage(
         context,
-        TicketScreen(event: widget.event, verification: result),
+        TicketScreen(
+          event: widget.event,
+          verification: result,
+          qrToken: code.trim(),
+        ),
       );
     } catch (error) {
       if (mounted) setState(() => _error = error);
@@ -136,9 +140,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen>
             ('DEMO-USED', context.l.checked_in, Icons.history),
             ('DEMO-CANCELLED', context.l.cancelled, Icons.block),
             ('DEMO-REFUNDED', context.l.refunded, Icons.undo),
-            ('DEMO-OTHER', context.l.wrong_event, Icons.event_busy_outlined),
+            ('DEMO-OTHER', context.l.invalid, Icons.event_busy_outlined),
             (
-              'https://biletflow.demo/campaign/spring',
+              'https://biletflow.demo/events/detail?event_id=demo&promo=spring',
               context.l.campaign_qr,
               Icons.campaign_outlined,
             ),

@@ -1,3 +1,22 @@
+class TicketVerification {
+  const TicketVerification({
+    required this.status,
+    this.valid = false,
+    this.ticket,
+  });
+
+  TicketVerification.fromJson(Map<String, dynamic> json)
+    : status = json['status'] as String,
+      valid = json['valid'] == true,
+      ticket = json['ticket'] == null
+          ? null
+          : AdmissionTicket.fromJson(json['ticket'] as Map<String, dynamic>);
+
+  final String status;
+  final bool valid;
+  final AdmissionTicket? ticket;
+}
+
 class AdmissionTicket {
   AdmissionTicket.fromJson(Map<String, dynamic> json)
     : id = json['id'] as String,

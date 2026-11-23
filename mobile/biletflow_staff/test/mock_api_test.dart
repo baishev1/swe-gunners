@@ -3,6 +3,7 @@ import 'package:biletflow_staff/core/network/mock_api_adapter.dart';
 import 'package:biletflow_staff/core/network/mock_fixtures.dart';
 import 'package:biletflow_staff/core/storage/token_storage.dart';
 import 'package:biletflow_staff/features/auth/session_controller.dart';
+import 'package:biletflow_staff/features/check_in/check_in_controller.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,20 +26,21 @@ void main() {
     );
     await container.read(sessionProvider.future);
     dio = container.read(dioProvider);
+    dio.httpClientAdapter = MockApiAdapter(server);
   });
   tearDown(() => container.dispose());
 
   Future<Map<String, dynamic>> verify(String code) async =>
-      (await dio.post<Map<String, dynamic>>(
-        'checkin/verify',
-        data: {'event_id': demoEventId, 'qr_code': code},
+      (await dio.get<Map<String, dynamic>>(
+        'tickets/verify',
+        queryParameters: {'event_id': demoEventId, 'qr_token': code},
       )).data!;
   Future<Map<String, dynamic>> change(
     String ticketId, {
     bool undo = false,
   }) async => (await dio.post<Map<String, dynamic>>(
-    undo ? 'checkin/undo' : 'checkin/admit',
-    data: {'event_id': demoEventId, 'ticket_id': ticketId},
+    undo ? 'tickets/undo-check-in' : 'tickets/check-in',
+    queryParameters: {'event_id': demoEventId, 'ticket_id': ticketId},
   )).data!;
   Matcher status(int code) => isA<DioException>().having(
     (e) => e.response?.statusCode,
@@ -95,17 +97,18 @@ void main() {
       final initial = server.summary(demoEventId)['checked_in'] as int;
       final verified = await verify('DEMO-VALID');
       final ticketId = verified['ticket']['id'] as String;
-      expect(verified['result'], 'valid');
+      expect(verified['status'], 'valid');
+      expect(verified['valid'], isTrue);
       expect(server.summary(demoEventId)['checked_in'], initial);
       final admitted = await change(ticketId);
-      expect(admitted['ticket']['status'], 'checked_in');
-      expect(admitted['summary']['checked_in'], initial + 1);
-      expect((await verify('DEMO-VALID'))['result'], 'checked_in');
-      await expectLater(change(ticketId), throwsA(status(409)));
+      expect(admitted['status'], 'checked_in');
+      expect(server.summary(demoEventId)['checked_in'], initial + 1);
+      expect((await verify('DEMO-VALID'))['status'], 'checked_in');
+      await expectLater(change(ticketId), throwsA(status(400)));
       final undone = await change(ticketId, undo: true);
-      expect(undone['ticket']['status'], 'valid');
-      expect(undone['summary']['checked_in'], initial);
-      expect((await verify('DEMO-VALID'))['result'], 'valid');
+      expect(undone['status'], 'valid');
+      expect(server.summary(demoEventId)['checked_in'], initial);
+      expect((await verify('DEMO-VALID'))['status'], 'valid');
     },
   );
 
@@ -118,28 +121,61 @@ void main() {
         ).then<Object>((value) => value, onError: (Object error) => error),
     ]);
     expect(results.whereType<Map<String, dynamic>>(), hasLength(1));
-    expect(results.whereType<DioException>().single.response?.statusCode, 409);
+    expect(results.whereType<DioException>().single.response?.statusCode, 400);
   });
 
   for (final (code, result) in [
     ('DEMO-CANCELLED', 'cancelled'),
     ('DEMO-REFUNDED', 'refunded'),
-    ('DEMO-OTHER', 'wrong_event'),
-    ('https://biletflow.demo/campaign/test', 'campaign_qr'),
-    ('tampered', 'invalid'),
+    ('DEMO-OTHER', 'not_found'),
+    (
+      'https://biletflow.demo/events/detail?event_id=demo&promo=spring',
+      'not_found',
+    ),
+    ('tampered', 'not_found'),
   ]) {
-    test('$result never grants admission', () async {
+    test('$code returns $result and never grants admission', () async {
       final response = await verify(code);
-      expect(response['result'], result);
-      expect(response['can_check_in'], isFalse);
+      expect(response['status'], result);
+      expect(response['valid'], isFalse);
       if (response['ticket'] != null) {
         await expectLater(
           change(response['ticket']['id'] as String),
-          throwsA(status(409)),
+          throwsA(status(400)),
         );
       }
     });
   }
+
+  test(
+    'Campaign links produce a blocked result without a network call',
+    () async {
+      server.connection = DemoConnection.offline;
+      final result = await container
+          .read(checkInControllerProvider)
+          .verify(
+            demoEventId,
+            'https://biletflow.demo/events/detail?event_id=demo&promo=spring',
+          );
+      expect(result.status, 'campaign_qr');
+      expect(result.valid, isFalse);
+      expect(result.ticket, isNull);
+    },
+  );
+
+  test('Controller parses verification and the bare changed ticket', () async {
+    final controller = container.read(checkInControllerProvider);
+    final result = await controller.verify(demoEventId, 'DEMO-VALID');
+    expect(result.valid, isTrue);
+    expect(result.status, 'valid');
+    final admitted = await controller.change(
+      demoEventId,
+      result.ticket!.id,
+      undo: false,
+    );
+    expect(admitted.status, 'checked_in');
+    expect(admitted.checkedInAt, isNotNull);
+  });
 
   test('Manual search and details share scanner admission state', () async {
     final verified = await verify('DEMO-VALID');
@@ -156,7 +192,7 @@ void main() {
     );
     expect(search.data!['total'], 1);
     expect(search.data!['items'][0]['status'], 'checked_in');
-    expect(search.data!['items'][0].containsKey('qr_code'), isFalse);
+    expect(search.data!['items'][0].containsKey('qr_token'), isFalse);
     final detail = await dio.get<Map<String, dynamic>>(
       'checkin/tickets/detail',
       queryParameters: {'event_id': demoEventId, 'ticket_id': ticketId},
@@ -190,7 +226,7 @@ void main() {
           'events/detail',
           queryParameters: {'event_id': unassignedEventId},
         ),
-        throwsA(status(403)),
+        throwsA(status(404)),
       );
       final locked = await verify('DEMO-NO-UNDO');
       await expectLater(
@@ -198,18 +234,21 @@ void main() {
         throwsA(status(403)),
       );
       server.revoked = true;
-      await expectLater(verify('DEMO-VALID'), throwsA(status(403)));
+      await expectLater(verify('DEMO-VALID'), throwsA(status(404)));
       expect(storage.token, demoToken);
     },
   );
 
   test('Cancelled event cannot verify or admit a ticket', () async {
     await expectLater(
-      dio.post<dynamic>(
-        'checkin/verify',
-        data: {'event_id': cancelledEventId, 'qr_code': 'DEMO-VALID'},
+      dio.get<dynamic>(
+        'tickets/verify',
+        queryParameters: {
+          'event_id': cancelledEventId,
+          'qr_token': 'DEMO-VALID',
+        },
       ),
-      throwsA(status(409)),
+      throwsA(status(400)),
     );
   });
 

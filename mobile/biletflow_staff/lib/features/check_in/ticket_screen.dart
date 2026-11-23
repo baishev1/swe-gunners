@@ -4,8 +4,10 @@ import 'package:forui/forui.dart';
 
 import '../../core/localization/locale_provider.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/mock_api_adapter.dart';
 import '../../core/widgets/app_page.dart';
 import '../events/event.dart';
+import '../events/event_providers.dart';
 import 'check_in_controller.dart';
 import 'ticket.dart';
 
@@ -14,10 +16,12 @@ class TicketScreen extends ConsumerStatefulWidget {
     super.key,
     required this.event,
     this.verification,
+    this.qrToken,
     this.ticketId,
   });
   final StaffEvent event;
-  final Map<String, dynamic>? verification;
+  final TicketVerification? verification;
+  final String? qrToken;
   final String? ticketId;
   @override
   ConsumerState<TicketScreen> createState() => _TicketScreenState();
@@ -26,6 +30,7 @@ class TicketScreen extends ConsumerStatefulWidget {
 class _TicketScreenState extends ConsumerState<TicketScreen> {
   AdmissionTicket? _ticket;
   String _result = 'invalid';
+  bool _valid = false;
   String? _success;
   bool _busy = false, _loading = false;
   Object? _error;
@@ -35,15 +40,16 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     super.initState();
     final verification = widget.verification;
     if (verification != null) {
-      _result = verification['result'] as String;
-      if (verification['ticket'] != null) {
-        _ticket = AdmissionTicket.fromJson(
-          Map<String, dynamic>.from(verification['ticket'] as Map),
-        );
-      }
+      _applyVerification(verification);
     } else {
       _load();
     }
+  }
+
+  void _applyVerification(TicketVerification verification) {
+    _result = verification.status;
+    _valid = verification.valid;
+    _ticket = verification.ticket;
   }
 
   Future<void> _load() async {
@@ -52,6 +58,18 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       _error = null;
     });
     try {
+      final qrToken = widget.qrToken;
+      if (qrToken != null) {
+        final result = await ref
+            .read(checkInControllerProvider)
+            .verify(widget.event.id, qrToken);
+        if (!mounted) return;
+        setState(() {
+          _applyVerification(result);
+          _success = null;
+        });
+        return;
+      }
       final response = await ref
           .read(dioProvider)
           .get<Map<String, dynamic>>(
@@ -65,6 +83,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       setState(() {
         _ticket = AdmissionTicket.fromJson(response.data!);
         _result = _ticket!.status;
+        _valid = _result == 'valid';
         _success = null;
       });
     } catch (error) {
@@ -109,10 +128,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           .change(widget.event.id, _ticket!.id, undo: undo);
       if (!mounted) return;
       setState(() {
-        _ticket = AdmissionTicket.fromJson(
-          result['ticket'] as Map<String, dynamic>,
-        );
-        _result = _ticket!.status;
+        _ticket = result;
+        _result = result.status;
+        _valid = _result == 'valid';
         _success = undo ? 'undo' : 'admit';
       });
     } catch (error) {
@@ -130,6 +148,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   @override
   Widget build(BuildContext context) {
     final ticket = _ticket;
+    final account = !useMockApi && _result == 'checked_in'
+        ? ref.watch(accountProvider).asData?.value
+        : null;
+    final canUndo = useMockApi
+        ? ticket?.canUndo == true
+        : widget.event.canUndoCheckIn ||
+              account?['id'] == widget.event.organizerId ||
+              account?['role'] == 'platform_admin';
     final allowed =
         !widget.event.cancelled && ['valid', 'checked_in'].contains(_result);
     final successful = _success == 'admit';
@@ -152,6 +178,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     if (!_loading) {
       if (ticket != null &&
           allowed &&
+          _valid &&
           ticket.status == 'valid' &&
           _error == null) {
         primary = FButton(
@@ -277,13 +304,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     title: ticket.type,
                     subtitle: context.l.ticketType,
                   ),
-                  DetailRow(
-                    icon: Icons.event_seat_outlined,
-                    title: ticket.seat == null
-                        ? context.l.generalAdmission
-                        : '${ticket.section} / ${ticket.row} / ${ticket.seat}',
-                    subtitle: ticket.seat == null ? null : context.l.seat,
-                  ),
+                  if (useMockApi || ticket.seat != null)
+                    DetailRow(
+                      icon: Icons.event_seat_outlined,
+                      title: ticket.seat == null
+                          ? context.l.generalAdmission
+                          : '${ticket.section} / ${ticket.row} / ${ticket.seat}',
+                      subtitle: ticket.seat == null ? null : context.l.seat,
+                    ),
                   if (ticket.checkedInAt != null)
                     DetailRow(
                       icon: Icons.schedule_rounded,
@@ -299,7 +327,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
             ),
           if (widget.event.cancelled) Text(context.l.eventCancelled),
           if (ticket != null && allowed && ticket.status == 'checked_in')
-            if (ticket.canUndo)
+            if (canUndo)
               Center(
                 child: TextButton.icon(
                   onPressed: _busy ? null : () => _change(undo: true),
