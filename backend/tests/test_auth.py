@@ -167,7 +167,7 @@ def test_verification_email_is_sent_over_smtp(client: TestClient, monkeypatch) -
     sent: list[EmailMessage] = []
 
     class FakeSMTP:
-        def __init__(self, host: str, port: int) -> None:
+        def __init__(self, host: str, port: int, timeout: float) -> None:
             pass
 
         def __enter__(self) -> "FakeSMTP":
@@ -193,8 +193,8 @@ def test_smtp_logs_in_over_starttls_when_user_is_set(client: TestClient, monkeyp
     calls: list[str] = []
 
     class FakeSMTP:
-        def __init__(self, host: str, port: int) -> None:
-            calls.append(f"connect {host}:{port}")
+        def __init__(self, host: str, port: int, timeout: float) -> None:
+            calls.append(f"connect {host}:{port} timeout={timeout}")
 
         def __enter__(self) -> "FakeSMTP":
             return self
@@ -220,7 +220,7 @@ def test_smtp_logs_in_over_starttls_when_user_is_set(client: TestClient, monkeyp
     client.post("/api/v1/auth/register", json=USER)
 
     assert calls == [
-        "connect smtp.example.com:587",
+        "connect smtp.example.com:587 timeout=10",
         "starttls",
         "login mailer@example.com",
         "send",

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isAxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
-import { createOrder, simulatePayment } from '@/shared/api'
+import { createOrder } from '@/shared/api'
 import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input } from '@/shared/ui'
 import { formatPrice } from '@/shared/lib/format'
 import type { OrderItemCreate } from '@/shared/types'
@@ -12,6 +12,13 @@ export interface CheckoutTicketTypeOption {
   id: string
   name: string
   price_kzt: number
+  available: number
+  max_per_order: number | null
+}
+
+// The most of one ticket type a single order can take right now.
+function maxQuantity(type: CheckoutTicketTypeOption) {
+  return type.max_per_order ? Math.min(type.available, type.max_per_order) : type.available
 }
 
 interface CheckoutFormProps {
@@ -43,18 +50,17 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
-  const [quantities, setQuantities] = useState<Record<string, number>>(
-    Object.fromEntries(ticketTypes.map((t, idx) => [t.id, idx === 0 ? 1 : 0])),
-  )
-  const [simulateFailure, setSimulateFailure] = useState(false)
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => {
+    const firstOnSale = ticketTypes.find((t) => t.available > 0)
+    return Object.fromEntries(ticketTypes.map((t) => [t.id, t === firstOnSale ? 1 : 0]))
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleQuantityChange = (id: string, delta: number) => {
+  const handleQuantityChange = (type: CheckoutTicketTypeOption, delta: number) => {
     setQuantities((prev) => {
-      const current = prev[id] || 0
-      const next = Math.max(0, current + delta)
-      return { ...prev, [id]: next }
+      const next = Math.min(maxQuantity(type), Math.max(0, (prev[type.id] || 0) + delta))
+      return { ...prev, [type.id]: next }
     })
   }
 
@@ -98,21 +104,9 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
         promo_code: promo?.code ?? null,
       })
 
-      if (order.status === 'paid') {
-        navigate(`/tickets?order_id=${order.id}`)
-        return
-      }
-
-      const payment = await simulatePayment({
-        order_id: order.id,
-        simulate_failure: simulateFailure,
-      })
-
-      if (payment.status === 'succeeded') {
-        navigate(`/tickets?order_id=${order.id}`)
-      } else {
-        setErrorMessage(t('checkout.errors.paymentFailed'))
-      }
+      // Free orders are confirmed at once. Paid ones stay reserved (pending) until the
+      // attendee pays from My orders, so an abandoned checkout releases its hold (SRS 4.6).
+      navigate(order.status === 'paid' ? `/tickets?order_id=${order.id}` : '/orders')
     } catch (err: unknown) {
       setErrorMessage(t(checkoutErrorKey(err)))
     } finally {
@@ -134,7 +128,12 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
             >
               <div>
                 <p className="font-medium text-sm text-foreground">{type.name}</p>
-                <p className="text-muted-foreground text-xs">{formatPrice(type.price_kzt)}</p>
+                <p className="text-muted-foreground text-xs">
+                  {formatPrice(type.price_kzt)} ·{' '}
+                  {type.available > 0
+                    ? t('checkout.remaining', { count: type.available })
+                    : t('checkout.soldOut')}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -142,7 +141,7 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
                   variant="outline"
                   size="icon-xs"
                   aria-label={t('checkout.decrease', { name: type.name })}
-                  onClick={() => handleQuantityChange(type.id, -1)}
+                  onClick={() => handleQuantityChange(type, -1)}
                   disabled={isLoading || (quantities[type.id] || 0) === 0}
                 >
                   -
@@ -155,8 +154,8 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
                   variant="outline"
                   size="icon-xs"
                   aria-label={t('checkout.increase', { name: type.name })}
-                  onClick={() => handleQuantityChange(type.id, 1)}
-                  disabled={isLoading}
+                  onClick={() => handleQuantityChange(type, 1)}
+                  disabled={isLoading || (quantities[type.id] || 0) >= maxQuantity(type)}
                 >
                   +
                 </Button>
@@ -236,16 +235,7 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
           {totalAmountKzt > 0 && (
             <div className="rounded-md border p-3 bg-muted/20 text-xs text-muted-foreground space-y-2">
               <p className="font-semibold text-foreground">{t('checkout.simulationTitle')}</p>
-              <p>{t('checkout.simulationNote')}</p>
-              <label className="flex items-center gap-2 pt-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={simulateFailure}
-                  onChange={(e) => setSimulateFailure(e.target.checked)}
-                  className="rounded border-input text-primary focus:ring-primary"
-                />
-                <span>{t('checkout.simulateFailure')}</span>
-              </label>
+              <p>{t('checkout.holdNote')}</p>
             </div>
           )}
 
@@ -261,7 +251,7 @@ export function CheckoutForm({ eventId, ticketTypes, promo, onRemovePromo }: Che
               ? t('checkout.processing')
               : totalAmountKzt === 0
                 ? t('checkout.registerFree')
-                : t('checkout.pay', { amount: formatPrice(totalAmountKzt) })}
+                : t('checkout.reserve', { amount: formatPrice(totalAmountKzt) })}
           </Button>
         </CardFooter>
       </Card>

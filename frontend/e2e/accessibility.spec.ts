@@ -75,8 +75,19 @@ for (const language of ['ru', 'kk', 'en']) {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await expectNoViolations(page)
 
+    // A reserved order shows the payment panel on My orders.
+    const pending = await api(request, 'post', '/orders', attendee, {
+      event_id: event.id,
+      customer_name: 'A11y Attendee',
+      customer_email: 'attendee@biletflow.dev',
+      items: [{ ticket_type_id: ticketType.id, quantity: 1 }],
+    })
     await page.goto('/orders')
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /\((simulation|симуляция)\)/ }).first(),
+    ).toBeVisible()
     await expectNoViolations(page)
+    await api(request, 'post', '/orders/cancel?order_id=' + pending.id, attendee)
   })
 }

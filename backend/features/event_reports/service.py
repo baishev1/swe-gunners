@@ -3,6 +3,8 @@ from sqlalchemy import select
 from core import *
 from features.audit_log.service import audit_log_service
 from features.events.models import Event
+from features.notifications.service import notification_service
+from features.users.models import User
 
 from .models import *
 from .schemas import *
@@ -16,6 +18,12 @@ class EventReportService:
         db.add(report)
         db.commit()
         db.refresh(report)
+        # Reports are moderated by the platform, so only platform admins hear about them.
+        admins = db.scalars(select(User.email).where(User.role == "platform_admin")).all()
+        for email in admins:
+            notification_service.event_report_created(
+                email, event.title, report.category, report.id
+            )
         return report
 
     def list_reports(self, db: Session, status: str | None = None) -> list[EventReport]:

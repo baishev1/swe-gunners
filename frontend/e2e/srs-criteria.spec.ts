@@ -17,7 +17,11 @@ test('attendee registers for a free event and gets a valid ticket', async ({ pag
   await signIn(page, 'attendee@biletflow.dev', PASSWORD)
   await page.goto(`/events/detail?event_id=${event.id}`)
   await expect(page.getByText('Free', { exact: true })).toBeVisible()
+  // No policy was set, so the platform default is shown (SRS 4.9).
+  const defaultPolicy = /The organizer has not set a refund policy/
+  await expect(page.getByText(defaultPolicy)).toBeVisible()
   await page.getByRole('link', { name: 'Get tickets' }).click()
+  await expect(page.getByText(defaultPolicy)).toBeVisible()
 
   await page.getByLabel('Full name').fill('Free Attendee')
   await page.getByLabel('Email address').fill('attendee@biletflow.dev')
@@ -80,7 +84,12 @@ test('attendee buys through a campaign link with the discount applied', async ({
   await page.getByLabel('Full name').fill('Campaign Attendee')
   await page.getByLabel('Email address').fill('attendee@biletflow.dev')
   // 5000 KZT minus 20% = 4000 KZT; the currency format depends on the browser's Intl data.
-  await page.getByRole('button', { name: /^Pay .*4,?000.* \(simulation\)$/ }).click()
+  await page.getByRole('button', { name: /^Reserve for .*4,?000.* and go to payment$/ }).click()
+  await page.waitForURL(/\/orders$/)
+  await page
+    .getByRole('button', { name: /^Pay .*4,?000.* \(simulation\)$/ })
+    .first()
+    .click()
 
   await page.waitForURL(/\/tickets\?order_id=/)
   await expect(page.getByText('Valid', { exact: true })).toBeVisible()
