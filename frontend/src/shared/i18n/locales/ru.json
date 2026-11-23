@@ -5,7 +5,8 @@
     "password": "Пароль",
     "goToSignIn": "Перейти ко входу",
     "backToHome": "На главную",
-    "invalidLink": "Недействительная ссылка"
+    "invalidLink": "Недействительная ссылка",
+    "back": "Назад"
   },
   "language": {
     "label": "Язык"

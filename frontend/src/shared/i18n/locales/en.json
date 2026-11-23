@@ -5,7 +5,8 @@
     "password": "Password",
     "goToSignIn": "Go to sign in",
     "backToHome": "Back to home",
-    "invalidLink": "Invalid link"
+    "invalidLink": "Invalid link",
+    "back": "Back"
   },
   "language": {
     "label": "Language"
