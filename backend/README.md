@@ -191,6 +191,8 @@ All routes are under `/api/v1/checkin` and require the shared authenticated user
 | Method | Route | Purpose |
 | --- | --- | --- |
 | GET | `/events` | List the current user's owned/assigned events, excluding cancelled/suspended events |
+| GET | `/attendees?event_id=...&q=...` | Search an event's ticket holders for the scanner |
+| GET | `/summary?event_id=...` | Registered and checked-in totals |
 | POST | `/staff?event_id=...` | Assign an existing active user to an event |
 | GET | `/staff?event_id=...` | List an event's staff |
 | DELETE | `/staff?event_id=...&assignment_id=...` | Revoke an assignment |
@@ -212,6 +214,14 @@ are opt-in. Duplicate user/event assignments return 409, enforced with a databas
 unique constraint. To change permissions, revoke the assignment and create a new
 one. Revocation removes event and support access on subsequent requests; stored
 support conversations remain intact.
+
+Each item from `/events` carries `can_undo_check_in`, so the scanner app knows
+whether to offer undo. It is always true for the owner and platform admins.
+
+`/attendees` and `/summary` use the same access rule as the scanner: owner,
+platform admin, or anyone assigned to the event. `q` matches attendee name or
+email by substring, or a full ticket ID. `registered` counts valid and
+checked-in tickets on paid orders; `checked_in` counts checked-in ones.
 
 ## Ticket scanner API
 
