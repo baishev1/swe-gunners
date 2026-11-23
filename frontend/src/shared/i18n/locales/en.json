@@ -268,7 +268,11 @@
       "order_expired": "Reservation expired",
       "staff_assigned": "Check-in staff assigned",
       "staff_removed": "Check-in staff removed",
-      "event_report_reviewed": "Report reviewed"
+      "event_report_reviewed": "Report reviewed",
+      "payment_succeeded": "Payment succeeded",
+      "payment_failed": "Payment failed",
+      "support_status_changed": "Support case status changed",
+      "support_assigned": "Support case assigned"
     }
   },
   "analytics": {

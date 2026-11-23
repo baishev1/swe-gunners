@@ -268,7 +268,11 @@
       "order_expired": "Брондау мерзімі өтті",
       "staff_assigned": "Кіреберіске қызметкер тағайындалды",
       "staff_removed": "Қызметкер кіреберістен алынды",
-      "event_report_reviewed": "Шағым қаралды"
+      "event_report_reviewed": "Шағым қаралды",
+      "payment_succeeded": "Төлем өтті",
+      "payment_failed": "Төлем өтпеді",
+      "support_status_changed": "Өтініш мәртебесі өзгерді",
+      "support_assigned": "Өтініш жұмысқа алынды"
     }
   },
   "analytics": {

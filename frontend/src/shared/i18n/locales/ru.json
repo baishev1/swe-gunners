@@ -268,7 +268,11 @@
       "order_expired": "Бронь истекла",
       "staff_assigned": "Назначен сотрудник на вход",
       "staff_removed": "Сотрудник снят со входа",
-      "event_report_reviewed": "Жалоба рассмотрена"
+      "event_report_reviewed": "Жалоба рассмотрена",
+      "payment_succeeded": "Оплата прошла",
+      "payment_failed": "Оплата не прошла",
+      "support_status_changed": "Статус обращения изменён",
+      "support_assigned": "Обращение взято в работу"
     }
   },
   "analytics": {

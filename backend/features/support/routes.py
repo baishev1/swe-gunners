@@ -62,9 +62,10 @@ def add_message(
 def update_status(
     data: SupportStatusUpdate,
     case: SupportCase = Depends(managed_support_case),
+    user: User = Depends(active_support_user),
     db: Session = Depends(get_db),
 ):
-    return support_service.update_status(db, case, data)
+    return support_service.update_status(db, case, data, user.id)
 
 
 @router.post("/cases/assign", response_model=SupportCaseResponse)
