@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { listTickets } from '@/shared/api'
 import { Button } from '@/shared/ui'
 import { TicketCard } from '@/entities/ticket'
+import { AddToCalendar } from '@/features/add-to-calendar'
 import { ContactSupportLink } from '@/features/contact-support'
 
 export function TicketsPage() {
@@ -53,6 +54,12 @@ export function TicketsPage() {
           <Button asChild className="mt-4" size="sm">
             <Link to="/events">{t('tickets.buy')}</Link>
           </Button>
+        </div>
+      )}
+
+      {orderId && tickets.length > 0 && (
+        <div className="mb-6">
+          <AddToCalendar eventId={tickets[0].event_id} />
         </div>
       )}
 
