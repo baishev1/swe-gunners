@@ -42,6 +42,48 @@ function outlookLink(event: EventItem, location: string, details: string) {
   return `https://outlook.live.com/calendar/0/deeplink/compose?${params}`
 }
 
+function GoogleCalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect
+        x="2"
+        y="2"
+        width="20"
+        height="20"
+        rx="3"
+        fill="#fff"
+        stroke="#4285F4"
+        strokeWidth="2"
+      />
+      <path d="M2 17h5v5H5a3 3 0 0 1-3-3z" fill="#34A853" />
+      <path d="M17 2h2a3 3 0 0 1 3 3v2h-5z" fill="#FBBC04" />
+      <path d="M17 17h5l-5 5z" fill="#EA4335" />
+      <text
+        x="12"
+        y="15.5"
+        textAnchor="middle"
+        fontSize="9"
+        fontWeight="700"
+        fontFamily="Arial, sans-serif"
+        fill="#4285F4"
+      >
+        31
+      </text>
+    </svg>
+  )
+}
+
+function OutlookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="9" y="5" width="13" height="14" rx="2" fill="#28A8EA" />
+      <path d="M14 8.5l4 3.5 4-3.5" fill="none" stroke="#fff" strokeWidth="1.5" />
+      <rect x="2" y="3" width="12" height="18" rx="2" fill="#0078D4" />
+      <circle cx="8" cy="12" r="3.5" fill="none" stroke="#fff" strokeWidth="2" />
+    </svg>
+  )
+}
+
 export function AddToCalendar({ eventId, access }: AddToCalendarProps) {
   const { t } = useTranslation()
   const event = useEvent(eventId, access)
@@ -75,11 +117,13 @@ export function AddToCalendar({ eventId, access }: AddToCalendarProps) {
         <>
           <Button variant="outline" size="sm" asChild>
             <a href={googleLink(data, location, details)} target="_blank" rel="noreferrer">
+              <GoogleCalendarIcon />
               {t('calendar.google')}
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
             <a href={outlookLink(data, location, details)} target="_blank" rel="noreferrer">
+              <OutlookIcon />
               {t('calendar.outlook')}
             </a>
           </Button>
