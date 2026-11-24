@@ -18,14 +18,35 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController(text: useMockApi ? demoEmail : '');
-  final _password = TextEditingController(text: useMockApi ? demoPassword : '');
+  late final TextEditingController _email;
+  late final TextEditingController _password;
+  final _passwordFocus = FocusNode();
   bool _busy = false, _obscure = true, _submitted = false, _sent = false;
   Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final mock = ref.read(useMockApiProvider);
+    _email = TextEditingController(text: mock ? demoEmail : '');
+    _password = TextEditingController(text: mock ? demoPassword : '');
+    _email.addListener(_onInputChanged);
+    _password.addListener(_onInputChanged);
+  }
+
+  void _onInputChanged() {
+    if (_submitted || _error != null) {
+      setState(() => _error = null);
+    }
+  }
+
   @override
   void dispose() {
+    _email.removeListener(_onInputChanged);
+    _password.removeListener(_onInputChanged);
     _email.dispose();
     _password.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -34,7 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _submitted = true;
       _error = null;
     });
-    if (!_email.text.contains(RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')) ||
+    if (!_email.text.trim().contains(RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')) ||
         (!widget.reset && _password.text.isEmpty)) {
       return;
     }
@@ -67,7 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) => AppPage(
-    title: 'Biletflow',
+    title: widget.reset ? context.l.resetPassword : 'Biletflow',
     back: widget.reset,
     actions: [
       IconButton(
@@ -114,14 +135,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ],
       ),
       const SizedBox(height: 4),
-      if (_sent)
+      if (_sent) ...[
         InfoCard(
           child: DetailRow(
             icon: Icons.mark_email_read_outlined,
             title: context.l.resetSent,
           ),
-        )
-      else ...[
+        ),
+        FButton(
+          builder: fitButtonLabel,
+          size: .lg,
+          variant: FButtonVariant.outline,
+          prefix: const Icon(Icons.arrow_back_rounded),
+          onPress: () => Navigator.of(context).maybePop(),
+          child: Text(context.l.signIn),
+        ),
+      ] else ...[
         AutofillGroup(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -132,9 +161,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 label: Text(context.l.email),
                 enabled: !_busy,
                 autofillHints: const [AutofillHints.username],
+                textInputAction: widget.reset
+                    ? TextInputAction.done
+                    : TextInputAction.next,
+                onSubmit: (_) {
+                  if (widget.reset) {
+                    _submit();
+                  } else {
+                    _passwordFocus.requestFocus();
+                  }
+                },
                 error:
                     _submitted &&
-                        !_email.text.contains(
+                        !_email.text.trim().contains(
                           RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$'),
                         )
                     ? Text(context.l.invalidEmail)
@@ -143,6 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (!widget.reset)
                 FTextField(
                   control: FTextFieldControl.managed(controller: _password),
+                  focusNode: _passwordFocus,
                   label: Text(context.l.password),
                   obscureText: _obscure,
                   enabled: !_busy,
@@ -190,7 +230,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               : Text(widget.reset ? context.l.sendReset : context.l.signIn),
         ),
       ],
-      if (useMockApi && !widget.reset)
+      if (ref.watch(useMockApiProvider) && !widget.reset)
         Text(
           context.l.demoLoginHint,
           textAlign: TextAlign.center,

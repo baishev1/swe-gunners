@@ -1,4 +1,4 @@
-package com.example.biletflow_staff
+package kz.biletflow.staff
 
 import io.flutter.embedding.android.FlutterActivity
 

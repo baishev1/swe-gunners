@@ -7,7 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'mock_fixtures.dart';
 
-const useMockApi = bool.fromEnvironment('USE_MOCK_API');
+/// Whether the demo transport is active. Tests override this instead of
+/// depending on a compile-time flag.
+final useMockApiProvider = Provider<bool>(
+  (ref) => const bool.fromEnvironment('USE_MOCK_API'),
+);
 final mockServerProvider = Provider((ref) => MockServer());
 
 enum DemoConnection { normal, offline, serverError }
@@ -29,8 +33,12 @@ class MockServer {
     emptyAssignments = revoked = expired = false;
   }
 
+  /// Mirrors `GET /checkin/summary`: registered/checked-in counts only for
+  /// paid orders, same as the backend query.
   Map<String, dynamic> summary(String eventId) {
-    final records = tickets.where((t) => t['event_id'] == eventId);
+    final records = tickets.where(
+      (t) => t['event_id'] == eventId && t['order_status'] == 'paid',
+    );
     final active = records.where(
       (t) => ['valid', 'checked_in'].contains(t['status']),
     );
@@ -41,9 +49,41 @@ class MockServer {
     };
   }
 
-  Map<String, dynamic> publicTicket(Map<String, dynamic> ticket) => {
-    for (final entry in ticket.entries)
-      if (entry.key != 'qr_token') entry.key: entry.value,
+  /// `TicketResponse` shape used by verify, check-in and undo.
+  Map<String, dynamic> ticketResponse(Map<String, dynamic> ticket) => {
+    'id': ticket['id'],
+    'order_id': ticket['order_id'],
+    'order_item_id': ticket['order_item_id'],
+    'event_id': ticket['event_id'],
+    'ticket_type_id': ticket['ticket_type_id'],
+    'ticket_type_name': ticket['ticket_type_name'],
+    'attendee_name': ticket['attendee_name'],
+    'attendee_email': ticket['attendee_email'],
+    'qr_token': ticket['qr_token'],
+    'status': ticket['status'],
+    'checked_in_at': ticket['checked_in_at'],
+    'section': ticket['section'],
+    'row': ticket['row'],
+    'seat': ticket['seat'],
+    'created_at': ticket['created_at'],
+    'updated_at': ticket['updated_at'],
+  };
+
+  /// `EventAttendeeResponse` shape used by `GET /checkin/attendees`.
+  Map<String, dynamic> attendeeResponse(Map<String, dynamic> ticket) => {
+    'ticket_id': ticket['id'],
+    'order_id': ticket['order_id'],
+    'attendee_name': ticket['attendee_name'],
+    'attendee_email': ticket['attendee_email'],
+    'ticket_type_id': ticket['ticket_type_id'],
+    'ticket_type_name': ticket['ticket_type_name'],
+    'ticket_status': ticket['status'],
+    'order_status': ticket['order_status'],
+    'checked_in_at': ticket['checked_in_at'],
+    'section': ticket['section'],
+    'row': ticket['row'],
+    'seat': ticket['seat'],
+    'created_at': ticket['created_at'],
   };
 
   ResponseBody json(Object? data, [int status = 200]) =>
@@ -128,55 +168,62 @@ class MockServer {
     final denied = eventAccess(eventId);
     if (denied != null) return denied;
     final event = events.firstWhere((e) => e['id'] == eventId);
+    if (event['status'] == 'cancelled') {
+      return error(400, 'Cannot check in to a cancelled event');
+    }
 
     if (path == 'checkin/summary' && method == 'GET') {
       return json(summary(eventId!));
     }
     if (path == 'checkin/attendees' && method == 'GET') {
       final q = (query['q'] ?? '').toLowerCase().trim();
-      final matches = tickets
-          .where(
-            (t) =>
-                t['event_id'] == eventId &&
-                [
-                  'attendee_name',
-                  'attendee_email',
-                  'id',
-                ].any((key) => (t[key] as String).toLowerCase().contains(q)),
-          )
-          .toList();
+      final matches =
+          tickets
+              .where(
+                (t) =>
+                    t['event_id'] == eventId &&
+                    ['attendee_name', 'attendee_email', 'id'].any(
+                      (key) => (t[key] as String).toLowerCase().contains(q),
+                    ),
+              )
+              .toList()
+            ..sort((a, b) {
+              final byName = (a['attendee_name'] as String).compareTo(
+                b['attendee_name'] as String,
+              );
+              return byName != 0
+                  ? byName
+                  : (a['id'] as String).compareTo(b['id'] as String);
+            });
       final offset = (int.tryParse(query['offset'] ?? '') ?? 0).clamp(
         0,
         100000,
       );
-      final limit = (int.tryParse(query['limit'] ?? '') ?? 3).clamp(1, 100);
-      return json({
-        'items': matches.skip(offset).take(limit).map(publicTicket).toList(),
-        'total': matches.length,
-        'limit': limit,
-        'offset': offset,
-      });
-    }
-    if (path == 'checkin/tickets/detail' && method == 'GET') {
-      final found = tickets.where(
-        (t) => t['id'] == query['ticket_id'] && t['event_id'] == eventId,
+      final limit = (int.tryParse(query['limit'] ?? '') ?? 50).clamp(1, 100);
+      return json(
+        matches
+            .skip(offset)
+            .take(limit)
+            .map(attendeeResponse)
+            .toList(growable: false),
       );
-      return found.isEmpty
-          ? error(404, 'ticket_not_found')
-          : json(publicTicket(found.first));
     }
-    if (event['status'] == 'cancelled') return error(400, 'event_cancelled');
     if (path == 'tickets/verify' && method == 'GET') {
       final code = query['qr_token'];
       if (code == null) return error(422, 'invalid_code');
       final ticket = tickets
           .where((t) => t['qr_token'] == code && t['event_id'] == eventId)
           .firstOrNull;
-      final status = ticket?['status'] ?? 'not_found';
+      final orderStatus = ticket?['order_status'] as String?;
+      final status = ticket == null
+          ? 'not_found'
+          : orderStatus != 'paid'
+          ? orderStatus!
+          : ticket['status'] as String;
       return json({
         'valid': status == 'valid',
         'status': status,
-        'ticket': ticket,
+        'ticket': ticket == null ? null : ticketResponse(ticket),
         'message': 'Ticket is $status',
       });
     }
@@ -185,21 +232,32 @@ class MockServer {
       final found = tickets.where(
         (t) => t['id'] == query['ticket_id'] && t['event_id'] == eventId,
       );
-      if (found.isEmpty) return error(404, 'ticket_not_found');
+      if (found.isEmpty) return error(404, 'Ticket not found for this event');
       final ticket = found.first;
+      if (ticket['order_status'] != 'paid') {
+        return error(400, 'Ticket is not eligible for admission');
+      }
       if (path == 'tickets/undo-check-in') {
-        if (ticket['can_undo'] != true) return error(403, 'undo_forbidden');
+        if (event['can_undo_check_in'] != true) {
+          return error(403, 'Check-in reversal is not permitted');
+        }
         if (ticket['status'] != 'checked_in') {
-          return error(400, 'not_checked_in');
+          return error(400, 'Ticket is not checked in');
         }
         ticket['status'] = 'valid';
         ticket['checked_in_at'] = null;
       } else {
-        if (ticket['status'] != 'valid') return error(400, 'ticket_not_valid');
+        if (ticket['status'] != 'valid') {
+          return error(
+            400,
+            'Ticket is already checked in or is not eligible for admission',
+          );
+        }
         ticket['status'] = 'checked_in';
         ticket['checked_in_at'] = DateTime.now().toUtc().toIso8601String();
       }
-      return json(ticket);
+      ticket['updated_at'] = DateTime.now().toUtc().toIso8601String();
+      return json(ticketResponse(ticket));
     }
     return error(404, 'route_not_found');
   }

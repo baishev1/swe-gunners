@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties (git-ignored) and fill in the
+# credentials from the team secret vault. Never commit android/key.properties
+# or any .jks/.keystore file to git.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=biletflow-upload
+storeFile=/absolute/path/to/biletflow-staff-upload.jks

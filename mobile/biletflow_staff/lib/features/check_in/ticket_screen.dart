@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 
 import '../../core/localization/locale_provider.dart';
-import '../../core/network/api_client.dart';
-import '../../core/network/mock_api_adapter.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_page.dart';
 import '../events/event.dart';
 import '../events/event_providers.dart';
@@ -18,18 +18,22 @@ class TicketScreen extends ConsumerStatefulWidget {
     this.verification,
     this.qrToken,
     this.ticketId,
+    this.attendee,
+    this.fromScanner = false,
   });
   final StaffEvent event;
   final TicketVerification? verification;
   final String? qrToken;
   final String? ticketId;
+  final AdmissionTicket? attendee;
+  final bool fromScanner;
   @override
   ConsumerState<TicketScreen> createState() => _TicketScreenState();
 }
 
 class _TicketScreenState extends ConsumerState<TicketScreen> {
   AdmissionTicket? _ticket;
-  String _result = 'invalid';
+  String _result = '';
   bool _valid = false;
   String? _success;
   bool _busy = false, _loading = false;
@@ -42,7 +46,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     if (verification != null) {
       _applyVerification(verification);
     } else {
-      _load();
+      final attendee = widget.attendee;
+      if (attendee != null) {
+        _ticket = attendee;
+        _result = attendee.status;
+        _valid = attendee.status == 'valid';
+      } else {
+        _load();
+      }
     }
   }
 
@@ -70,26 +81,42 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         });
         return;
       }
-      final response = await ref
-          .read(dioProvider)
-          .get<Map<String, dynamic>>(
-            'checkin/tickets/detail',
-            queryParameters: {
-              'event_id': widget.event.id,
-              'ticket_id': widget.ticketId ?? _ticket?.id,
-            },
-          );
+      final ticketId = widget.ticketId ?? _ticket?.id ?? widget.attendee?.id;
+      if (ticketId == null) return;
+      // The backend exposes no check-in detail route; resolve the row through
+      // the assigned-event attendee search instead.
+      final row = await ref
+          .read(checkInControllerProvider)
+          .findAttendee(widget.event.id, ticketId);
       if (!mounted) return;
       setState(() {
-        _ticket = AdmissionTicket.fromJson(response.data!);
-        _result = _ticket!.status;
-        _valid = _result == 'valid';
+        _ticket = row;
+        _result = row?.status ?? 'not_found';
+        _valid = row?.status == 'valid';
         _success = null;
       });
     } catch (error) {
       if (mounted) setState(() => _error = error);
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _refreshAttendee() async {
+    final ticketId = _ticket?.id;
+    if (ticketId == null) return;
+    try {
+      final row = await ref
+          .read(checkInControllerProvider)
+          .findAttendee(widget.event.id, ticketId);
+      if (!mounted) return;
+      setState(() {
+        _ticket = row;
+        _result = row?.status ?? 'not_found';
+        _valid = row?.status == 'valid';
+      });
+    } catch (_) {
+      // Keep the authoritative change response; the refresh can retry.
     }
   }
 
@@ -127,13 +154,16 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           .read(checkInControllerProvider)
           .change(widget.event.id, _ticket!.id, undo: undo);
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       setState(() {
         _ticket = result;
         _result = result.status;
         _valid = _result == 'valid';
         _success = undo ? 'undo' : 'admit';
       });
+      if (widget.verification == null) await _refreshAttendee();
     } catch (error) {
+      HapticFeedback.heavyImpact();
       if (mounted) {
         setState(() {
           _error = error;
@@ -148,20 +178,28 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   @override
   Widget build(BuildContext context) {
     final ticket = _ticket;
-    final account = !useMockApi && _result == 'checked_in'
+    final account = _result == 'checked_in'
         ? ref.watch(accountProvider).asData?.value
         : null;
-    final canUndo = useMockApi
-        ? ticket?.canUndo == true
-        : widget.event.canUndoCheckIn ||
-              account?['id'] == widget.event.organizerId ||
-              account?['role'] == 'platform_admin';
-    final allowed =
-        !widget.event.cancelled && ['valid', 'checked_in'].contains(_result);
+    final canUndo =
+        widget.event.canUndoCheckIn ||
+        account?['id'] == widget.event.organizerId ||
+        account?['role'] == 'platform_admin';
+    final allowed = ['valid', 'checked_in'].contains(_result);
     final successful = _success == 'admit';
-    final color = allowed
+    final alreadyUsed = _result == 'checked_in' && !successful;
+    final color = successful || _result == 'valid'
         ? context.theme.colors.primary
+        : alreadyUsed
+        ? warningColor(context)
         : context.theme.colors.error;
+    final statusIcon = successful || _result == 'valid'
+        ? (_success == 'undo' ? Icons.undo_rounded : Icons.check_rounded)
+        : alreadyUsed
+        ? Icons.history_rounded
+        : _result == 'not_found'
+        ? Icons.search_off_rounded
+        : Icons.block_rounded;
     final headline = successful
         ? context.l.admitted
         : _success == 'undo'
@@ -174,6 +212,16 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         : _result == 'checked_in'
         ? context.l.usedHint
         : context.l.blockedHint;
+    final showResult =
+        widget.verification != null || ticket != null || _result == 'not_found';
+    final loadFailed =
+        _error != null && ticket == null && widget.verification == null;
+    final canRefresh =
+        ticket != null ||
+        widget.ticketId != null ||
+        widget.attendee != null ||
+        widget.qrToken != null;
+    final canPop = Navigator.of(context).canPop();
     Widget? primary;
     if (!_loading) {
       if (ticket != null &&
@@ -188,13 +236,22 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           prefix: const Icon(Icons.check_rounded),
           child: _busy ? const FCircularProgress() : Text(context.l.checkIn),
         );
-      } else if (widget.verification != null) {
+      } else if (widget.verification != null || widget.fromScanner) {
         primary = FButton(
           builder: fitButtonLabel,
           size: .lg,
-          onPress: _busy ? null : () => Navigator.pop(context),
+          onPress: _busy ? null : () => Navigator.of(context).maybePop(),
           prefix: const Icon(Icons.qr_code_scanner_rounded),
           child: Text(context.l.scanNext),
+        );
+      } else if (canPop) {
+        primary = FButton(
+          builder: fitButtonLabel,
+          size: .lg,
+          variant: FButtonVariant.outline,
+          onPress: _busy ? null : () => Navigator.of(context).maybePop(),
+          prefix: const Icon(Icons.arrow_back_rounded),
+          child: Text(context.l.back),
         );
       }
     }
@@ -202,8 +259,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       title: widget.verification == null
           ? context.l.ticket
           : context.l.verification,
+      onRefresh: canRefresh && !_busy ? _load : null,
       actions: [
-        if (ticket != null || widget.ticketId != null)
+        if (canRefresh)
           IconButton(
             tooltip: context.l.refresh,
             onPressed: _busy || _loading ? null : _load,
@@ -212,12 +270,21 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       ],
       footer: primary,
       children: [
-        if (_loading)
+        if (_loading && ticket == null)
           const Padding(
             padding: EdgeInsets.all(48),
             child: Center(child: FCircularProgress()),
           )
-        else ...[
+        else if (loadFailed) ...[
+          ErrorNotice(error: _error!),
+          FButton(
+            builder: fitButtonLabel,
+            size: .lg,
+            variant: FButtonVariant.outline,
+            onPress: _load,
+            child: Text(context.l.retry),
+          ),
+        ] else if (showResult) ...[
           Semantics(
             liveRegion: true,
             child: Column(
@@ -229,17 +296,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                   height: 88,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withValues(alpha: 0.10),
+                    color: color.withValues(alpha: 0.12),
                   ),
-                  child: Icon(
-                    successful || _result == 'valid'
-                        ? Icons.check_rounded
-                        : _result == 'checked_in'
-                        ? Icons.history_rounded
-                        : Icons.block_rounded,
-                    size: 44,
-                    color: color,
-                  ),
+                  child: Icon(statusIcon, size: 44, color: color),
                 ),
                 Text(
                   headline,
@@ -255,7 +314,18 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
               ],
             ),
           ),
-          if (_error != null) ErrorNotice(error: _error!),
+          if (_error != null) ...[
+            ErrorNotice(error: _error!),
+            if (canRefresh)
+              FButton(
+                builder: fitButtonLabel,
+                size: .lg,
+                variant: FButtonVariant.outline,
+                prefix: const Icon(Icons.refresh_rounded),
+                onPress: _busy || _loading ? null : _load,
+                child: Text(context.l.refresh),
+              ),
+          ],
           if (ticket != null)
             InfoCard(
               child: Column(
@@ -269,13 +339,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                         backgroundColor: context.theme.colors.secondary,
                         foregroundColor: context.theme.colors.primary,
                         child: Text(
-                          ticket.name
-                              .trim()
-                              .split(' ')
-                              .where((s) => s.isNotEmpty)
-                              .take(2)
-                              .map((s) => s.characters.first)
-                              .join(),
+                          nameInitials(ticket.name, ticket.email),
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -304,14 +368,12 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     title: ticket.type,
                     subtitle: context.l.ticketType,
                   ),
-                  if (useMockApi || ticket.seat != null)
-                    DetailRow(
-                      icon: Icons.event_seat_outlined,
-                      title: ticket.seat == null
-                          ? context.l.generalAdmission
-                          : '${ticket.section} / ${ticket.row} / ${ticket.seat}',
-                      subtitle: ticket.seat == null ? null : context.l.seat,
-                    ),
+                  DetailRow(
+                    icon: Icons.event_seat_outlined,
+                    title:
+                        ticket.assignedSeatLabel ?? context.l.generalAdmission,
+                    subtitle: context.l.seat,
+                  ),
                   if (ticket.checkedInAt != null)
                     DetailRow(
                       icon: Icons.schedule_rounded,
@@ -325,7 +387,6 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                 ],
               ),
             ),
-          if (widget.event.cancelled) Text(context.l.eventCancelled),
           if (ticket != null && allowed && ticket.status == 'checked_in')
             if (canUndo)
               Center(
@@ -344,24 +405,36 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           if (ticket != null)
             ExpansionTile(
               tilePadding: EdgeInsets.zero,
+              shape: const Border(),
+              collapsedShape: const Border(),
+              expandedAlignment: AlignmentDirectional.centerStart,
+              childrenPadding: const EdgeInsets.only(bottom: 12),
               title: Text(
                 context.l.ticket,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               children: [
-                SelectableText(
-                  ticket.id,
-                  style: Theme.of(context).textTheme.bodySmall,
+                Row(
+                  children: [
+                    Expanded(
+                      child: SelectableText(
+                        ticket.id,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).copyButtonLabel,
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: ticket.id));
+                        HapticFeedback.selectionClick();
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          if (_error != null && ticket == null && widget.ticketId != null)
-            FButton(
-              builder: fitButtonLabel,
-              size: .lg,
-              variant: FButtonVariant.outline,
-              onPress: _load,
-              child: Text(context.l.retry),
             ),
         ],
       ],

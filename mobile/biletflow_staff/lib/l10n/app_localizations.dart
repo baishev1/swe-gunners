@@ -118,12 +118,6 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get signIn;
 
-  /// No description provided for @signInHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Your event, ready at the door.'**
-  String get signInHint;
-
   /// No description provided for @email.
   ///
   /// In en, this message translates to:
@@ -183,24 +177,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If this account exists, a reset link will be sent. In demo mode no email is sent.'**
   String get resetSent;
-
-  /// No description provided for @demoCredentials.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo: staff@biletflow.demo / Demo123!'**
-  String get demoCredentials;
-
-  /// No description provided for @events.
-  ///
-  /// In en, this message translates to:
-  /// **'Assigned events'**
-  String get events;
-
-  /// No description provided for @eventsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose an event to start welcoming guests.'**
-  String get eventsHint;
 
   /// No description provided for @noEvents.
   ///
@@ -262,12 +238,6 @@ abstract class AppLocalizations {
   /// **'Registered'**
   String get registered;
 
-  /// No description provided for @checkedIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Checked in'**
-  String get checkedIn;
-
   /// No description provided for @remaining.
   ///
   /// In en, this message translates to:
@@ -279,18 +249,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scan ticket'**
   String get scanTicket;
-
-  /// No description provided for @findAttendee.
-  ///
-  /// In en, this message translates to:
-  /// **'Find attendee'**
-  String get findAttendee;
-
-  /// No description provided for @venue.
-  ///
-  /// In en, this message translates to:
-  /// **'Venue'**
-  String get venue;
 
   /// No description provided for @eventCancelled.
   ///
@@ -309,18 +267,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get cancelled;
-
-  /// No description provided for @upcoming.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get upcoming;
-
-  /// No description provided for @scannerHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Scan an admission QR code. Campaign QR codes do not grant entry.'**
-  String get scannerHint;
 
   /// No description provided for @openCamera.
   ///
@@ -349,8 +295,14 @@ abstract class AppLocalizations {
   /// No description provided for @manualCode.
   ///
   /// In en, this message translates to:
-  /// **'Ticket code'**
+  /// **'Ticket ID or QR token'**
   String get manualCode;
+
+  /// No description provided for @manualCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the ticket UUID or 64-character QR token.'**
+  String get manualCodeHint;
 
   /// No description provided for @verify.
   ///
@@ -472,12 +424,6 @@ abstract class AppLocalizations {
   /// **'Name, email or ticket ID'**
   String get searchHint;
 
-  /// No description provided for @search.
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get search;
-
   /// No description provided for @noResults.
   ///
   /// In en, this message translates to:
@@ -568,6 +514,12 @@ abstract class AppLocalizations {
   /// **'Unable to access your saved session.'**
   String get storageError;
 
+  /// No description provided for @genericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get genericError;
+
   /// No description provided for @demoControls.
   ///
   /// In en, this message translates to:
@@ -616,47 +568,17 @@ abstract class AppLocalizations {
   /// **'Reset demo data'**
   String get resetDemo;
 
-  /// No description provided for @demoReset.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo records reset.'**
-  String get demoReset;
-
   /// No description provided for @permissionDenied.
   ///
   /// In en, this message translates to:
   /// **'Undo not permitted'**
   String get permissionDenied;
 
-  /// No description provided for @eventAdmin.
-  ///
-  /// In en, this message translates to:
-  /// **'Event administrator'**
-  String get eventAdmin;
-
-  /// No description provided for @noAdmission.
-  ///
-  /// In en, this message translates to:
-  /// **'This ticket cannot be admitted.'**
-  String get noAdmission;
-
   /// No description provided for @resetHint.
   ///
   /// In en, this message translates to:
   /// **'Enter the email used for your staff account.'**
   String get resetHint;
-
-  /// No description provided for @attendeeCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{No attendees} one{1 attendee} other{{count} attendees}}'**
-  String attendeeCount(int count);
-
-  /// No description provided for @cancelEventDemo.
-  ///
-  /// In en, this message translates to:
-  /// **'Simulate event cancellation'**
-  String get cancelEventDemo;
 
   /// No description provided for @demoShort.
   ///
@@ -754,12 +676,6 @@ abstract class AppLocalizations {
   /// **'Checking ticket…'**
   String get checkingTicket;
 
-  /// No description provided for @readyAdmission.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready to admit'**
-  String get readyAdmission;
-
   /// No description provided for @admissionHint.
   ///
   /// In en, this message translates to:
@@ -814,18 +730,6 @@ abstract class AppLocalizations {
   /// **'Event details'**
   String get eventDetails;
 
-  /// No description provided for @allGuests.
-  ///
-  /// In en, this message translates to:
-  /// **'All guests'**
-  String get allGuests;
-
-  /// No description provided for @notArrived.
-  ///
-  /// In en, this message translates to:
-  /// **'Not arrived'**
-  String get notArrived;
-
   /// No description provided for @logoutConfirm.
   ///
   /// In en, this message translates to:
@@ -849,6 +753,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The demo account is filled in. Sign in to explore.'**
   String get demoLoginHint;
+
+  /// No description provided for @ticketNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket not found'**
+  String get ticketNotFound;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment pending'**
+  String get pending;
+
+  /// No description provided for @invalidOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order not eligible'**
+  String get invalidOrder;
+
+  /// No description provided for @validationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the entered information and try again.'**
+  String get validationError;
 }
 
 class _AppLocalizationsDelegate

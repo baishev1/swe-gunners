@@ -6,6 +6,7 @@ class StaffEvent {
       title = json['title'] as String,
       status = json['status'] as String,
       startsAt = json['start_time'] as String,
+      endsAt = json['end_time'] as String?,
       timezone = json['timezone'] as String,
       venue = json['venue']['name'] as String,
       address = json['venue']['address'] as String;
@@ -17,6 +18,6 @@ class StaffEvent {
       timezone,
       venue,
       address;
+  final String? endsAt;
   final bool canUndoCheckIn;
-  bool get cancelled => status == 'cancelled';
 }

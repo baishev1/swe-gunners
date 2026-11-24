@@ -4,11 +4,49 @@ import 'package:biletflow_staff/core/network/mock_fixtures.dart';
 import 'package:biletflow_staff/core/storage/token_storage.dart';
 import 'package:biletflow_staff/features/auth/session_controller.dart';
 import 'package:biletflow_staff/features/check_in/check_in_controller.dart';
+import 'package:biletflow_staff/features/check_in/ticket.dart';
+import 'package:biletflow_staff/features/events/event.dart';
+import 'package:biletflow_staff/features/events/event_providers.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'test_storage.dart';
+
+const _ticketResponseKeys = {
+  'id',
+  'order_id',
+  'order_item_id',
+  'event_id',
+  'ticket_type_id',
+  'ticket_type_name',
+  'attendee_name',
+  'attendee_email',
+  'qr_token',
+  'status',
+  'checked_in_at',
+  'section',
+  'row',
+  'seat',
+  'created_at',
+  'updated_at',
+};
+
+const _attendeeResponseKeys = {
+  'ticket_id',
+  'order_id',
+  'attendee_name',
+  'attendee_email',
+  'ticket_type_id',
+  'ticket_type_name',
+  'ticket_status',
+  'order_status',
+  'checked_in_at',
+  'section',
+  'row',
+  'seat',
+  'created_at',
+};
 
 void main() {
   late ProviderContainer container;
@@ -20,27 +58,30 @@ void main() {
     storage = MemoryTokenStorage(demoToken);
     container = ProviderContainer(
       overrides: [
+        useMockApiProvider.overrideWithValue(true),
         mockServerProvider.overrideWithValue(server),
         tokenStorageProvider.overrideWithValue(storage),
       ],
     );
     await container.read(sessionProvider.future);
     dio = container.read(dioProvider);
-    dio.httpClientAdapter = MockApiAdapter(server);
   });
   tearDown(() => container.dispose());
 
-  Future<Map<String, dynamic>> verify(String code) async =>
-      (await dio.get<Map<String, dynamic>>(
-        'tickets/verify',
-        queryParameters: {'event_id': demoEventId, 'qr_token': code},
-      )).data!;
+  Future<Map<String, dynamic>> verify(
+    String code, {
+    String eventId = demoEventId,
+  }) async => (await dio.get<Map<String, dynamic>>(
+    'tickets/verify',
+    queryParameters: {'event_id': eventId, 'qr_token': code},
+  )).data!;
   Future<Map<String, dynamic>> change(
     String ticketId, {
+    String eventId = demoEventId,
     bool undo = false,
   }) async => (await dio.post<Map<String, dynamic>>(
     undo ? 'tickets/undo-check-in' : 'tickets/check-in',
-    queryParameters: {'event_id': demoEventId, 'ticket_id': ticketId},
+    queryParameters: {'event_id': eventId, 'ticket_id': ticketId},
   )).data!;
   Matcher status(int code) => isA<DioException>().having(
     (e) => e.response?.statusCode,
@@ -49,20 +90,71 @@ void main() {
   );
 
   test(
-    'Existing event contracts stay raw arrays with nested venue and timezone',
+    'Event, attendee, verify, check-in and summary contracts match backend JSON shapes',
     () async {
       final events = (await dio.get<List<dynamic>>('checkin/events')).data!;
       expect(events, hasLength(2));
       expect(events.any((e) => e['id'] == unassignedEventId), isFalse);
-      final detail = (await dio.get<Map<String, dynamic>>(
-        'events/detail',
+      expect(events.any((e) => e['id'] == cancelledEventId), isFalse);
+      final firstEvent = StaffEvent.fromJson(
+        events.first as Map<String, dynamic>,
+      );
+      expect(firstEvent.canUndoCheckIn, isTrue);
+      expect(firstEvent.timezone, 'Asia/Almaty');
+
+      final summary = (await dio.get<Map<String, dynamic>>(
+        'checkin/summary',
         queryParameters: {'event_id': demoEventId},
       )).data!;
-      expect(detail['timezone'], 'Asia/Almaty');
-      expect(detail['venue']['address'], isA<String>());
-      expect(detail.containsKey('checked_in'), isFalse);
+      expect(summary.keys.toSet(), {'event_id', 'registered', 'checked_in'});
+      expect(summary['event_id'], demoEventId);
+
+      final attendees = (await dio.get<List<dynamic>>(
+        'checkin/attendees',
+        queryParameters: {'event_id': demoEventId, 'limit': 20, 'offset': 0},
+      )).data!;
+      expect(attendees, isNotEmpty);
+      final attendeeRow = attendees.first as Map<String, dynamic>;
+      expect(attendeeRow.keys.toSet(), _attendeeResponseKeys);
+      expect(attendeeRow.containsKey('qr_token'), isFalse);
+      final parsedAttendee = AdmissionTicket.fromAttendee(attendeeRow);
+      expect(parsedAttendee.id, attendeeRow['ticket_id']);
+      expect(parsedAttendee.status, attendeeRow['ticket_status']);
+      expect(parsedAttendee.section, attendeeRow['section']);
+      expect(parsedAttendee.row, attendeeRow['row']);
+      expect(parsedAttendee.seat, attendeeRow['seat']);
+
+      final verified = await verify('DEMO-VALID');
+      expect(verified.keys.toSet(), {'valid', 'status', 'ticket', 'message'});
+      final verifiedTicket = verified['ticket'] as Map<String, dynamic>;
+      expect(verifiedTicket.keys.toSet(), _ticketResponseKeys);
+      expect(verifiedTicket['section'], 'A');
+      expect(verifiedTicket['row'], '2');
+      expect(verifiedTicket['seat'], '12');
+
+      final gaVerified = await verify('DEMO-GENERAL');
+      final gaTicket = gaVerified['ticket'] as Map<String, dynamic>;
+      expect(gaTicket['section'], isNull);
+      expect(gaTicket['row'], isNull);
+      expect(gaTicket['seat'], isNull);
+
+      final checkedIn = await change(verifiedTicket['id'] as String);
+      expect(checkedIn.keys.toSet(), _ticketResponseKeys);
+      expect(checkedIn['status'], 'checked_in');
     },
   );
+
+  test('Removed checkin/tickets/detail route returns 404', () async {
+    final verified = await verify('DEMO-VALID');
+    final ticketId = verified['ticket']['id'] as String;
+    await expectLater(
+      dio.get<dynamic>(
+        'checkin/tickets/detail',
+        queryParameters: {'event_id': demoEventId, 'ticket_id': ticketId},
+      ),
+      throwsA(status(404)),
+    );
+  });
 
   test('Invalid login does not discard an existing session', () async {
     await expectLater(
@@ -177,44 +269,60 @@ void main() {
     expect(admitted.checkedInAt, isNotNull);
   });
 
-  test('Manual search and details share scanner admission state', () async {
-    final verified = await verify('DEMO-VALID');
-    final ticketId = verified['ticket']['id'] as String;
-    await change(ticketId);
-    final search = await dio.get<Map<String, dynamic>>(
-      'checkin/attendees',
-      queryParameters: {
-        'event_id': demoEventId,
-        'q': 'guest1@example.test',
-        'limit': 3,
-        'offset': 0,
-      },
-    );
-    expect(search.data!['total'], 1);
-    expect(search.data!['items'][0]['status'], 'checked_in');
-    expect(search.data!['items'][0].containsKey('qr_token'), isFalse);
-    final detail = await dio.get<Map<String, dynamic>>(
-      'checkin/tickets/detail',
-      queryParameters: {'event_id': demoEventId, 'ticket_id': ticketId},
-    );
-    expect(detail.data!['status'], 'checked_in');
-    expect(detail.data!['seat'], '12');
-  });
+  test(
+    'Manual search and attendee lookup share scanner admission state',
+    () async {
+      final verified = await verify('DEMO-VALID');
+      final ticketId = verified['ticket']['id'] as String;
+      await change(ticketId);
+      final search = (await dio.get<List<dynamic>>(
+        'checkin/attendees',
+        queryParameters: {
+          'event_id': demoEventId,
+          'q': 'guest1@example.test',
+          'limit': 20,
+          'offset': 0,
+        },
+      )).data!;
+      expect(search, hasLength(1));
+      final row = search.first as Map<String, dynamic>;
+      expect(row['ticket_id'], ticketId);
+      expect(row['ticket_status'], 'checked_in');
+      expect(row.containsKey('qr_token'), isFalse);
+
+      final found = await container
+          .read(checkInControllerProvider)
+          .findAttendee(demoEventId, ticketId);
+      expect(found, isNotNull);
+      expect(found!.id, ticketId);
+      expect(found.status, 'checked_in');
+    },
+  );
 
   test(
-    'Pagination has no duplicate records and reports complete count',
+    'Page-length pagination has no duplicates and stops on a short page',
     () async {
-      final first = (await dio.get<Map<String, dynamic>>(
+      const pageSize = 4;
+      final first = (await dio.get<List<dynamic>>(
         'checkin/attendees',
-        queryParameters: {'event_id': demoEventId, 'limit': 3},
+        queryParameters: {
+          'event_id': demoEventId,
+          'limit': pageSize,
+          'offset': 0,
+        },
       )).data!;
-      final second = (await dio.get<Map<String, dynamic>>(
+      expect(first.length, pageSize);
+      final second = (await dio.get<List<dynamic>>(
         'checkin/attendees',
-        queryParameters: {'event_id': demoEventId, 'limit': 3, 'offset': 3},
+        queryParameters: {
+          'event_id': demoEventId,
+          'limit': pageSize,
+          'offset': first.length,
+        },
       )).data!;
-      final all = [...first['items'] as List, ...second['items'] as List];
-      expect(all.length, first['total']);
-      expect(all.map((e) => e['id']).toSet().length, all.length);
+      expect(second.length, lessThan(pageSize));
+      final all = [...first, ...second];
+      expect(all.map((e) => e['ticket_id']).toSet().length, all.length);
     },
   );
 
@@ -228,9 +336,11 @@ void main() {
         ),
         throwsA(status(404)),
       );
-      final locked = await verify('DEMO-NO-UNDO');
+      final upcoming = await verify('DEMO-OTHER', eventId: upcomingEventId);
+      final upcomingTicketId = upcoming['ticket']['id'] as String;
+      await change(upcomingTicketId, eventId: upcomingEventId);
       await expectLater(
-        change(locked['ticket']['id'] as String, undo: true),
+        change(upcomingTicketId, eventId: upcomingEventId, undo: true),
         throwsA(status(403)),
       );
       server.revoked = true;
@@ -266,6 +376,75 @@ void main() {
       await expectLater(verify('DEMO-VALID'), throwsA(status(401)));
       expect(storage.token, isNull);
       expect(await container.read(sessionProvider.future), isNull);
+    },
+  );
+
+  test('resolveApiBaseUrl enforces HTTPS in release builds', () {
+    expect(
+      resolveApiBaseUrl(
+        configured: 'https://api.biletflow.kz/api/v1',
+        release: true,
+      ),
+      'https://api.biletflow.kz/api/v1/',
+    );
+    expect(
+      () => resolveApiBaseUrl(
+        configured: 'http://localhost:8000/api/v1/',
+        release: true,
+      ),
+      throwsStateError,
+    );
+    expect(
+      resolveApiBaseUrl(
+        configured: 'http://localhost:8000/api/v1/',
+        release: false,
+      ),
+      'http://localhost:8000/api/v1/',
+    );
+  });
+
+  test(
+    'sortStaffEvents places active and upcoming events before past ones',
+    () {
+      final now = DateTime.utc(2026, 11, 23, 12);
+      StaffEvent makeEvent(String id, String start, String end) =>
+          StaffEvent.fromJson({
+            'id': id,
+            'organizer_id': 'org',
+            'can_undo_check_in': false,
+            'title': id,
+            'status': 'published',
+            'start_time': start,
+            'end_time': end,
+            'timezone': 'UTC',
+            'venue': {'name': 'Hall', 'address': 'Street 1'},
+          });
+      final sorted = sortStaffEvents([
+        makeEvent('past-old', '2026-10-01T10:00:00Z', '2026-10-01T12:00:00Z'),
+        makeEvent(
+          'future-late',
+          '2026-12-10T10:00:00Z',
+          '2026-12-10T12:00:00Z',
+        ),
+        makeEvent('active', '2026-11-23T11:00:00Z', '2026-11-23T14:00:00Z'),
+        makeEvent(
+          'past-recent',
+          '2026-11-20T10:00:00Z',
+          '2026-11-20T12:00:00Z',
+        ),
+        makeEvent(
+          'future-soon',
+          '2026-11-25T10:00:00Z',
+          '2026-11-25T12:00:00Z',
+        ),
+      ], now: now);
+      expect(sorted.map((e) => e.id).toList(), [
+        'active',
+        'future-soon',
+        'future-late',
+        'past-recent',
+        'past-old',
+      ]);
     },
   );
 }

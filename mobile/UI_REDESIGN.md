@@ -12,8 +12,8 @@ The redesign keeps Flutter, Forui, the backend-shaped mock transport, all three 
 - Overview: one attendance summary, compact venue/date details, and one primary Scan action. Counts remain server-derived.
 - Scan: framed camera stage, clear event context, a manual-entry sheet, and an isolated demo-code sheet. No wall of scenario buttons in the main screen.
 - Result: explicit status and supporting icon, concise attendee details, fixed bottom admission/continue action. Reversal is secondary and requires confirmation.
-- Guests: search as you type with debounce, compact tappable rows, readable status labels, pagination, and accessible empty/error feedback.
-- Account: profile and language first; demo controls behind a separate screen; destructive logout action separated from preferences.
+- Guests: available in both real and demo modes; search as you type with debounce, compact tappable rows, readable status labels, page-length pagination (20 per page, no invented filtered count), and accessible empty/error feedback.
+- Account: profile (with initials derived from the account name) and language first; demo controls behind a separate screen in demo mode; destructive logout action separated from preferences.
 
 ## Visual and interaction rules
 

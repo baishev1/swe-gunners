@@ -5,6 +5,31 @@ import '../../core/network/api_client.dart';
 import '../auth/session_controller.dart';
 import 'event.dart';
 
+/// Sorts active and upcoming events first (earliest start first), followed by
+/// completed events (most recent first).
+List<StaffEvent> sortStaffEvents(List<StaffEvent> events, {DateTime? now}) {
+  final current = (now ?? DateTime.now()).toUtc();
+  bool isCompleted(StaffEvent event) {
+    final end = DateTime.tryParse(event.endsAt ?? '')?.toUtc();
+    if (end != null) return end.isBefore(current);
+    final start = DateTime.tryParse(event.startsAt)?.toUtc();
+    return start != null && start.isBefore(current);
+  }
+
+  final sorted = List<StaffEvent>.of(events);
+  sorted.sort((a, b) {
+    final aPast = isCompleted(a);
+    final bPast = isCompleted(b);
+    if (aPast != bPast) return aPast ? 1 : -1;
+    final aStart = DateTime.tryParse(a.startsAt)?.toUtc();
+    final bStart = DateTime.tryParse(b.startsAt)?.toUtc();
+    if (aStart == null || bStart == null) return a.id.compareTo(b.id);
+    final byTime = aPast ? bStart.compareTo(aStart) : aStart.compareTo(bStart);
+    return byTime != 0 ? byTime : a.id.compareTo(b.id);
+  });
+  return sorted;
+}
+
 final accountProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   ref,
 ) async {
@@ -30,7 +55,7 @@ final eventsProvider = FutureProvider.autoDispose<List<StaffEvent>>((
     events.addAll(
       page.map((e) => StaffEvent.fromJson(e as Map<String, dynamic>)),
     );
-    if (page.length < limit) return events;
+    if (page.length < limit) return sortStaffEvents(events);
   }
 });
 final eventProvider = FutureProvider.autoDispose.family<StaffEvent, String>((

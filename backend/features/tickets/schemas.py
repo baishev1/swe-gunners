@@ -19,6 +19,9 @@ class TicketResponse(BaseModel):
     qr_token: str
     status: str
     checked_in_at: datetime | None = None
+    section: str | None = None
+    row: str | None = None
+    seat: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -33,6 +36,9 @@ class EventAttendeeResponse(BaseModel):
     ticket_status: str
     order_status: str
     checked_in_at: datetime | None = None
+    section: str | None = None
+    row: str | None = None
+    seat: str | None = None
     created_at: datetime
 
 

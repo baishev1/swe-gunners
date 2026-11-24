@@ -77,13 +77,18 @@ ThemeData materialTheme(FThemeData theme) {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: theme.colors.card,
+      surfaceTintColor: Colors.transparent,
       indicatorColor: theme.colors.secondary,
       height: 72,
-      labelTextStyle: WidgetStatePropertyAll(
-        TextStyle(
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
           fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: theme.colors.foreground,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w600
+              : FontWeight.w500,
+          color: states.contains(WidgetState.selected)
+              ? theme.colors.foreground
+              : theme.colors.mutedForeground,
         ),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
@@ -95,6 +100,43 @@ ThemeData materialTheme(FThemeData theme) {
         ),
       ),
     ),
+    chipTheme: base.chipTheme.copyWith(
+      backgroundColor: theme.colors.secondary,
+      selectedColor: theme.colors.primary,
+      side: BorderSide(color: theme.colors.border),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      labelStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: theme.colors.foreground,
+      ),
+      secondaryLabelStyle: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: theme.colors.primaryForeground,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: theme.colors.card,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titleTextStyle: TextStyle(
+        fontSize: 19,
+        fontWeight: FontWeight.w600,
+        color: theme.colors.foreground,
+      ),
+      contentTextStyle: TextStyle(
+        fontSize: 15,
+        height: 1.45,
+        color: theme.colors.mutedForeground,
+      ),
+    ),
     dividerColor: theme.colors.border,
   );
 }
+
+Color warningColor(BuildContext context) =>
+    Theme.brightnessOf(context) == Brightness.dark
+    ? const Color(0xFFF5B74C)
+    : const Color(0xFFB45309);

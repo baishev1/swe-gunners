@@ -18,9 +18,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signIn => 'Sign in';
 
   @override
-  String get signInHint => 'Your event, ready at the door.';
-
-  @override
   String get email => 'Email';
 
   @override
@@ -50,15 +47,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetSent =>
       'If this account exists, a reset link will be sent. In demo mode no email is sent.';
-
-  @override
-  String get demoCredentials => 'Demo: staff@biletflow.demo / Demo123!';
-
-  @override
-  String get events => 'Assigned events';
-
-  @override
-  String get eventsHint => 'Choose an event to start welcoming guests.';
 
   @override
   String get noEvents => 'No events assigned yet.';
@@ -91,19 +79,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registered => 'Registered';
 
   @override
-  String get checkedIn => 'Checked in';
-
-  @override
   String get remaining => 'Not arrived';
 
   @override
   String get scanTicket => 'Scan ticket';
-
-  @override
-  String get findAttendee => 'Find attendee';
-
-  @override
-  String get venue => 'Venue';
 
   @override
   String get eventCancelled => 'This event is cancelled. Admission is closed.';
@@ -113,13 +92,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelled => 'Cancelled';
-
-  @override
-  String get upcoming => 'Upcoming';
-
-  @override
-  String get scannerHint =>
-      'Scan an admission QR code. Campaign QR codes do not grant entry.';
 
   @override
   String get openCamera => 'Open camera';
@@ -135,7 +107,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get torch => 'Toggle torch';
 
   @override
-  String get manualCode => 'Ticket code';
+  String get manualCode => 'Ticket ID or QR token';
+
+  @override
+  String get manualCodeHint =>
+      'Paste the ticket UUID or 64-character QR token.';
 
   @override
   String get verify => 'Verify ticket';
@@ -199,9 +175,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchHint => 'Name, email or ticket ID';
 
   @override
-  String get search => 'Search';
-
-  @override
   String get noResults => 'No attendees found.';
 
   @override
@@ -247,6 +220,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storageError => 'Unable to access your saved session.';
 
   @override
+  String get genericError => 'Something went wrong. Please try again.';
+
+  @override
   String get demoControls => 'Demo controls';
 
   @override
@@ -271,34 +247,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetDemo => 'Reset demo data';
 
   @override
-  String get demoReset => 'Demo records reset.';
-
-  @override
   String get permissionDenied => 'Undo not permitted';
 
   @override
-  String get eventAdmin => 'Event administrator';
-
-  @override
-  String get noAdmission => 'This ticket cannot be admitted.';
-
-  @override
   String get resetHint => 'Enter the email used for your staff account.';
-
-  @override
-  String attendeeCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count attendees',
-      one: '1 attendee',
-      zero: 'No attendees',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get cancelEventDemo => 'Simulate event cancellation';
 
   @override
   String get demoShort => 'Demo';
@@ -352,9 +304,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkingTicket => 'Checking ticket…';
 
   @override
-  String get readyAdmission => 'Ready to admit';
-
-  @override
   String get admissionHint => 'Confirm entry to mark this ticket as used.';
 
   @override
@@ -384,12 +333,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eventDetails => 'Event details';
 
   @override
-  String get allGuests => 'All guests';
-
-  @override
-  String get notArrived => 'Not arrived';
-
-  @override
   String get logoutConfirm => 'Log out of this account?';
 
   @override
@@ -401,4 +344,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get demoLoginHint =>
       'The demo account is filled in. Sign in to explore.';
+
+  @override
+  String get ticketNotFound => 'Ticket not found';
+
+  @override
+  String get pending => 'Payment pending';
+
+  @override
+  String get invalidOrder => 'Order not eligible';
+
+  @override
+  String get validationError => 'Check the entered information and try again.';
 }

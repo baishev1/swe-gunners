@@ -18,9 +18,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signIn => 'Войти';
 
   @override
-  String get signInHint => 'Встречайте гостей вашего события.';
-
-  @override
   String get email => 'Электронная почта';
 
   @override
@@ -50,15 +47,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get resetSent =>
       'Если аккаунт существует, мы отправим ссылку. В деморежиме письма не отправляются.';
-
-  @override
-  String get demoCredentials => 'Демо: staff@biletflow.demo / Demo123!';
-
-  @override
-  String get events => 'Назначенные события';
-
-  @override
-  String get eventsHint => 'Выберите событие для регистрации гостей.';
 
   @override
   String get noEvents => 'Пока нет назначенных событий.';
@@ -91,19 +79,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get registered => 'Зарегистрировано';
 
   @override
-  String get checkedIn => 'Прошли на событие';
-
-  @override
   String get remaining => 'Ещё не пришли';
 
   @override
   String get scanTicket => 'Сканировать билет';
-
-  @override
-  String get findAttendee => 'Найти участника';
-
-  @override
-  String get venue => 'Место проведения';
 
   @override
   String get eventCancelled => 'Событие отменено. Вход закрыт.';
@@ -113,13 +92,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cancelled => 'Отменён';
-
-  @override
-  String get upcoming => 'Предстоящее';
-
-  @override
-  String get scannerHint =>
-      'Сканируйте QR билета. Рекламные QR-коды не дают права входа.';
 
   @override
   String get openCamera => 'Открыть камеру';
@@ -135,7 +107,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get torch => 'Включить/выключить фонарик';
 
   @override
-  String get manualCode => 'Код билета';
+  String get manualCode => 'ID билета или QR-токен';
+
+  @override
+  String get manualCodeHint =>
+      'Вставьте UUID билета или 64-символьный QR-токен.';
 
   @override
   String get verify => 'Проверить билет';
@@ -198,9 +174,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchHint => 'Имя, почта или ID билета';
 
   @override
-  String get search => 'Поиск';
-
-  @override
   String get noResults => 'Участники не найдены.';
 
   @override
@@ -246,6 +219,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get storageError => 'Не удалось получить сохранённую сессию.';
 
   @override
+  String get genericError => 'Что-то пошло не так. Попробуйте ещё раз.';
+
+  @override
   String get demoControls => 'Управление демо';
 
   @override
@@ -270,36 +246,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get resetDemo => 'Сбросить демоданные';
 
   @override
-  String get demoReset => 'Демоданные сброшены.';
-
-  @override
   String get permissionDenied => 'Отмена прохода запрещена';
 
   @override
-  String get eventAdmin => 'Администратор события';
-
-  @override
-  String get noAdmission => 'По этому билету вход запрещён.';
-
-  @override
   String get resetHint => 'Укажите почту аккаунта сотрудника.';
-
-  @override
-  String attendeeCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count участника',
-      many: '$count участников',
-      few: '$count участника',
-      one: '$count участник',
-      zero: 'Нет участников',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get cancelEventDemo => 'Имитировать отмену события';
 
   @override
   String get demoShort => 'Демо';
@@ -353,9 +303,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get checkingTicket => 'Проверяем билет…';
 
   @override
-  String get readyAdmission => 'Можно пропустить';
-
-  @override
   String get admissionHint =>
       'Подтвердите вход, чтобы отметить билет использованным.';
 
@@ -386,12 +333,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get eventDetails => 'Информация о событии';
 
   @override
-  String get allGuests => 'Все гости';
-
-  @override
-  String get notArrived => 'Не пришли';
-
-  @override
   String get logoutConfirm => 'Выйти из аккаунта?';
 
   @override
@@ -403,4 +344,17 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get demoLoginHint =>
       'Демоаккаунт уже заполнен. Войдите, чтобы посмотреть приложение.';
+
+  @override
+  String get ticketNotFound => 'Билет не найден';
+
+  @override
+  String get pending => 'Ожидает оплаты';
+
+  @override
+  String get invalidOrder => 'Заказ недействителен';
+
+  @override
+  String get validationError =>
+      'Проверьте введённые данные и попробуйте снова.';
 }

@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/api_client.dart';
-import '../../core/network/mock_api_adapter.dart';
 import '../events/event_providers.dart';
 import 'ticket.dart';
 
@@ -30,6 +29,27 @@ class CheckInController {
     return TicketVerification.fromJson(response.data!);
   }
 
+  /// Looks up one attendee row by ticket UUID. Used by the detail screen and
+  /// manual entry because the backend exposes no check-in detail route.
+  Future<AdmissionTicket?> findAttendee(String eventId, String ticketId) async {
+    final response = await _dio.get<List<dynamic>>(
+      'checkin/attendees',
+      queryParameters: {
+        'event_id': eventId,
+        'q': ticketId,
+        'limit': 20,
+        'offset': 0,
+      },
+    );
+    for (final row in response.data ?? const <dynamic>[]) {
+      final json = row as Map<String, dynamic>;
+      if (json['ticket_id'] == ticketId) {
+        return AdmissionTicket.fromAttendee(json);
+      }
+    }
+    return null;
+  }
+
   Future<AdmissionTicket> change(
     String eventId,
     String ticketId, {
@@ -39,7 +59,7 @@ class CheckInController {
       undo ? 'tickets/undo-check-in' : 'tickets/check-in',
       queryParameters: {'event_id': eventId, 'ticket_id': ticketId},
     );
-    if (useMockApi) ref.invalidate(summaryProvider(eventId));
+    ref.invalidate(summaryProvider(eventId));
     return AdmissionTicket.fromJson(response.data!);
   }
 }

@@ -54,6 +54,7 @@ BUYERS = [
 ]
 
 EVENT_TITLE = "BiletFlow Demo Concert"
+SEATED_EVENT_TITLE = "Almaty Symphony Evening"
 FREE_EVENT_TITLE = "Открытая лекция: Как запустить стартап в Казахстане"
 PAST_EVENT_TITLE = "Jazz Evening Almaty"
 CANCELLED_EVENT_TITLE = "Outdoor Cinema Night"
@@ -120,6 +121,7 @@ def create_event(
     category: str,
     capacity: int,
     ticket_types: list[tuple[str, int, int]],
+    is_assigned_seating: bool = False,
 ) -> Event:
     """Creates and publishes an event through the services, so the timeline has entries."""
     organizer = demo.users["organizer"]
@@ -135,6 +137,7 @@ def create_event(
         visibility="public",
         status="draft",
         organizer_id=organizer.id,
+        is_assigned_seating=is_assigned_seating,
         refund_policy="Full refund up to 48 hours before the event.",
     )
     db.add(event)
@@ -265,6 +268,55 @@ def seed_paid_event(db: Session, demo: Demo) -> Event:
     return event
 
 
+def seed_seated_event(db: Session, demo: Demo) -> Event:
+    """Assigned-seating event with section, row and seat assigned to each ticket."""
+    organizer = demo.users["organizer"]
+    event = find_event(db, SEATED_EVENT_TITLE, organizer)
+    if event is not None:
+        return event
+
+    event = create_event(
+        db,
+        demo,
+        SEATED_EVENT_TITLE,
+        timedelta(days=21),
+        "Classical concert with assigned hall seating.",
+        "music",
+        120,
+        [("Parterre", 8000 * KZT, 80), ("Balcony", 4500 * KZT, 40)],
+        is_assigned_seating=True,
+    )
+    paid_sales_service.pay_fee(db, event, organizer.id, simulate_failure=False)
+    paid_sales_service.accept_terms(db, event, organizer.id)
+    paid_sales_service.activate(db, event, organizer.id)
+
+    parterre = ticket_type_named(db, event, "Parterre")
+    balcony = ticket_type_named(db, event, "Balcony")
+
+    aigerim, daniyar, madina = demo.buyers
+    place_order(db, event, aigerim, [(parterre, 2)], days_ago=4)
+    place_order(db, event, daniyar, [(balcony, 1)], days_ago=2)
+    place_order(db, event, madina, [(parterre, 1)], days_ago=1)
+
+    seat_assignments = [
+        ("A", "2", "12"),
+        ("A", "2", "13"),
+        ("B", "5", "4"),
+        ("A", "3", "7"),
+    ]
+    tickets = db.scalars(
+        select(Ticket).where(Ticket.event_id == event.id).order_by(Ticket.created_at, Ticket.id)
+    ).all()
+    for ticket, (section, row, seat) in zip(tickets, seat_assignments, strict=False):
+        ticket.section = section
+        ticket.row = row
+        ticket.seat = seat
+    db.commit()
+
+    assign_staff(db, event, demo.users["event_admin"])
+    return event
+
+
 def seed_free_event(db: Session, demo: Demo) -> Event:
     organizer = demo.users["organizer"]
     event = find_event(db, FREE_EVENT_TITLE, organizer)
@@ -357,6 +409,7 @@ def seed_cancelled_event(db: Session, demo: Demo) -> Event:
 
 SEED_STEPS: list[Callable[[Session, Demo], Event]] = [
     seed_paid_event,
+    seed_seated_event,
     seed_free_event,
     seed_past_event,
     seed_cancelled_event,

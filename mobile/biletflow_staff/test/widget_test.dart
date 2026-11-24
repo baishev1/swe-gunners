@@ -22,6 +22,7 @@ Future<MemoryTokenStorage> start(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        useMockApiProvider.overrideWithValue(true),
         tokenStorageProvider.overrideWithValue(storage),
         mockServerProvider.overrideWithValue(
           MockServer(latency: Duration.zero),
@@ -181,4 +182,86 @@ void main() {
     expect(find.text('Check-in recorded'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Reset password confirmation returns to sign in', (tester) async {
+    await start(tester);
+    await tap(tester, 'Forgot password?');
+    expect(find.byTooltip('Back'), findsOneWidget);
+    await tap(tester, 'Send reset link');
+    expect(find.textContaining('If this account exists'), findsOneWidget);
+    await tap(tester, 'Sign in');
+    expect(find.text('Forgot password?'), findsOneWidget);
+    expect(find.byTooltip('Back'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'Connecting points link Attendance card to Guests, Ticket footer back to Guests, and Settings back to Event',
+    (tester) async {
+      await start(tester, signedIn: true);
+      await event(tester);
+
+      // Attendance card opens Guests tab directly.
+      await tap(tester, 'Attendance');
+      expect(find.text('Аружан Демо'), findsOneWidget);
+
+      // Open guest -> Check in -> use bottom Back footer button to return to Guests.
+      await tap(tester, 'Аружан Демо');
+      await tap(tester, 'Check in');
+      expect(find.text('Check-in recorded'), findsOneWidget);
+      await tap(tester, 'Back');
+      expect(find.text('Аружан Демо'), findsOneWidget);
+
+      // Open Settings -> Demo controls -> Back -> Back -> Back returns to Events.
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Demo controls');
+      expect(find.text('Reset demo data'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Account'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Аружан Демо'), findsOneWidget);
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Your events'), findsOneWidget);
+
+      // System back on the root Events screen never pops into an empty screen.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Your events'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'Narrow dark-mode screens with large text render all core flows cleanly',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 720);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.4;
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      await start(tester);
+      await tap(tester, 'Sign in');
+      await event(tester);
+      await tap(tester, 'Guests');
+      await tap(tester, 'Аружан Демо');
+      await tap(tester, 'Check in');
+      expect(find.text('Check-in recorded'), findsOneWidget);
+      await tap(tester, 'Back');
+      await tap(tester, 'Scan');
+      await scan(tester, 'DEMO-USED');
+      expect(find.text('Already used'), findsOneWidget);
+      await tap(tester, 'Scan next ticket');
+      await tester.tap(find.byTooltip('Settings'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Demo controls');
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
