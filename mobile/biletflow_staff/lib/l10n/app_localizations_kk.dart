@@ -18,9 +18,6 @@ class AppLocalizationsKk extends AppLocalizations {
   String get signIn => 'Кіру';
 
   @override
-  String get signInHint => 'Іс-шараңызға кіруді басқарыңыз.';
-
-  @override
   String get email => 'Электрондық пошта';
 
   @override
@@ -50,15 +47,6 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get resetSent =>
       'Тіркелгі бар болса, қалпына келтіру сілтемесі жіберіледі. Демо режимде хат жіберілмейді.';
-
-  @override
-  String get demoCredentials => 'Демо: staff@biletflow.demo / Demo123!';
-
-  @override
-  String get events => 'Тағайындалған іс-шаралар';
-
-  @override
-  String get eventsHint => 'Қонақтарды тіркеу үшін іс-шараны таңдаңыз.';
 
   @override
   String get noEvents => 'Әзірге іс-шара тағайындалмаған.';
@@ -91,19 +79,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get registered => 'Тіркелгендер';
 
   @override
-  String get checkedIn => 'Кіргендер';
-
-  @override
   String get remaining => 'Келмегендер';
 
   @override
   String get scanTicket => 'Билетті сканерлеу';
-
-  @override
-  String get findAttendee => 'Қатысушыны табу';
-
-  @override
-  String get venue => 'Өтетін орын';
 
   @override
   String get eventCancelled => 'Іс-шара тоқтатылды. Кіру жабық.';
@@ -113,13 +92,6 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get cancelled => 'Күші жойылған';
-
-  @override
-  String get upcoming => 'Алдағы';
-
-  @override
-  String get scannerHint =>
-      'Кіру билетінің QR кодын сканерлеңіз. Науқан QR коды кіруге жарамсыз.';
 
   @override
   String get openCamera => 'Камераны ашу';
@@ -135,7 +107,11 @@ class AppLocalizationsKk extends AppLocalizations {
   String get torch => 'Шамды қосу/өшіру';
 
   @override
-  String get manualCode => 'Билет коды';
+  String get manualCode => 'Билет ID немесе QR токен';
+
+  @override
+  String get manualCodeHint =>
+      'Билеттің UUID нөмірін немесе 64 таңбалы QR токенін енгізіңіз.';
 
   @override
   String get verify => 'Билетті тексеру';
@@ -198,9 +174,6 @@ class AppLocalizationsKk extends AppLocalizations {
   String get searchHint => 'Аты, пошта немесе билет ID';
 
   @override
-  String get search => 'Іздеу';
-
-  @override
   String get noResults => 'Қатысушылар табылмады.';
 
   @override
@@ -246,6 +219,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get storageError => 'Сақталған сессия қолжетімсіз.';
 
   @override
+  String get genericError => 'Қате пайда болды. Қайталап көріңіз.';
+
+  @override
   String get demoControls => 'Демо басқару';
 
   @override
@@ -270,33 +246,10 @@ class AppLocalizationsKk extends AppLocalizations {
   String get resetDemo => 'Демо деректерді қалпына келтіру';
 
   @override
-  String get demoReset => 'Демо деректер қалпына келтірілді.';
-
-  @override
   String get permissionDenied => 'Болдырмауға рұқсат жоқ';
 
   @override
-  String get eventAdmin => 'Іс-шара әкімшісі';
-
-  @override
-  String get noAdmission => 'Бұл билетпен кіруге болмайды.';
-
-  @override
   String get resetHint => 'Қызметкер тіркелгісінің поштасын енгізіңіз.';
-
-  @override
-  String attendeeCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count қатысушы',
-      zero: 'Қатысушылар жоқ',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get cancelEventDemo => 'Іс-шараның тоқтатылуын көрсету';
 
   @override
   String get demoShort => 'Демо';
@@ -350,9 +303,6 @@ class AppLocalizationsKk extends AppLocalizations {
   String get checkingTicket => 'Билет тексерілуде…';
 
   @override
-  String get readyAdmission => 'Кіруге рұқсат беруге болады';
-
-  @override
   String get admissionHint =>
       'Кіруді растасаңыз, билет пайдаланылған деп белгіленеді.';
 
@@ -383,12 +333,6 @@ class AppLocalizationsKk extends AppLocalizations {
   String get eventDetails => 'Іс-шара мәліметтері';
 
   @override
-  String get allGuests => 'Барлық қонақтар';
-
-  @override
-  String get notArrived => 'Келмегендер';
-
-  @override
   String get logoutConfirm => 'Бұл тіркелгіден шығасыз ба?';
 
   @override
@@ -399,4 +343,17 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get demoLoginHint => 'Демо тіркелгі толтырылған. Кіру арқылы көріңіз.';
+
+  @override
+  String get ticketNotFound => 'Билет табылмады';
+
+  @override
+  String get pending => 'Төлем күтілуде';
+
+  @override
+  String get invalidOrder => 'Тапсырыс жарамсыз';
+
+  @override
+  String get validationError =>
+      'Енгізілген деректерді тексеріп, қайталап көріңіз.';
 }

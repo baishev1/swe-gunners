@@ -5,7 +5,6 @@ import 'package:forui/forui.dart';
 import '../../core/localization/locale_provider.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/mock_api_adapter.dart';
-import '../../core/network/mock_fixtures.dart';
 import '../../core/widgets/app_page.dart';
 import '../auth/session_controller.dart';
 import '../events/event_providers.dart';
@@ -32,6 +31,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Text(context.l.cancel),
           ),
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: context.theme.colors.error,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(context.l.confirm),
           ),
@@ -52,57 +54,79 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) => AppPage(
     title: context.l.settings,
+    onRefresh: () async {
+      ref.invalidate(accountProvider);
+      try {
+        await ref.read(accountProvider.future);
+      } catch (_) {
+        /* RequestView displays the error. */
+      }
+    },
     children: [
       Text(context.l.account, style: Theme.of(context).textTheme.headlineLarge),
       RequestView<Map<String, dynamic>>(
         value: ref.watch(accountProvider),
         retry: () => ref.invalidate(accountProvider),
-        builder: (account) => InfoCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 18,
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: context.theme.colors.secondary,
-                foregroundColor: context.theme.colors.primary,
-                child: const Text(
-                  'AD',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 4,
-                children: [
-                  Text(
-                    account['full_name'] as String,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  Text(
-                    account['email'] as String,
-                    style: TextStyle(
-                      color: context.theme.colors.mutedForeground,
+        builder: (account) {
+          final fullName = (account['full_name'] as String?)?.trim() ?? '';
+          final email = (account['email'] as String?)?.trim() ?? '';
+          return InfoCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 16,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: context.theme.colors.secondary,
+                      foregroundColor: context.theme.colors.primary,
+                      child: Text(
+                        nameInitials(fullName, email),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Text(
-                context.l.signedInAs,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 3,
+                        children: [
+                          Text(
+                            fullName.isNotEmpty ? fullName : email,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          if (email.isNotEmpty)
+                            Text(
+                              email,
+                              style: TextStyle(
+                                color: context.theme.colors.mutedForeground,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                Divider(height: 1, color: context.theme.colors.border),
+                Text(
+                  context.l.signedInAs,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          );
+        },
       ),
       Text(
         context.l.preferences,
         style: Theme.of(context).textTheme.titleMedium,
       ),
-      Material(
-        color: context.theme.colors.card,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
+      SurfaceGroup(
+        radius: 16,
         child: Column(
           children: [
             ListTile(
@@ -123,7 +147,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: const LanguagePicker(),
               ),
             ),
-            if (useMockApi) ...[
+            if (ref.watch(useMockApiProvider)) ...[
               Divider(
                 height: 1,
                 indent: 20,
@@ -143,13 +167,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
       if (_error != null) ErrorNotice(error: _error!),
-      TextButton.icon(
+      const SizedBox(height: 4),
+      OutlinedButton.icon(
         onPressed: _busy ? null : _logout,
-        style: TextButton.styleFrom(
+        style: OutlinedButton.styleFrom(
           foregroundColor: context.theme.colors.error,
-          minimumSize: const Size(48, 52),
+          side: BorderSide(
+            color: context.theme.colors.error.withValues(alpha: 0.35),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          minimumSize: const Size(double.infinity, 52),
         ),
-        icon: const Icon(Icons.logout_rounded, size: 20),
+        icon: _busy
+            ? const SizedBox(width: 18, height: 18, child: FCircularProgress())
+            : const Icon(Icons.logout_rounded, size: 20),
         label: Text(context.l.logout),
       ),
     ],
@@ -180,54 +213,65 @@ class _DemoToolsScreenState extends ConsumerState<DemoToolsScreen> {
           context.l.demoToolsHint,
           style: TextStyle(color: context.theme.colors.mutedForeground),
         ),
-        RadioGroup<DemoConnection>(
-          groupValue: server.connection,
-          onChanged: (mode) {
-            setState(() => server.connection = mode!);
-            _refreshData();
-          },
-          child: Column(
-            children: [
-              for (final (mode, label) in [
-                (DemoConnection.normal, context.l.normal),
-                (DemoConnection.offline, context.l.offlineMode),
-                (DemoConnection.serverError, context.l.serverMode),
-              ])
-                RadioListTile<DemoConnection>(value: mode, title: Text(label)),
-            ],
+        SurfaceGroup(
+          radius: 16,
+          child: RadioGroup<DemoConnection>(
+            groupValue: server.connection,
+            onChanged: (mode) {
+              setState(() => server.connection = mode!);
+              _refreshData();
+            },
+            child: Column(
+              children: [
+                for (final (i, (mode, label)) in [
+                  (DemoConnection.normal, context.l.normal),
+                  (DemoConnection.offline, context.l.offlineMode),
+                  (DemoConnection.serverError, context.l.serverMode),
+                ].indexed) ...[
+                  if (i > 0)
+                    Divider(
+                      height: 1,
+                      indent: 20,
+                      endIndent: 20,
+                      color: context.theme.colors.border,
+                    ),
+                  RadioListTile<DemoConnection>(
+                    value: mode,
+                    title: Text(label),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
-        FSwitch(
-          label: Text(context.l.emptyAssignments),
-          value: server.emptyAssignments,
-          onChange: (value) {
-            setState(() => server.emptyAssignments = value);
-            _refreshData();
-          },
-        ),
-        FSwitch(
-          label: Text(context.l.revokeAssignment),
-          value: server.revoked,
-          onChange: (value) {
-            setState(() => server.revoked = value);
-            _refreshData();
-          },
-        ),
-        FSwitch(
-          label: Text(context.l.cancelEventDemo),
-          value:
-              server.events.firstWhere(
-                (e) => e['id'] == demoEventId,
-              )['status'] ==
-              'cancelled',
-          onChange: (value) {
-            setState(
-              () => server.events.firstWhere(
-                (e) => e['id'] == demoEventId,
-              )['status'] = value ? 'cancelled' : 'published',
-            );
-            _refreshData();
-          },
+        SurfaceGroup(
+          radius: 16,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 16,
+              children: [
+                FSwitch(
+                  label: Text(context.l.emptyAssignments),
+                  value: server.emptyAssignments,
+                  onChange: (value) {
+                    setState(() => server.emptyAssignments = value);
+                    _refreshData();
+                  },
+                ),
+                Divider(height: 1, color: context.theme.colors.border),
+                FSwitch(
+                  label: Text(context.l.revokeAssignment),
+                  value: server.revoked,
+                  onChange: (value) {
+                    setState(() => server.revoked = value);
+                    _refreshData();
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
         FButton(
           builder: fitButtonLabel,

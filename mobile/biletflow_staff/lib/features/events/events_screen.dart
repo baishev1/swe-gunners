@@ -65,6 +65,14 @@ class EventsScreen extends ConsumerWidget {
                       color: context.theme.colors.mutedForeground,
                     ),
                     Text(context.l.noEvents, textAlign: TextAlign.center),
+                    FButton(
+                      builder: fitButtonLabel,
+                      size: .lg,
+                      variant: FButtonVariant.outline,
+                      prefix: const Icon(Icons.refresh_rounded),
+                      onPress: () => ref.invalidate(eventsProvider),
+                      child: Text(context.l.refresh),
+                    ),
                   ],
                 ),
               ),
@@ -84,8 +92,11 @@ class EventsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 56,
-                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            constraints: const BoxConstraints(minWidth: 56),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 9,
+                            ),
                             decoration: BoxDecoration(
                               color: context.theme.colors.secondary,
                               borderRadius: BorderRadius.circular(12),
@@ -99,6 +110,7 @@ class EventsScreen extends ConsumerWidget {
                                     event.timezone,
                                     'MMM',
                                   ).toUpperCase(),
+                                  maxLines: 1,
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
@@ -112,6 +124,7 @@ class EventsScreen extends ConsumerWidget {
                                     event.timezone,
                                     'd',
                                   ),
+                                  maxLines: 1,
                                   style: TextStyle(
                                     fontSize: 26,
                                     fontWeight: FontWeight.w600,
@@ -162,9 +175,12 @@ class EventsScreen extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               event.venue,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           StatusTag(status: event.status),
                         ],
                       ),

@@ -18,8 +18,9 @@ class AuthGate extends ConsumerWidget {
             const FScaffold(child: Center(child: FCircularProgress())),
         error: (_, _) => AppPage(
           title: context.l.appName,
+          back: false,
           children: [
-            Text(context.l.storageError),
+            MessageNotice(message: context.l.storageError),
             FButton(
               builder: fitButtonLabel,
               size: .lg,
@@ -53,15 +54,44 @@ class _SessionNavigator extends StatefulWidget {
 
 class _SessionNavigatorState extends State<_SessionNavigator> {
   final _navigator = GlobalKey<NavigatorState>();
+  bool _canPop = false;
+
+  void _syncCanPop() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final canPop = _navigator.currentState?.canPop() ?? false;
+      if (canPop != _canPop) setState(() => _canPop = canPop);
+    });
+  }
+
   @override
   Widget build(BuildContext context) => NavigatorPopHandler<void>(
-    onPopWithResult: (_) => _navigator.currentState!.pop(),
+    enabled: _canPop,
+    onPopWithResult: (_) => _navigator.currentState?.maybePop(),
     child: Navigator(
       key: _navigator,
+      observers: [_CanPopObserver(_syncCanPop)],
       onGenerateRoute: (_) => MaterialPageRoute<void>(
         builder: (_) =>
             widget.signedIn ? const EventsScreen() : const LoginScreen(),
       ),
     ),
   );
+}
+
+class _CanPopObserver extends NavigatorObserver {
+  _CanPopObserver(this.onChange);
+  final VoidCallback onChange;
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChange();
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChange();
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      onChange();
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      onChange();
 }

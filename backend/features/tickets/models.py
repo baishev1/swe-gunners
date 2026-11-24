@@ -15,3 +15,6 @@ class Ticket(DbBase):
     qr_token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     status: Mapped[str] = mapped_column(String(20), default="valid")
     checked_in_at: Mapped[AwareDateTime | None] = mapped_column(default=None)
+    section: Mapped[str | None] = mapped_column(String(50), default=None)
+    row: Mapped[str | None] = mapped_column(String(50), default=None)
+    seat: Mapped[str | None] = mapped_column(String(50), default=None)

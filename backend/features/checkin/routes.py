@@ -52,6 +52,9 @@ def search_attendees(
             ticket_status=ticket.status,
             order_status=order_status,
             checked_in_at=ticket.checked_in_at,
+            section=ticket.section,
+            row=ticket.row,
+            seat=ticket.seat,
             created_at=ticket.created_at,
         )
         for ticket, order_status in checkin_service.search_attendees(db, event, q, limit, offset)

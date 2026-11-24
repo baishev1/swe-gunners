@@ -5,8 +5,9 @@ import 'package:forui/forui.dart';
 
 import '../localization/locale_provider.dart';
 import '../network/mock_api_adapter.dart';
+import '../theme/app_theme.dart';
 
-class AppPage extends StatelessWidget {
+class AppPage extends ConsumerWidget {
   const AppPage({
     super.key,
     required this.title,
@@ -24,7 +25,7 @@ class AppPage extends StatelessWidget {
   final Future<void> Function()? onRefresh;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     Widget content = SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -56,7 +57,7 @@ class AppPage extends StatelessWidget {
         titleSpacing: back && Navigator.of(context).canPop() ? 0 : 24,
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
-          if (useMockApi) const DemoIndicator(),
+          if (ref.watch(useMockApiProvider)) const DemoIndicator(),
           ...actions,
           const SizedBox(width: 12),
         ],
@@ -66,32 +67,42 @@ class AppPage extends StatelessWidget {
         bottom: footer == null && bottomNavigation == null,
         child: content,
       ),
-      bottomNavigationBar: footer == null
-          ? bottomNavigation
+      bottomNavigationBar: footer == null && bottomNavigation == null
+          ? null
           : Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    border: Border(
-                      top: BorderSide(color: Theme.of(context).dividerColor),
+                if (footer != null)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      border: Border(
+                        top: BorderSide(color: Theme.of(context).dividerColor),
+                      ),
                     ),
-                  ),
-                  child: SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 600),
-                          child: footer!,
+                    child: SafeArea(
+                      top: false,
+                      bottom: bottomNavigation == null,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: footer!,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                ?bottomNavigation,
+                if (bottomNavigation != null)
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(color: Theme.of(context).dividerColor),
+                      ),
+                    ),
+                    child: bottomNavigation!,
+                  ),
               ],
             ),
     );
@@ -124,23 +135,34 @@ class DemoIndicator extends StatelessWidget {
 class LanguagePicker extends ConsumerWidget {
   const LanguagePicker({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Wrap(
-    spacing: 8,
-    runSpacing: 8,
-    children: [
-      for (final (code, label) in [
-        ('kk', 'Қазақша'),
-        ('ru', 'Русский'),
-        ('en', 'English'),
-      ])
-        ChoiceChip(
-          label: Text(label),
-          selected: Localizations.localeOf(context).languageCode == code,
-          showCheckmark: false,
-          onSelected: (_) => ref.read(localeProvider.notifier).select(code),
-        ),
-    ],
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = Localizations.localeOf(context).languageCode;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final (code, label) in [
+          ('kk', 'Қазақша'),
+          ('ru', 'Русский'),
+          ('en', 'English'),
+        ])
+          ChoiceChip(
+            label: Text(
+              label,
+              style: TextStyle(
+                fontWeight: current == code ? FontWeight.w600 : FontWeight.w500,
+                color: current == code
+                    ? context.theme.colors.primaryForeground
+                    : context.theme.colors.foreground,
+              ),
+            ),
+            selected: current == code,
+            showCheckmark: false,
+            onSelected: (_) => ref.read(localeProvider.notifier).select(code),
+          ),
+      ],
+    );
+  }
 }
 
 class RequestView<T> extends StatelessWidget {
@@ -181,49 +203,60 @@ class RequestView<T> extends StatelessWidget {
 }
 
 String errorMessage(BuildContext context, Object error) {
-  if (error is! DioException) return context.l.storageError;
-  if ([
-    DioExceptionType.connectionError,
-    DioExceptionType.connectionTimeout,
-    DioExceptionType.receiveTimeout,
-    DioExceptionType.sendTimeout,
-  ].contains(error.type)) {
-    return context.l.offline;
+  if (error is DioException) {
+    final data = error.response?.data;
+    final detail = data is Map ? data['detail'] : null;
+    if ([
+      DioExceptionType.connectionError,
+      DioExceptionType.connectionTimeout,
+      DioExceptionType.receiveTimeout,
+      DioExceptionType.sendTimeout,
+    ].contains(error.type)) {
+      return context.l.offline;
+    }
+    if (detail == 'Invalid email or password' ||
+        (error.response?.statusCode == 401 &&
+            error.requestOptions.extra['requiresAuth'] == false)) {
+      return context.l.badCredentials;
+    }
+    if (detail == 'event_cancelled' ||
+        detail == 'Cannot check in to a cancelled event') {
+      return context.l.eventCancelled;
+    }
+    if (detail == 'Cannot check in to a suspended event') {
+      return context.l.forbidden;
+    }
+    if (error.response?.statusCode == 400 &&
+        [
+          'tickets/check-in',
+          'tickets/undo-check-in',
+        ].contains(error.requestOptions.path)) {
+      return context.l.conflict;
+    }
+    return switch (error.response?.statusCode) {
+      401 => context.l.unauthorized,
+      403 => context.l.forbidden,
+      404 => context.l.notFound,
+      409 => context.l.conflict,
+      422 =>
+        detail is String && detail.trim().isNotEmpty
+            ? detail
+            : context.l.validationError,
+      _ => context.l.serverError,
+    };
   }
-  final data = error.response?.data;
-  final detail = data is Map ? data['detail'] : null;
-  if (detail == 'Invalid email or password' ||
-      (error.response?.statusCode == 401 &&
-          error.requestOptions.extra['requiresAuth'] == false)) {
-    return context.l.badCredentials;
-  }
-  if (detail == 'event_cancelled' ||
-      detail == 'Cannot check in to a cancelled event') {
-    return context.l.eventCancelled;
-  }
-  if (detail == 'Cannot check in to a suspended event') {
-    return context.l.forbidden;
-  }
-  if (error.response?.statusCode == 400 &&
-      [
-        'tickets/check-in',
-        'tickets/undo-check-in',
-      ].contains(error.requestOptions.path)) {
-    return context.l.conflict;
-  }
-  return switch (error.response?.statusCode) {
-    401 => context.l.unauthorized,
-    403 => context.l.forbidden,
-    404 => context.l.notFound,
-    409 => context.l.conflict,
-    422 => context.l.requiredField,
-    _ => context.l.serverError,
-  };
+  // A parse or other non-Dio failure is not a broken saved session.
+  return context.l.genericError;
 }
 
-class ErrorNotice extends StatelessWidget {
-  const ErrorNotice({super.key, required this.error});
-  final Object error;
+class MessageNotice extends StatelessWidget {
+  const MessageNotice({
+    super.key,
+    required this.message,
+    this.icon = Icons.error_outline_rounded,
+  });
+  final String message;
+  final IconData icon;
   @override
   Widget build(BuildContext context) => Semantics(
     liveRegion: true,
@@ -237,14 +270,14 @@ class ErrorNotice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.error_outline_rounded,
+            icon,
             color: Theme.of(context).colorScheme.onErrorContainer,
             size: 20,
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              errorMessage(context, error),
+              message,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
@@ -254,6 +287,43 @@ class ErrorNotice extends StatelessWidget {
       ),
     ),
   );
+}
+
+class ErrorNotice extends StatelessWidget {
+  const ErrorNotice({super.key, required this.error});
+  final Object error;
+  @override
+  Widget build(BuildContext context) =>
+      MessageNotice(message: errorMessage(context, error));
+}
+
+class SurfaceGroup extends StatelessWidget {
+  const SurfaceGroup({super.key, required this.child, this.radius = 18});
+  final Widget child;
+  final double radius;
+  @override
+  Widget build(BuildContext context) => Material(
+    color: context.theme.colors.card,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(radius),
+      side: BorderSide(color: context.theme.colors.border),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: child,
+  );
+}
+
+String nameInitials(String? fullName, [String? fallback]) {
+  final parts = (fullName ?? '')
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isNotEmpty) {
+    return parts.take(2).map((p) => p.characters.first).join().toUpperCase();
+  }
+  final alt = (fallback ?? '').trim();
+  return alt.isNotEmpty ? alt.characters.first.toUpperCase() : '?';
 }
 
 class InfoCard extends StatelessWidget {
@@ -303,26 +373,43 @@ class StatusTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final positive = status == 'valid' || status == 'published';
+    final used = status == 'checked_in';
     final color = positive
         ? context.theme.colors.primary
-        : status == 'checked_in'
-        ? context.theme.colors.mutedForeground
+        : used
+        ? warningColor(context)
         : context.theme.colors.error;
+    final icon = positive
+        ? Icons.check_circle_outline_rounded
+        : used
+        ? Icons.history_rounded
+        : Icons.block_rounded;
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(7),
+          color: color.withValues(alpha: 0.11),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
-          statusLabel(context, status),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 5,
+          children: [
+            Icon(icon, size: 13, color: color),
+            Flexible(
+              child: Text(
+                statusLabel(context, status),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -403,7 +490,21 @@ Future<T?> appSheet<T>(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 20,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
             child,
           ],
         ),

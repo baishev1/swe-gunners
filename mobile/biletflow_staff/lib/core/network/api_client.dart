@@ -1,22 +1,46 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/session_controller.dart';
 import 'mock_api_adapter.dart';
 
+const defaultApiBaseUrl = 'http://localhost:8000/api/v1/';
+
+/// Overrides the HTTP transport in tests while keeping the session
+/// interceptor and base configuration.
+final httpClientAdapterProvider = Provider<HttpClientAdapter?>((ref) => null);
+
+String resolveApiBaseUrl({required String configured, required bool release}) {
+  final uri = Uri.tryParse(configured);
+  if (uri == null || !uri.hasScheme || uri.host.isEmpty) {
+    throw StateError('API_BASE_URL must be an absolute URL.');
+  }
+  if (release && uri.scheme != 'https') {
+    throw StateError('API_BASE_URL must use HTTPS in release builds.');
+  }
+  return configured.endsWith('/') ? configured : '$configured/';
+}
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
-      baseUrl: const String.fromEnvironment(
-        'API_BASE_URL',
-        defaultValue: 'http://localhost:8000/api/v1/',
+      baseUrl: resolveApiBaseUrl(
+        configured: const String.fromEnvironment(
+          'API_BASE_URL',
+          defaultValue: defaultApiBaseUrl,
+        ),
+        release: kReleaseMode,
       ),
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 30),
       headers: {'Accept': 'application/json'},
     ),
   );
-  if (useMockApi) {
+  final adapter = ref.watch(httpClientAdapterProvider);
+  if (adapter != null) {
+    dio.httpClientAdapter = adapter;
+  } else if (ref.watch(useMockApiProvider)) {
     dio.httpClientAdapter = MockApiAdapter(ref.read(mockServerProvider));
   }
   final api = Uri.parse(dio.options.baseUrl);
