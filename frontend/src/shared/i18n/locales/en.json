@@ -173,7 +173,10 @@
     "refundPolicy": "Refund policy",
     "saveChanges": "Save changes",
     "create": "Create event",
-    "assignedSeating": "Assigned seating: attendees choose seats on the hall map"
+    "assignedSeating": "Assigned seating: attendees choose seats on the hall map",
+    "venueLayouts": {
+      "main_hall": "seat map, 1000 seats"
+    }
   },
   "ticketTypes": {
     "name": "Name",
@@ -192,12 +195,7 @@
   "createVenue": {
     "name": "Venue name",
     "address": "Address",
-    "submit": "Add venue",
-    "layout": "Seating layout",
-    "layoutNone": "None (general admission)",
-    "layouts": {
-      "main_hall": "Main Hall, 1000 seats"
-    }
+    "submit": "Add venue"
   },
   "eventStatus": {
     "unpublish": "Unpublish",
