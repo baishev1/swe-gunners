@@ -5,8 +5,10 @@ import { useEvent } from '@/entities/event'
 import { EventStatusActions } from '@/features/change-event-status'
 import { EventForm } from '@/features/event-form'
 import { TicketTypeManager } from '@/features/manage-ticket-types'
+import { EventStaffManager } from '@/features/manage-event-staff'
 import { OrganizerOrdersPanel } from '@/features/organizer-orders'
 import { PaidSalesChecklistCard } from '@/features/paid-sales-activation'
+import { PrivateEventLink } from '@/features/share-private-event'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
@@ -54,12 +56,18 @@ export function OrganizerEventEditPage() {
             {t('organizerEventEdit.attendees')}
           </Link>
         </Button>
+        <Button variant="link" asChild className="self-start">
+          <Link to={`${ROUTES.organizerEventPromo}?event_id=${event.data.id}`}>
+            {t('organizerEventEdit.promo')}
+          </Link>
+        </Button>
         <Button variant="outline" asChild className="self-start">
           <Link to={`${ROUTES.organizerEventAnalytics}?event_id=${event.data.id}`}>
             {t('analytics.open')}
           </Link>
         </Button>
       </div>
+      {event.data.visibility === 'private' && <PrivateEventLink eventId={event.data.id} />}
       <Card>
         <CardHeader>
           <CardTitle>{t('organizerEventEdit.details')}</CardTitle>
@@ -85,6 +93,14 @@ export function OrganizerEventEditPage() {
         </CardContent>
       </Card>
       <PaidSalesChecklistCard eventId={event.data.id} />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('organizerEventEdit.staff')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EventStaffManager eventId={event.data.id} />
+        </CardContent>
+      </Card>
     </main>
   )
 }

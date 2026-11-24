@@ -36,6 +36,7 @@ export interface OrderCreatePayload {
   customer_email: string
   items: OrderItemCreate[]
   promo_code?: string | null
+  access_token?: string | null
 }
 
 export interface Ticket {

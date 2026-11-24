@@ -5,6 +5,7 @@ import { listOrders } from '@/shared/api'
 import { Button } from '@/shared/ui'
 import { OrderCard } from '@/entities/order'
 import { ContactSupportLink } from '@/features/contact-support'
+import { PayOrderPanel } from '@/features/pay-order'
 
 export function OrdersPage() {
   const { t } = useTranslation()
@@ -52,8 +53,9 @@ export function OrdersPage() {
         {orders.map((order) => (
           <div key={order.id} className="flex flex-col gap-2">
             <OrderCard order={order} />
+            {order.status === 'pending' && <PayOrderPanel order={order} />}
             <div className="flex justify-end">
-              <ContactSupportLink eventId={order.event_id} category="payment" />
+              <ContactSupportLink eventId={order.event_id} orderId={order.id} category="payment" />
             </div>
           </div>
         ))}

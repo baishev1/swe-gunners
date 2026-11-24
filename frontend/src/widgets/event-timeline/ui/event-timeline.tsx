@@ -30,6 +30,17 @@ const ACTIONS = [
   'paid_sales_activated',
   'paid_sales_suspended',
   'paid_sales_reinstated',
+  'order_refunded',
+  'order_cancelled',
+  'order_expired',
+  'staff_assigned',
+  'staff_removed',
+  'event_report_reviewed',
+  'payment_succeeded',
+  'payment_failed',
+  'support_status_changed',
+  'support_assigned',
+  'event_reinstated',
 ] as const
 
 export function EventTimeline({ eventId }: { eventId: string }) {

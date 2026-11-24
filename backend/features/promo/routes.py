@@ -59,6 +59,12 @@ def get_campaign_qr(campaign: PromoCampaign = Depends(owned_campaign_guard)):
     return Response(content=promo_service.build_qr_svg(campaign), media_type="image/svg+xml")
 
 
+@router.get("/validate", response_model=PromoCampaignPublicResponse)
+def validate_promo_code(campaign: PromoCampaign = Depends(redeemable_code_guard)):
+    """Lets checkout preview a typed code; the order recalculates the discount."""
+    return campaign
+
+
 @router.get("/resolve", response_model=PromoCampaignPublicResponse)
 def resolve_promo_link(campaign: PromoCampaign = Depends(redeemable_campaign_guard)):
     return campaign

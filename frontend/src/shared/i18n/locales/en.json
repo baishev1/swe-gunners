@@ -5,7 +5,8 @@
     "password": "Password",
     "goToSignIn": "Go to sign in",
     "backToHome": "Back to home",
-    "invalidLink": "Invalid link"
+    "invalidLink": "Invalid link",
+    "back": "Back"
   },
   "language": {
     "label": "Language"
@@ -116,7 +117,8 @@
     "soldOut": "Sold out",
     "edit": "Edit event",
     "getTickets": "Get tickets",
-    "refundPolicy": "Refund policy"
+    "refundPolicy": "Refund policy",
+    "defaultRefundPolicy": "The organizer has not set a refund policy for this event, so the platform rules apply: if the event is cancelled, paid tickets are refunded in full. For any other refund request, contact support from your order."
   },
   "organizerEventNew": {
     "title": "New event",
@@ -128,7 +130,9 @@
     "details": "Event details",
     "ticketTypes": "Ticket types",
     "orders": "Orders",
-    "attendees": "Attendees"
+    "attendees": "Attendees",
+    "promo": "Promo campaigns",
+    "staff": "Check-in staff"
   },
   "organizerOrders": {
     "created": "Created",
@@ -258,7 +262,18 @@
       "promo_disabled": "Promo campaign disabled",
       "event_suspended": "Event suspended",
       "user_suspended": "User suspended",
-      "settings_updated": "Settings updated"
+      "settings_updated": "Settings updated",
+      "order_refunded": "Order refunded",
+      "order_cancelled": "Order cancelled",
+      "order_expired": "Reservation expired",
+      "staff_assigned": "Check-in staff assigned",
+      "staff_removed": "Check-in staff removed",
+      "event_report_reviewed": "Report reviewed",
+      "payment_succeeded": "Payment succeeded",
+      "payment_failed": "Payment failed",
+      "support_status_changed": "Support case status changed",
+      "support_assigned": "Support case assigned",
+      "event_reinstated": "Event restored"
     }
   },
   "analytics": {
@@ -400,7 +415,11 @@
       "reporter": "Reported by",
       "date": "Date",
       "markReviewed": "Mark reviewed"
-    }
+    },
+    "reinstate": "Reinstate",
+    "reinstateEvent": "Restore event",
+    "confirmSuspendUser": "Suspend {{email}}? They will be signed out and can't use BiletFlow until you reinstate them.",
+    "confirmSuspendEvent": "Suspend \"{{title}}\"? Ticket sales and check-in stop until you restore it."
   },
   "eventAttendees": {
     "title": "Attendees — {{title}}",
@@ -470,7 +489,8 @@
       "submit": "Send request",
       "submitting": "Sending...",
       "contextRequiredTitle": "Choose where to start",
-      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context."
+      "contextRequired": "Open a request from an event, order or ticket page so we can attach the right context.",
+      "attached": "Attached"
     },
     "categories": {
       "ticket_delivery": "Ticket delivery",
@@ -505,6 +525,12 @@
       "unassigned": "No assignee",
       "assignedToStaff": "Assigned to support staff",
       "assignToMe": "Assign to me"
+    },
+    "context": {
+      "order": "Order #{{number}}",
+      "ticket": "Ticket #{{number}}",
+      "orderLabel": "Order",
+      "ticketLabel": "Ticket"
     }
   },
   "reportEvent": {
@@ -550,7 +576,17 @@
     "pay": "Pay {{amount}} (simulation)",
     "promoApplied": "Promo code {{code}}",
     "removePromo": "Remove",
-    "subtotal": "Subtotal"
+    "subtotal": "Subtotal",
+    "remaining": "{{count}} left",
+    "soldOut": "Sold out",
+    "reserve": "Reserve for {{amount}} and go to payment",
+    "holdNote": "No real payments are collected. We hold your tickets for a limited time; you pay on the next step, in My orders.",
+    "promoCode": {
+      "label": "Promo code",
+      "apply": "Apply",
+      "invalid": "There is no such promo code for this event.",
+      "notApplicable": "This code does not apply to the selected tickets."
+    }
   },
   "orders": {
     "title": "My orders",
@@ -564,7 +600,12 @@
     "attendee": "Attendee",
     "total": "Total",
     "viewTickets": "View tickets →",
-    "discount": "Discount"
+    "discount": "Discount",
+    "payment": {
+      "title": "Awaiting payment",
+      "heldUntil": "Tickets are reserved until {{time}}.",
+      "expired": "The reservation has expired and the tickets were released. Please place a new order."
+    }
   },
   "tickets": {
     "title": "Digital tickets",
@@ -582,5 +623,28 @@
     "qrAlt": "Admission QR code for ticket {{id}}",
     "qrFailed": "Could not load the QR code. Download the PDF instead.",
     "notAdmissible": "This ticket is no longer valid for entry."
+  },
+  "eventStaff": {
+    "description": "People who scan tickets at the entrance with the BiletFlow Staff app. They need a BiletFlow account; they only see the events you assign them to.",
+    "email": "Staff member's email",
+    "canUndo": "Can undo check-ins",
+    "canSupport": "Can answer support cases for this event",
+    "add": "Assign",
+    "remove": "Remove {{name}}",
+    "empty": "No staff assigned yet.",
+    "undoBadge": "Undo",
+    "supportBadge": "Support",
+    "errors": {
+      "notFound": "No BiletFlow account uses this email. Ask the person to register first.",
+      "duplicate": "This person is already assigned.",
+      "invalid": "This account can't be assigned: it is the event owner or is blocked.",
+      "generic": "Could not update staff. Try again."
+    }
+  },
+  "privateLink": {
+    "title": "Private event link",
+    "description": "This event is private: only people with this link can see it and get tickets. Share it with your guests.",
+    "copy": "Copy link",
+    "copied": "Copied"
   }
 }

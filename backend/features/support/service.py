@@ -1,6 +1,7 @@
 from sqlalchemy import or_, select
 
 from core import *
+from features.audit_log.service import audit_log_service
 from features.checkin.models import StaffAssignment
 from features.events.models import Event
 from features.notifications.service import notification_service
@@ -63,9 +64,24 @@ class SupportService:
         return message
 
     def update_status(
-        self, db: Session, case: SupportCase, data: SupportStatusUpdate
+        self,
+        db: Session,
+        case: SupportCase,
+        data: SupportStatusUpdate,
+        actor_id: UUID | None = None,
     ) -> SupportCase:
         changed = case.status != data.status
+        if changed:
+            # Event timeline entry (SRS 4.16); platform cases without an event still get one.
+            audit_log_service.record(
+                db,
+                action="support_status_changed",
+                entity_type="support_case",
+                entity_id=case.id,
+                description=f'Support case "{case.subject}": {case.status} -> {data.status}',
+                event_id=case.event_id,
+                actor_id=actor_id,
+            )
         case.status = data.status
         db.commit()
         db.refresh(case)
@@ -79,6 +95,16 @@ class SupportService:
     def assign_to_self(self, db: Session, case: SupportCase, user: User) -> SupportCase:
         changed = case.assignee_id != user.id
         case.assignee_id = user.id
+        if changed:
+            audit_log_service.record(
+                db,
+                action="support_assigned",
+                entity_type="support_case",
+                entity_id=case.id,
+                description=f'{user.full_name} took support case "{case.subject}"',
+                event_id=case.event_id,
+                actor_id=user.id,
+            )
         db.commit()
         db.refresh(case)
         requester = db.get(User, case.requester_id)

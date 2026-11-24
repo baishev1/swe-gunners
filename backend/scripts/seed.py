@@ -396,14 +396,10 @@ def seed_cancelled_event(db: Session, demo: Demo) -> Event:
     paid_sales_service.accept_terms(db, event, organizer.id)
     paid_sales_service.activate(db, event, organizer.id)
     standard = ticket_type_named(db, event, "Standard")
-    orders = [
+    for days_ago, buyer in zip((9, 8), demo.buyers[:2], strict=True):
         place_order(db, event, buyer, [(standard, 1)], days_ago=days_ago)
-        for days_ago, buyer in zip((9, 8), demo.buyers[:2], strict=True)
-    ]
 
     event_service.cancel_event(db, event, organizer.id)
-    for order in orders:
-        order_service.refund_order(db, order, organizer.id)
     return event
 
 

@@ -21,7 +21,9 @@ class OrderService:
         # Free stock held by abandoned checkouts before checking availability.
         self.expire_stale_orders(db)
         order = Order(
-            **data.model_dump(exclude={"items", "promo_code"}), user_id=user_id, total_amount_kzt=0
+            **data.model_dump(exclude={"items", "promo_code", "access_token"}),
+            user_id=user_id,
+            total_amount_kzt=0,
         )
         db.add(order)
         db.flush()
@@ -153,7 +155,7 @@ class OrderService:
         stmt = stmt.order_by(Order.created_at.desc())
         return list(db.scalars(stmt).all())
 
-    def cancel_order(self, db: Session, order: Order, actor_id: UUID) -> Order:
+    def cancel_order(self, db: Session, order: Order, actor_id: UUID | None) -> Order:
         if order.status == "pending":
             for item in order.items:
                 ticket_type_service.release(db, item.ticket_type_id, item.quantity)
@@ -188,7 +190,7 @@ class OrderService:
         db.refresh(order)
         return order
 
-    def refund_order(self, db: Session, order: Order, actor_id: UUID) -> Order:
+    def refund_order(self, db: Session, order: Order, actor_id: UUID | None) -> Order:
         # Imported here to avoid a cycle: events and payments both import this module.
         from features.events.models import Event
         from features.payments.models import Payment

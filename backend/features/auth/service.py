@@ -79,7 +79,8 @@ class AuthService:
         message["To"] = to
         message["Subject"] = subject
         message.set_content(body)
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
+        # A timeout keeps an unreachable SMTP server from hanging the request.
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10) as smtp:
             if settings.SMTP_USER:
                 smtp.starttls()
                 smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)

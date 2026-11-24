@@ -67,7 +67,7 @@ Adding a language:
 1. Create `locales/<code>.json` with the same keys as `en.json`.
 2. Register it in `resources` and in `LANGUAGES` in `src/shared/i18n/index.ts`.
 
-The switcher in `src/widgets/language-switcher` picks the new code up from `LANGUAGES`.
+The switcher in the `src/widgets/app-header` header picks the new code up from `LANGUAGES`.
 
 ## End-to-end tests
 

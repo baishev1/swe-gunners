@@ -10,13 +10,13 @@ export const ticketTypeKeys = {
     [...ticketTypeKeys.all, eventId, includeHidden] as const,
 }
 
-export function useTicketTypes(eventId: string, includeHidden = false) {
+export function useTicketTypes(eventId: string, includeHidden = false, access?: string | null) {
   return useQuery({
-    queryKey: ticketTypeKeys.byEvent(eventId, includeHidden),
+    queryKey: [...ticketTypeKeys.byEvent(eventId, includeHidden), access ?? ''],
     queryFn: async () =>
       (
         await apiClient.get<TicketType[]>('/ticket-types', {
-          params: { event_id: eventId, include_hidden: includeHidden },
+          params: { event_id: eventId, include_hidden: includeHidden, access: access || undefined },
         })
       ).data,
     enabled: Boolean(eventId),

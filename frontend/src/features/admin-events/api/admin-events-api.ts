@@ -43,3 +43,20 @@ export function useSuspendEvent() {
     },
   })
 }
+
+/** Undoes a suspension; the event returns to the status it had before (SRS 4.12). */
+export function useReinstateEvent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (eventId: string) =>
+      (
+        await apiClient.post<AdminEvent>('/admin/events/reinstate', null, {
+          params: { event_id: eventId },
+        })
+      ).data,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminEventKeys.all })
+      void queryClient.invalidateQueries({ queryKey: eventKeys.all })
+    },
+  })
+}

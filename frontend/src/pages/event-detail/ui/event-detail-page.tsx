@@ -19,8 +19,9 @@ export function EventDetailPage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const eventId = searchParams.get('event_id') ?? ''
-  const event = useEvent(eventId)
-  const ticketTypes = useTicketTypes(eventId)
+  const access = searchParams.get('access')
+  const event = useEvent(eventId, access)
+  const ticketTypes = useTicketTypes(eventId, false, access)
   const me = useMe()
 
   if (event.isPending) {
@@ -67,12 +68,12 @@ export function EventDetailPage() {
       </div>
       <PromoLinkBanner eventId={eventId} />
       {data.description && <p className="whitespace-pre-line">{data.description}</p>}
-      {data.refund_policy && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">{t('eventDetail.refundPolicy')}</h2>
-          <p className="text-muted-foreground text-sm whitespace-pre-line">{data.refund_policy}</p>
-        </div>
-      )}
+      <div className="flex flex-col gap-2">
+        <h2 className="text-xl font-semibold">{t('eventDetail.refundPolicy')}</h2>
+        <p className="text-muted-foreground text-sm whitespace-pre-line">
+          {data.refund_policy?.trim() || t('eventDetail.defaultRefundPolicy')}
+        </p>
+      </div>
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold">{t('eventDetail.tickets')}</h2>
         {ticketTypes.data?.length === 0 && (
@@ -102,15 +103,21 @@ export function EventDetailPage() {
       {data.status === 'published' &&
         ticketTypes.data?.some((ticketType) => ticketType.available > 0) && (
           <Button asChild>
-            <Link to={`${ROUTES.checkout}?event_id=${data.id}`}>{t('eventDetail.getTickets')}</Link>
+            <Link
+              to={`${ROUTES.checkout}?event_id=${data.id}${access ? `&access=${encodeURIComponent(access)}` : ''}`}
+            >
+              {t('eventDetail.getTickets')}
+            </Link>
           </Button>
         )}
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" asChild>
-          <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>
-            {t('eventDetail.edit')}
-          </Link>
-        </Button>
+        {me.data?.id === data.organizer_id && (
+          <Button variant="outline" asChild>
+            <Link to={`${ROUTES.organizerEventEdit}?event_id=${data.id}`}>
+              {t('eventDetail.edit')}
+            </Link>
+          </Button>
+        )}
         <ContactSupportLink eventId={data.id} category="event_information" />
         {me.data && me.data.id !== data.organizer_id && <ReportEventForm eventId={data.id} />}
       </div>
