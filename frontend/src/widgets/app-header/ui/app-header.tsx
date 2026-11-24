@@ -21,6 +21,7 @@ export function AppHeader() {
   const location = useLocation()
   // Signed-out pages: home is behind sign-in, so there is nowhere to go back to.
   const showNavigation = !AUTH_PAGES.includes(location.pathname)
+  const showBack = showNavigation && location.pathname !== ROUTES.home
 
   function goBack() {
     // A page opened from a link or a QR code has no history to go back to.
@@ -31,8 +32,17 @@ export function AppHeader() {
   return (
     <header className="bg-background sticky top-0 z-10 border-b">
       <div className="mx-auto flex max-w-5xl items-center gap-1 px-4 py-2">
-        {showNavigation && location.pathname !== ROUTES.home && (
-          <Button variant="ghost" size="sm" onClick={goBack} aria-label={t('common.back')}>
+        {/* Invisible placeholder keeps the logo and nav in a fixed position. */}
+        {showNavigation && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goBack}
+            className={showBack ? undefined : 'invisible'}
+            aria-hidden={!showBack}
+            tabIndex={showBack ? undefined : -1}
+            disabled={!showBack}
+          >
             <ArrowLeft />
             <span className="hidden sm:inline">{t('common.back')}</span>
           </Button>
