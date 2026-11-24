@@ -22,7 +22,6 @@ export function HomePage() {
   const isAdmin = me?.role === 'platform_admin'
 
   const links = [
-    { to: ROUTES.events, label: t('home.browseEvents') },
     ...(isOrganizer
       ? [
           { to: ROUTES.organizerDashboard, label: t('home.organizerDashboard') },
@@ -30,13 +29,6 @@ export function HomePage() {
         ]
       : []),
     ...(isAdmin ? [{ to: ROUTES.admin, label: t('home.admin') }] : []),
-    ...(!isOrganizer && !isAdmin
-      ? [
-          { to: ROUTES.orders, label: t('home.myOrders') },
-          { to: ROUTES.tickets, label: t('home.myTickets') },
-        ]
-      : []),
-    { to: ROUTES.support, label: t('support.title') },
   ]
 
   return (
@@ -69,17 +61,19 @@ export function HomePage() {
         </div>
       )}
 
-      <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {links.map((link) => (
-          <Link
-            key={link.to}
-            to={link.to}
-            className="bg-card hover:bg-muted rounded-lg border p-4 text-sm font-medium transition-colors"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </nav>
+      {links.length > 0 && (
+        <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {links.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="bg-card hover:bg-muted rounded-lg border p-4 text-sm font-medium transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4">
