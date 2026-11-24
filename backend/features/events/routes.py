@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 
 from core import *
 from features.auth.guards import require_role, verified_organizer_guard
@@ -46,6 +46,15 @@ def get_organizer_dashboard(
 @router.get("/detail", response_model=EventResponse)
 def get_event_detail(event: Event = Depends(viewable_event_guard)):
     return event
+
+
+@router.get("/calendar", response_class=Response)
+def download_event_calendar(event: Event = Depends(viewable_event_guard)):
+    return Response(
+        content=event_service.calendar_file(event),
+        media_type="text/calendar; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="event-{event.id}.ics"'},
+    )
 
 
 @router.patch("/update", response_model=EventResponse)

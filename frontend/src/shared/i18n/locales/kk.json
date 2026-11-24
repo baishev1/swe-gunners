@@ -6,7 +6,8 @@
     "goToSignIn": "Кіруге өту",
     "backToHome": "Басты бетке",
     "invalidLink": "Жарамсыз сілтеме",
-    "back": "Артқа"
+    "back": "Артқа",
+    "navigation": "Навигация"
   },
   "language": {
     "label": "Тіл"
@@ -655,6 +656,12 @@
     "description": "Іс-шара жабық: оны тек осы сілтемесі барлар көріп, билет ала алады. Сілтемені қонақтарыңызға жіберіңіз.",
     "copy": "Көшіру",
     "copied": "Көшірілді"
+  },
+  "calendar": {
+    "ics": ".ics жүктеу",
+    "cancellationFile": "Болдырмау .ics жүктеу",
+    "google": "Google Күнтізбе",
+    "outlook": "Outlook"
   },
   "seating": {
     "title": "Орындарды таңдаңыз",

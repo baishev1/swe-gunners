@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEvent } from '@/entities/event'
 import { useMe } from '@/entities/session'
 import { useTicketTypes } from '@/entities/ticket-type'
+import { AddToCalendar } from '@/features/add-to-calendar'
 import { PromoLinkBanner } from '@/features/apply-promo-link'
 import { ContactSupportLink } from '@/features/contact-support'
 import { ReportEventForm } from '@/features/report-event'
@@ -65,6 +66,7 @@ export function EventDetailPage() {
         <p className="text-muted-foreground text-sm">
           {data.venue.name}, {data.venue.address}
         </p>
+        <AddToCalendar eventId={data.id} access={access} />
       </div>
       <PromoLinkBanner eventId={eventId} />
       {data.description && <p className="whitespace-pre-line">{data.description}</p>}

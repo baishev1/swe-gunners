@@ -6,7 +6,8 @@
     "goToSignIn": "Go to sign in",
     "backToHome": "Back to home",
     "invalidLink": "Invalid link",
-    "back": "Back"
+    "back": "Back",
+    "navigation": "Navigation"
   },
   "language": {
     "label": "Language"
@@ -655,6 +656,12 @@
     "description": "This event is private: only people with this link can see it and get tickets. Share it with your guests.",
     "copy": "Copy link",
     "copied": "Copied"
+  },
+  "calendar": {
+    "ics": "Download .ics",
+    "cancellationFile": "Download cancellation .ics",
+    "google": "Google Calendar",
+    "outlook": "Outlook"
   },
   "seating": {
     "title": "Choose your seats",
