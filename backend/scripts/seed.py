@@ -65,6 +65,8 @@ PROMO_CODE = "DEMO20"
 
 KZT = 100  # Prices are stored in tiyn.
 
+MAIN_HALL_ADDRESS = "53 Kabanbay Batyr Ave, Astana"
+
 # Main Hall price categories: (category, ticket type name, price).
 SEAT_PRICES = [
     (1, "Lower parterre", 12000 * KZT),
@@ -123,7 +125,7 @@ def seed_main_hall(db: Session) -> Venue:
     """The predefined assigned-seating layout (SRS 4.3.1), 1000 seats."""
     venue = db.scalar(select(Venue).where(Venue.layout_key == MAIN_HALL.key))
     if venue is None:
-        venue = Venue(name=MAIN_HALL.name, address="Almaty", layout_key=MAIN_HALL.key)
+        venue = Venue(name=MAIN_HALL.name, address=MAIN_HALL_ADDRESS, layout_key=MAIN_HALL.key)
         db.add(venue)
         db.commit()
     return venue

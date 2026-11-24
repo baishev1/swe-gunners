@@ -44,7 +44,7 @@ def upgrade() -> None:
                 {
                     "id": uuid4(),
                     "name": "Main Hall",
-                    "address": "Almaty",
+                    "address": "53 Kabanbay Batyr Ave, Astana",
                     "layout_key": "main_hall",
                     "created_at": now,
                     "updated_at": now,
