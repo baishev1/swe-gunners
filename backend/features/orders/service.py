@@ -2,11 +2,13 @@ from datetime import datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 
 from core import *
 from features.audit_log.service import audit_log_service
 from features.notifications.service import notification_service
 from features.promo.service import promo_service
+from features.seating.service import seating_service
 from features.ticket_types.models import TicketType
 from features.ticket_types.service import ticket_type_service
 from features.tickets.models import Ticket
@@ -43,9 +45,20 @@ class OrderService:
                     ticket_type_name=ticket_type.name,
                     unit_price_kzt=ticket_type.price,
                     quantity=item_data.quantity,
+                    seats=list(item_data.seats),
                 )
             )
             order.total_amount_kzt += ticket_type.price * item_data.quantity
+
+        try:
+            seating_service.hold_seats(db, order)
+        except IntegrityError:
+            # Another checkout holds or bought one of these seats (SRS 4.3.1).
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="One of the selected seats is no longer available",
+            ) from None
 
         if data.promo_code:
             self._apply_promo(db, order, data.promo_code)
@@ -83,6 +96,7 @@ class OrderService:
             return False
         for item in order.items:
             ticket_type_service.release(db, item.ticket_type_id, item.quantity)
+        seating_service.release_seats(db, order.id)
         audit_log_service.record(
             db,
             action="order_expired",
@@ -136,6 +150,7 @@ class OrderService:
                 )
         for item in order.items:
             ticket_type_service.confirm_sale(db, item.ticket_type_id, item.quantity)
+        seating_service.mark_sold(db, order)
         order.status = "paid"
 
     def list_orders(
@@ -176,6 +191,7 @@ class OrderService:
                 restocked[ticket_type_id] = restocked.get(ticket_type_id, 0) + 1
             for ticket_type_id, quantity in restocked.items():
                 ticket_type_service.release_sale(db, ticket_type_id, quantity)
+        seating_service.release_seats(db, order.id)
         order.status = "cancelled"
         audit_log_service.record(
             db,
@@ -233,6 +249,7 @@ class OrderService:
             .values(status="refunded")
             .execution_options(synchronize_session=False)
         )
+        seating_service.release_seats(db, order.id)
 
         audit_log_service.record(
             db,

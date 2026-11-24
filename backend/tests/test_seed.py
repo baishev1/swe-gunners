@@ -74,8 +74,14 @@ def test_seed_covers_every_demo_scenario(client) -> None:
         assert seated_event.is_assigned_seating is True
         assert seated_event.id in assigned
         seated_tickets = db.scalars(select(Ticket).where(Ticket.event_id == seated_event.id)).all()
-        assert len(seated_tickets) == 4
-        assert all(t.section and t.row and t.seat for t in seated_tickets)
+        assert len(seated_tickets) == 5
+        assert {(t.section, t.row, t.seat) for t in seated_tickets} == {
+            ("E", "D", "16"),
+            ("E", "D", "17"),
+            ("Balcony centre", "J", "20"),
+            ("B", "S", "21"),
+            ("E", "C", "15"),
+        }
 
         ga_tickets = db.scalars(select(Ticket).where(Ticket.event_id == paid_event.id)).all()
         assert ga_tickets

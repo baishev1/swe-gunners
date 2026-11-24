@@ -22,7 +22,15 @@ class NotificationService:
     """
 
     def order_confirmation(self, order: Order, tickets: list[Ticket], event_title: str) -> None:
-        lines = "\n".join(f"- {ticket.ticket_type_name}: {ticket.id}" for ticket in tickets)
+        def describe(ticket: Ticket) -> str:
+            seat = (
+                f", section {ticket.section} row {ticket.row} seat {ticket.seat}"
+                if ticket.section
+                else ""
+            )
+            return f"- {ticket.ticket_type_name}{seat}: {ticket.id}"
+
+        lines = "\n".join(describe(ticket) for ticket in tickets)
         self._send(
             order.customer_email,
             f"Your tickets for {event_title}",

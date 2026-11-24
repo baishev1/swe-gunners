@@ -17,6 +17,8 @@ class TicketType(DbBase):
     is_hidden: Mapped[bool] = mapped_column(Boolean, default=False)
     reserved_count: Mapped[int] = mapped_column(Integer, default=0)
     sold_count: Mapped[int] = mapped_column(Integer, default=0)
+    # Price category of the venue layout this type sells seats for (SRS 4.3.1).
+    seat_category: Mapped[int | None] = mapped_column(Integer, default=None)
 
     event: Mapped[Event] = relationship()
 

@@ -171,7 +171,8 @@
     "coverImageUrl": "Cover image URL",
     "refundPolicy": "Refund policy",
     "saveChanges": "Save changes",
-    "create": "Create event"
+    "create": "Create event",
+    "assignedSeating": "Assigned seating: attendees choose seats on the hall map"
   },
   "ticketTypes": {
     "name": "Name",
@@ -190,7 +191,12 @@
   "createVenue": {
     "name": "Venue name",
     "address": "Address",
-    "submit": "Add venue"
+    "submit": "Add venue",
+    "layout": "Seating layout",
+    "layoutNone": "None (general admission)",
+    "layouts": {
+      "main_hall": "Main Hall, 1000 seats"
+    }
   },
   "eventStatus": {
     "unpublish": "Unpublish",
@@ -569,7 +575,9 @@
       "notAvailable": "This order can't be placed right now. Check the ticket quantity and sale dates.",
       "salesClosed": "Paid ticket sales are not open for this event yet.",
       "soldOut": "Not enough tickets left, or your checkout time ran out. Please start a new order.",
-      "generic": "Something went wrong during checkout."
+      "generic": "Something went wrong during checkout.",
+      "seatTaken": "One of your seats was just taken by someone else. Pick another seat.",
+      "noSeats": "Please choose at least one seat."
     },
     "processing": "Processing...",
     "registerFree": "Complete free registration",
@@ -586,7 +594,8 @@
       "apply": "Apply",
       "invalid": "There is no such promo code for this event.",
       "notApplicable": "This code does not apply to the selected tickets."
-    }
+    },
+    "selectedSeats": "Selected seats"
   },
   "orders": {
     "title": "My orders",
@@ -646,5 +655,53 @@
     "description": "This event is private: only people with this link can see it and get tickets. Share it with your guests.",
     "copy": "Copy link",
     "copied": "Copied"
+  },
+  "seating": {
+    "title": "Choose your seats",
+    "stage": "Stage",
+    "legend": "Seat legend",
+    "tiers": {
+      "balcony": "Balcony",
+      "upper": "Upper parterre",
+      "lower": "Lower parterre"
+    },
+    "sections": {
+      "BL": "Balcony left",
+      "BC": "Balcony centre",
+      "BR": "Balcony right"
+    },
+    "section": "Section {{key}}",
+    "seatShort": "{{section}} · row {{row}} · seat {{number}}",
+    "rowSeat": "Row {{row}}, seat {{number}}",
+    "seatLabel": "{{section}}, row {{row}}, seat {{number}}: {{status}}",
+    "status": {
+      "available": "Available",
+      "accessible": "Accessible seat",
+      "selected": "Selected",
+      "held": "Temporarily held",
+      "sold": "Sold",
+      "unavailable": "Not on sale"
+    },
+    "seatsLeft": "Free seats: {{count}}",
+    "selectedHere": "Selected: {{count}}",
+    "openSection": "{{name}}: {{price}}, free seats: {{count}}. Open to pick seats",
+    "backToHall": "Whole hall",
+    "notPriced": "Not on sale yet",
+    "maxReached": "You can pick at most {{count}} seats in this price category.",
+    "noneSelected": "Pick a block on the hall map, then choose your seats.",
+    "holdNote": "Your seats are held for {{minutes}} minutes after you place the order.",
+    "loadFailed": "Could not load the seat map. Refresh the page."
+  },
+  "seatingSetup": {
+    "title": "Assigned seating",
+    "description": "{{layout}}: {{count}} seats in three price categories. Each category becomes one ticket type.",
+    "categoryLabel": "Category {{number}} ({{count}} seats)",
+    "categories": {
+      "1": "Lower parterre",
+      "2": "Upper parterre",
+      "3": "Balcony"
+    },
+    "save": "Save seating prices",
+    "saved": "Seating prices saved."
   }
 }

@@ -7,6 +7,7 @@ import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, Input } f
 import { formatPrice } from '@/shared/lib/format'
 import type { OrderItemCreate } from '@/shared/types'
 import type { ResolvedPromo } from '@/entities/promo-campaign'
+import { type SelectedSeat, seatLabel } from '@/entities/seating'
 
 import { PromoCodeField } from './promo-code-field'
 
@@ -32,6 +33,10 @@ interface CheckoutFormProps {
   onApplyPromo?: (code: string) => Promise<void>
   /** Secret from a private event's link; the server checks it again (SRS 4.2). */
   accessToken?: string | null
+  /** Assigned-seating events pass the picked seats instead of quantities (SRS 4.3.1). */
+  seats?: SelectedSeat[]
+  /** Called when a seat was taken by someone else, so the map can refresh. */
+  onSeatConflict?: () => void
 }
 
 // Preview only: the server recalculates the discount when it creates the order (SRS 4.14).
@@ -43,11 +48,11 @@ function previewDiscount(promo: ResolvedPromo, eligibleSubtotal: number) {
 }
 
 // Backend error details are English, so buyer-facing messages come from the locale files.
-function checkoutErrorKey(error: unknown) {
+function checkoutErrorKey(error: unknown, seated: boolean) {
   const status = isAxiosError(error) ? error.response?.status : undefined
   if (status === 400) return 'checkout.errors.notAvailable'
   if (status === 403) return 'checkout.errors.salesClosed'
-  if (status === 409) return 'checkout.errors.soldOut'
+  if (status === 409) return seated ? 'checkout.errors.seatTaken' : 'checkout.errors.soldOut'
   return 'checkout.errors.generic'
 }
 
@@ -58,7 +63,10 @@ export function CheckoutForm({
   onRemovePromo,
   onApplyPromo,
   accessToken,
+  seats,
+  onSeatConflict,
 }: CheckoutFormProps) {
+  const seated = seats !== undefined
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [customerName, setCustomerName] = useState('')
@@ -77,18 +85,42 @@ export function CheckoutForm({
     })
   }
 
-  const selectedItems: OrderItemCreate[] = ticketTypes
-    .filter((t) => (quantities[t.id] || 0) > 0)
-    .map((t) => ({ ticket_type_id: t.id, quantity: quantities[t.id] }))
+  // One line per ticket type: picked quantities, or the seats grouped by their ticket type.
+  const lines = seated
+    ? ticketTypes
+        .map((t) => ({ type: t, seats: seats.filter((s) => s.ticketTypeId === t.id) }))
+        .filter((l) => l.seats.length > 0)
+        .map((l) => ({
+          ticketTypeId: l.type.id,
+          quantity: l.seats.length,
+          amount: l.seats.reduce((sum, s) => sum + s.price, 0),
+          seats: l.seats.map((s) => s.id),
+        }))
+    : ticketTypes
+        .filter((t) => (quantities[t.id] || 0) > 0)
+        .map((t) => ({
+          ticketTypeId: t.id,
+          quantity: quantities[t.id],
+          amount: t.price_kzt * quantities[t.id],
+          seats: undefined,
+        }))
 
-  const lineTotal = (t: CheckoutTicketTypeOption) => t.price_kzt * (quantities[t.id] || 0)
-  const subtotalKzt = ticketTypes.reduce((sum, t) => sum + lineTotal(t), 0)
+  const selectedItems: OrderItemCreate[] = lines.map((l) => ({
+    ticket_type_id: l.ticketTypeId,
+    quantity: l.quantity,
+    ...(l.seats ? { seats: l.seats } : {}),
+  }))
+
+  const subtotalKzt = lines.reduce((sum, l) => sum + l.amount, 0)
   const discountKzt = promo
     ? previewDiscount(
         promo,
-        ticketTypes
-          .filter((t) => promo.ticket_type_ids.length === 0 || promo.ticket_type_ids.includes(t.id))
-          .reduce((sum, t) => sum + lineTotal(t), 0),
+        lines
+          .filter(
+            (l) =>
+              promo.ticket_type_ids.length === 0 || promo.ticket_type_ids.includes(l.ticketTypeId),
+          )
+          .reduce((sum, l) => sum + l.amount, 0),
       )
     : 0
   const totalAmountKzt = subtotalKzt - discountKzt
@@ -103,7 +135,7 @@ export function CheckoutForm({
     }
 
     if (selectedItems.length === 0) {
-      setErrorMessage(t('checkout.errors.noTickets'))
+      setErrorMessage(t(seated ? 'checkout.errors.noSeats' : 'checkout.errors.noTickets'))
       return
     }
 
@@ -122,7 +154,8 @@ export function CheckoutForm({
       // attendee pays from My orders, so an abandoned checkout releases its hold (SRS 4.6).
       navigate(order.status === 'paid' ? `/tickets?order_id=${order.id}` : '/orders')
     } catch (err: unknown) {
-      setErrorMessage(t(checkoutErrorKey(err)))
+      setErrorMessage(t(checkoutErrorKey(err, seated)))
+      if (seated && isAxiosError(err) && err.response?.status === 409) onSeatConflict?.()
     } finally {
       setIsLoading(false)
     }
@@ -132,50 +165,64 @@ export function CheckoutForm({
     <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>{t('checkout.selectTickets')}</CardTitle>
+          <CardTitle>{t(seated ? 'checkout.selectedSeats' : 'checkout.selectTickets')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {ticketTypes.map((type) => (
-            <div
-              key={type.id}
-              className="flex items-center justify-between border-b pb-3 last:border-0"
-            >
-              <div>
-                <p className="font-medium text-sm text-foreground">{type.name}</p>
-                <p className="text-muted-foreground text-xs">
-                  {formatPrice(type.price_kzt)} ·{' '}
-                  {type.available > 0
-                    ? t('checkout.remaining', { count: type.available })
-                    : t('checkout.soldOut')}
-                </p>
+          {seated && seats.length === 0 && (
+            <p className="text-muted-foreground text-sm">{t('seating.noneSelected')}</p>
+          )}
+          {seated && (
+            <ul className="space-y-1.5">
+              {seats.map((seat) => (
+                <li key={seat.id} className="flex justify-between gap-2 text-sm">
+                  <span>{seatLabel(t, seat.id)}</span>
+                  <span className="text-muted-foreground shrink-0">{formatPrice(seat.price)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!seated &&
+            ticketTypes.map((type) => (
+              <div
+                key={type.id}
+                className="flex items-center justify-between border-b pb-3 last:border-0"
+              >
+                <div>
+                  <p className="font-medium text-sm text-foreground">{type.name}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatPrice(type.price_kzt)} ·{' '}
+                    {type.available > 0
+                      ? t('checkout.remaining', { count: type.available })
+                      : t('checkout.soldOut')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-xs"
+                    aria-label={t('checkout.decrease', { name: type.name })}
+                    onClick={() => handleQuantityChange(type, -1)}
+                    disabled={isLoading || (quantities[type.id] || 0) === 0}
+                  >
+                    -
+                  </Button>
+                  <span className="w-6 text-center text-sm font-semibold">
+                    {quantities[type.id] || 0}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-xs"
+                    aria-label={t('checkout.increase', { name: type.name })}
+                    onClick={() => handleQuantityChange(type, 1)}
+                    disabled={isLoading || (quantities[type.id] || 0) >= maxQuantity(type)}
+                  >
+                    +
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-xs"
-                  aria-label={t('checkout.decrease', { name: type.name })}
-                  onClick={() => handleQuantityChange(type, -1)}
-                  disabled={isLoading || (quantities[type.id] || 0) === 0}
-                >
-                  -
-                </Button>
-                <span className="w-6 text-center text-sm font-semibold">
-                  {quantities[type.id] || 0}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-xs"
-                  aria-label={t('checkout.increase', { name: type.name })}
-                  onClick={() => handleQuantityChange(type, 1)}
-                  disabled={isLoading || (quantities[type.id] || 0) >= maxQuantity(type)}
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-          ))}
+            ))}
 
           {promo && (
             <div className="space-y-1 border-t pt-2 text-sm">
@@ -266,7 +313,11 @@ export function CheckoutForm({
           )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || (seated && seats.length === 0)}
+          >
             {isLoading
               ? t('checkout.processing')
               : totalAmountKzt === 0

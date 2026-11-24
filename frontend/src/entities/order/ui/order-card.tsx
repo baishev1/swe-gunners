@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui'
 import { formatDateTime, formatPrice } from '@/shared/lib/format'
 import type { Order } from '@/shared/types'
+import { seatLabel } from '@/entities/seating'
 import { OrderStatusBadge } from './order-status-badge'
 
 interface OrderCardProps {
@@ -33,6 +34,11 @@ export function OrderCard({ order }: OrderCardProps) {
             <div key={item.id} className="flex justify-between py-0.5">
               <span>
                 {item.quantity}x {item.ticket_type_name}
+                {item.seats && item.seats.length > 0 && (
+                  <span className="block">
+                    {item.seats.map((id) => seatLabel(t, id)).join('; ')}
+                  </span>
+                )}
               </span>
               <span>{formatPrice(item.unit_price_kzt * item.quantity)}</span>
             </div>

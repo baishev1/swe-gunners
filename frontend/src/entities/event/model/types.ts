@@ -15,6 +15,7 @@ export interface EventPayload {
   registration_end_time: string | null
   cover_image_url: string | null
   refund_policy: string | null
+  is_assigned_seating: boolean
 }
 
 export interface EventItem extends EventPayload {
@@ -22,7 +23,7 @@ export interface EventItem extends EventPayload {
   organizer_id: string
   status: EventStatus
   timezone: string
-  venue: { id: string; name: string; address: string }
+  venue: { id: string; name: string; address: string; layout_key: string | null }
   created_at: string
   updated_at: string
 }
