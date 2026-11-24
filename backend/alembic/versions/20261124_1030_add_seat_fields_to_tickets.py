@@ -1,8 +1,8 @@
 """add seat fields to tickets
 
 Revision ID: 9b4e6f1a2c3d
-Revises: 7c1e2d9a4b10
-Create Date: 2026-11-23 16:00:00.000000
+Revises: 5b8c2d4e6f71
+Create Date: 2026-11-24 10:30:00.000000
 """
 
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "9b4e6f1a2c3d"
-down_revision: str | None = "7c1e2d9a4b10"
+down_revision: str | None = "5b8c2d4e6f71"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
