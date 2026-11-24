@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import select
@@ -203,6 +203,59 @@ class EventService:
         phases["completed"].reverse()
         phases["cancelled"].reverse()
         return phases
+
+    def calendar_file(self, event: Event) -> str:
+        """iCalendar export (SRS 4.11). The UID never changes and SEQUENCE grows with every
+        update, so re-importing the file replaces the earlier entry instead of adding one."""
+        status = "CANCELLED" if event.status == "cancelled" else "CONFIRMED"
+        title = f"Cancelled: {event.title}" if status == "CANCELLED" else event.title
+        url = f"{settings.FRONTEND_URL}/events/detail?event_id={event.id}"
+        lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//BiletFlow//Events//EN",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            f"X-WR-TIMEZONE:{event.timezone}",
+            "BEGIN:VEVENT",
+            f"UID:{event.id}@biletflow",
+            f"SEQUENCE:{int(event.updated_at.timestamp())}",
+            f"DTSTAMP:{self._ics_time(event.updated_at)}",
+            f"DTSTART:{self._ics_time(event.start_time)}",
+            f"DTEND:{self._ics_time(event.end_time)}",
+            f"SUMMARY:{self._ics_text(title)}",
+            f"DESCRIPTION:{self._ics_text(event.description or '')}",
+            f"LOCATION:{self._ics_text(f'{event.venue.name}, {event.venue.address}')}",
+            f"URL:{url}",
+            f"STATUS:{status}",
+            "END:VEVENT",
+            "END:VCALENDAR",
+        ]
+        return "".join(self._ics_fold(line) + "\r\n" for line in lines)
+
+    def _ics_time(self, value: datetime) -> str:
+        return value.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+    def _ics_text(self, value: str) -> str:
+        return (
+            value.replace("\\", "\\\\")
+            .replace(";", "\\;")
+            .replace(",", "\\,")
+            .replace("\r\n", "\\n")
+            .replace("\n", "\\n")
+        )
+
+    def _ics_fold(self, line: str) -> str:
+        # RFC 5545 caps content lines at 75 octets; longer ones continue after CRLF + space.
+        parts = []
+        chunk = ""
+        for char in line:
+            if len((chunk + char).encode()) > 74:
+                parts.append(chunk)
+                chunk = ""
+            chunk += char
+        parts.append(chunk)
+        return "\r\n ".join(parts)
 
     def _record(
         self, db: Session, event: Event, action: str, description: str, actor_id: UUID | None
