@@ -45,6 +45,22 @@ export function AppHeader() {
             </Link>
           </Button>
         )}
+        {showNavigation && (
+          <nav className="flex items-center gap-1" aria-label={t('common.navigation')}>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={ROUTES.events}>{t('home.browseEvents')}</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={ROUTES.orders}>{t('home.myOrders')}</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={ROUTES.tickets}>{t('home.myTickets')}</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={ROUTES.support}>{t('support.title')}</Link>
+            </Button>
+          </nav>
+        )}
         <div className="ml-auto">
           <LanguageSwitcher />
         </div>

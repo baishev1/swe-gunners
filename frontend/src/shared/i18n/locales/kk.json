@@ -6,7 +6,8 @@
     "goToSignIn": "Кіруге өту",
     "backToHome": "Басты бетке",
     "invalidLink": "Жарамсыз сілтеме",
-    "back": "Артқа"
+    "back": "Артқа",
+    "navigation": "Навигация"
   },
   "language": {
     "label": "Тіл"

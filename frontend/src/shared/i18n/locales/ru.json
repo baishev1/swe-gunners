@@ -6,7 +6,8 @@
     "goToSignIn": "Перейти ко входу",
     "backToHome": "На главную",
     "invalidLink": "Недействительная ссылка",
-    "back": "Назад"
+    "back": "Назад",
+    "navigation": "Навигация"
   },
   "language": {
     "label": "Язык"
