@@ -42,7 +42,11 @@ export function SeatingSetupCard({ eventId }: { eventId: string }) {
         ) : seatMap.isError ? (
           <p className="text-destructive text-sm">{getErrorMessage(seatMap.error)}</p>
         ) : (
-          <SeatingSetupForm eventId={eventId} categories={seatMap.data.categories} />
+          <SeatingSetupForm
+            eventId={eventId}
+            layoutKey={seatMap.data.layout_key}
+            categories={seatMap.data.categories}
+          />
         )}
       </CardContent>
     </Card>
@@ -51,9 +55,11 @@ export function SeatingSetupCard({ eventId }: { eventId: string }) {
 
 function SeatingSetupForm({
   eventId,
+  layoutKey,
   categories,
 }: {
   eventId: string
+  layoutKey: string
   categories: SeatCategory[]
 }) {
   const { t } = useTranslation()
@@ -63,7 +69,8 @@ function SeatingSetupForm({
       categories.map((c) => [
         c.category,
         {
-          name: c.ticket_type_name ?? t(`seatingSetup.categories.${c.category}`, c.name),
+          name:
+            c.ticket_type_name ?? t(`seatingSetup.categories.${layoutKey}.${c.category}`, c.name),
           price: c.price != null ? String(c.price / 100) : '',
         },
       ]),

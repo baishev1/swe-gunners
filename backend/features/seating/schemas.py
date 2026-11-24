@@ -20,6 +20,9 @@ class SeatRowResponse(BaseModel):
 
 
 class SeatSectionResponse(BaseModel):
+    """Sections come nearest tier first, then left to right, as seen with the stage on top.
+    Rows come nearest the stage first and seats left to right."""
+
     key: str
     name: str
     tier: str
@@ -42,7 +45,6 @@ class SeatCategoryResponse(BaseModel):
 class SeatMapResponse(BaseModel):
     layout_key: str
     name: str
-    stage: str
     hold_minutes: int
     categories: list[SeatCategoryResponse]
     sections: list[SeatSectionResponse]

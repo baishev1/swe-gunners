@@ -107,6 +107,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
             {venues.data?.map((venue) => (
               <NativeSelectOption key={venue.id} value={venue.id}>
                 {venue.name}, {venue.address}
+                {venue.layout_key && ` · ${t(`eventForm.venueLayouts.${venue.layout_key}`)}`}
               </NativeSelectOption>
             ))}
           </NativeSelect>

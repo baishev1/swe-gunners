@@ -12,17 +12,20 @@ from httpx import Response
 from test_checkout_holds import age_order
 
 from core import settings
-from features.seating.layouts import MAIN_HALL
+from features.seating.layouts import MAIN_HALL, ORANGE_HALL
 
 PRICES = {1: 1_200_000, 2: 800_000, 3: 450_000}
 
 
 def create_seated_event(
-    client: TestClient, headers: dict[str, str], prices: dict[int, int] = PRICES
+    client: TestClient,
+    headers: dict[str, str],
+    prices: dict[int, int] = PRICES,
+    layout_key: str = "main_hall",
 ) -> str:
     venue = client.post(
         "/api/v1/venues",
-        json={"name": "Main Hall", "address": "Almaty", "layout_key": "main_hall"},
+        json={"name": "Hall", "address": "Astana", "layout_key": layout_key},
         headers=headers,
     )
     assert venue.status_code == 201
@@ -137,6 +140,43 @@ def test_main_hall_layout_matches_the_hall_plan() -> None:
         "F-A-7",
         "F-A-8",
     }
+
+
+def test_orange_hall_layout_matches_the_spreadsheet() -> None:
+    assert ORANGE_HALL.seat_count() == 450
+    assert [ORANGE_HALL.seat_count(c) for c in (1, 2)] == [283, 167]
+    rows = {row.label for section in ORANGE_HALL.sections for row in section.rows}
+    assert "N" not in rows and len(rows) == 16
+    # Each row is numbered 1..n without gaps across its three blocks.
+    for label in rows:
+        numbers = sorted(s.number for s in ORANGE_HALL.seats.values() if s.row == label)
+        assert numbers == list(range(1, len(numbers) + 1))
+
+
+def first_row(section: dict) -> tuple[str, list[int]]:
+    row = section["rows"][0]
+    return row["label"], [seat["number"] for seat in row["seats"]]
+
+
+def test_both_halls_are_shown_stage_on_top_with_seat_one_on_the_left(
+    client: TestClient, organizer_headers: dict[str, str]
+) -> None:
+    main = seat_map(client, create_seated_event(client, organizer_headers))
+    orange = seat_map(
+        client,
+        create_seated_event(client, organizer_headers, {1: 0, 2: 0}, layout_key="orange_hall"),
+    )
+
+    # Main Hall's plan has the stage at the bottom, so it is turned round.
+    assert [s["key"] for s in main["sections"]] == ["F", "E", "D", "C", "B", "A", "BR", "BC", "BL"]
+    assert first_row(main["sections"][0]) == ("A", list(range(1, 9)))
+    assert first_row(main["sections"][1]) == ("A", list(range(9, 24)))
+    assert [r["label"] for r in main["sections"][-1]["rows"]][:2] == ["J", "K"]
+
+    # Orange Hall's plan already has the stage on top.
+    assert [s["key"] for s in orange["sections"]] == ["LL", "LM", "LR", "UL", "UM", "UR"]
+    assert first_row(orange["sections"][0]) == ("A", [1, 2, 3, 4, 5])
+    assert [s["column"] for s in orange["sections"][:3]] == [0, 1, 2]
 
 
 def test_setup_creates_one_ticket_type_per_category(

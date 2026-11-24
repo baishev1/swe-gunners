@@ -7,7 +7,6 @@ import {
   type SeatCategory,
   type SeatMap,
   type SeatSection,
-  type SeatTier,
   type SelectedSeat,
   sectionLabel,
 } from '@/entities/seating'
@@ -35,8 +34,6 @@ const LOOK_SYMBOL: Partial<Record<SeatLook, string>> = {
   unavailable: '–',
 }
 
-const TIERS: SeatTier[] = ['balcony', 'upper', 'lower']
-
 function seatLook(seat: Seat, selected: boolean): SeatLook {
   if (selected) return 'selected'
   if (seat.status !== 'available') return seat.status
@@ -57,6 +54,9 @@ export function SeatPicker({ map, selected, onChange, disabled }: SeatPickerProp
   const categories = new Map(map.categories.map((c) => [c.category, c]))
   const selectedIds = new Set(selected.map((s) => s.id))
   const open = map.sections.find((s) => s.key === openKey) ?? null
+  // The API sends every hall the same way round: stage on top, nearest tier first,
+  // blocks left to right, rows nearest the stage first and seat 1 on the left.
+  const tiers = [...new Set(map.sections.map((s) => s.tier))]
 
   const toggleSeat = (section: SeatSection, row: string, seat: Seat) => {
     setLimitMessage(null)
@@ -101,20 +101,21 @@ export function SeatPicker({ map, selected, onChange, disabled }: SeatPickerProp
           onBack={() => setOpenKey(null)}
           onToggle={toggleSeat}
           disabled={disabled}
-          stage={map.stage === 'bottom' ? stage : null}
+          stage={stage}
         />
       ) : (
         <div className="space-y-3">
-          {map.stage === 'top' && stage}
-          {TIERS.map((tier) => (
+          {stage}
+          {tiers.map((tier) => (
             <div key={tier} className="space-y-1">
               <p className="text-muted-foreground text-xs font-medium">
-                {t(`seating.tiers.${tier}`)}
+                {t(`seating.tiers.${map.layout_key}.${tier}`, {
+                  defaultValue: t(`seating.tiers.${tier}`),
+                })}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {map.sections
                   .filter((s) => s.tier === tier)
-                  .sort((a, b) => a.column - b.column)
                   .map((section) => (
                     <SectionTile
                       key={section.key}
@@ -127,7 +128,6 @@ export function SeatPicker({ map, selected, onChange, disabled }: SeatPickerProp
               </div>
             </div>
           ))}
-          {map.stage === 'bottom' && stage}
         </div>
       )}
       {limitMessage && (
@@ -185,7 +185,7 @@ function SectionTile({ section, category, selectedIds, onOpen }: SectionTileProp
       <span aria-hidden className="flex w-full flex-col items-center gap-px overflow-hidden">
         {section.rows.map((row) => (
           <span key={row.label} className="flex gap-px">
-            {[...row.seats].reverse().map((seat) => (
+            {row.seats.map((seat) => (
               <span
                 key={seat.id}
                 className={`size-[3px] sm:size-1.5 ${
@@ -258,6 +258,7 @@ function SectionView({
           </span>
         </p>
       </div>
+      {stage}
       <div className="overflow-x-auto pb-1">
         <div className="mx-auto w-max space-y-1">
           {section.rows.map((row) => (
@@ -265,9 +266,8 @@ function SectionView({
               <span className="text-muted-foreground w-5 shrink-0 text-center text-xs font-semibold">
                 {row.label}
               </span>
-              {/* Seats are numbered right to left, as on the hall plan. */}
               <div className="flex flex-1 justify-center gap-1">
-                {[...row.seats].reverse().map((seat) => {
+                {row.seats.map((seat) => {
                   const isSelected = selectedIds.has(seat.id)
                   const look = seatLook(seat, isSelected)
                   const canToggle = isSelected || seat.status === 'available'
@@ -299,7 +299,6 @@ function SectionView({
           ))}
         </div>
       </div>
-      {stage}
     </div>
   )
 }

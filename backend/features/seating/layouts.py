@@ -1,8 +1,13 @@
 """Predefined venue layouts for assigned seating (SRS 4.3.1).
 
-The MVP ships one layout and no layout editor: organizers pick it through a venue that
-carries its key. Seats are numbered continuously across a row, from the right-hand block
-to the left one, so a row's ranges below never overlap between blocks of the same tier.
+There is no layout editor: organizers pick a layout through a venue that carries its key.
+Each layout is written down as it is drawn on the hall's own plan (sections top to bottom,
+rows top to bottom, blocks left to right), with `stage` and `numbering` saying how that
+plan is oriented. The seat map turns every layout to one view, stage on top and seat 1 on
+the left, so halls that face the same way look the same to attendees.
+
+Seats are numbered continuously across a row through all of its blocks, so a row's
+ranges never overlap between blocks of the same tier.
 """
 
 from dataclasses import dataclass, field
@@ -24,8 +29,8 @@ class LayoutRow:
 class LayoutSection:
     key: str
     name: str
-    tier: str  # balcony | upper | lower, top to bottom as drawn
-    column: int  # 0 left, 1 centre, 2 right
+    tier: str  # lower | upper | balcony
+    column: int  # 0 left, 1 centre, 2 right, as drawn
     category: int
     rows: tuple[LayoutRow, ...]
 
@@ -49,7 +54,8 @@ class LayoutSeat:
 class VenueLayout:
     key: str
     name: str
-    stage: str  # where the stage is drawn relative to the seats
+    stage: str  # top | bottom: where the plan draws the stage
+    numbering: str  # left_to_right | right_to_left: how seat numbers run on the plan
     categories: tuple[LayoutCategory, ...]
     sections: tuple[LayoutSection, ...]
     accessible_seats: frozenset[str] = field(default_factory=frozenset)
@@ -90,6 +96,7 @@ MAIN_HALL = VenueLayout(
     key="main_hall",
     name="Main Hall",
     stage="bottom",
+    numbering="right_to_left",
     categories=(
         LayoutCategory(1, "Lower parterre"),
         LayoutCategory(2, "Upper parterre"),
@@ -264,7 +271,125 @@ MAIN_HALL = VenueLayout(
     accessible_seats=frozenset({"D-A-24", "D-A-25", "F-A-7", "F-A-8"}),
 )
 
-LAYOUTS: dict[str, VenueLayout] = {MAIN_HALL.key: MAIN_HALL}
+ORANGE_HALL = VenueLayout(
+    key="orange_hall",
+    name="Orange Hall",
+    stage="top",
+    numbering="left_to_right",
+    categories=(
+        LayoutCategory(1, "Lower tier"),
+        LayoutCategory(2, "Upper tier"),
+    ),
+    sections=(
+        LayoutSection(
+            "LL",
+            "Lower left",
+            "lower",
+            0,
+            1,
+            _rows(
+                ("A", 1, 5),
+                ("B", 1, 6),
+                ("C", 1, 5),
+                ("D", 1, 6),
+                ("E", 1, 6),
+                ("F", 1, 6),
+                ("G", 1, 6),
+                ("H", 1, 6),
+                ("I", 1, 6),
+                ("J", 1, 7),
+            ),
+        ),
+        LayoutSection(
+            "LM",
+            "Lower middle",
+            "lower",
+            1,
+            1,
+            _rows(
+                ("A", 6, 20),
+                ("B", 7, 21),
+                ("C", 6, 21),
+                ("D", 7, 21),
+                ("E", 7, 22),
+                ("F", 7, 21),
+                ("G", 7, 22),
+                ("H", 7, 23),
+                ("I", 7, 22),
+                ("J", 8, 24),
+            ),
+        ),
+        LayoutSection(
+            "LR",
+            "Lower right",
+            "lower",
+            2,
+            1,
+            _rows(
+                ("A", 21, 26),
+                ("B", 22, 27),
+                ("C", 22, 27),
+                ("D", 22, 27),
+                ("E", 23, 29),
+                ("F", 22, 28),
+                ("G", 23, 29),
+                ("H", 24, 30),
+                ("I", 23, 29),
+                ("J", 25, 31),
+            ),
+        ),
+        # The hall has no row N.
+        LayoutSection(
+            "UL",
+            "Upper left",
+            "upper",
+            0,
+            2,
+            _rows(
+                ("K", 1, 6),
+                ("L", 1, 5),
+                ("M", 1, 6),
+                ("O", 1, 4),
+                ("P", 1, 4),
+                ("Q", 1, 6),
+            ),
+        ),
+        LayoutSection(
+            "UM",
+            "Upper middle",
+            "upper",
+            1,
+            2,
+            _rows(
+                ("K", 7, 24),
+                ("L", 6, 22),
+                ("M", 7, 24),
+                ("O", 5, 19),
+                ("P", 5, 19),
+                ("Q", 7, 25),
+            ),
+        ),
+        LayoutSection(
+            "UR",
+            "Upper right",
+            "upper",
+            2,
+            2,
+            _rows(
+                ("K", 25, 30),
+                ("L", 23, 28),
+                ("M", 25, 30),
+                ("O", 20, 24),
+                ("P", 20, 24),
+                ("Q", 26, 31),
+            ),
+        ),
+    ),
+    # Front-row aisle seats.
+    accessible_seats=frozenset({"LL-A-5", "LM-A-6", "LM-A-20", "LR-A-21"}),
+)
+
+LAYOUTS: dict[str, VenueLayout] = {layout.key: layout for layout in (MAIN_HALL, ORANGE_HALL)}
 
 
 def get_layout(key: str | None) -> VenueLayout | None:
