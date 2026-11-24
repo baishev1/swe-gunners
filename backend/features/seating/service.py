@@ -11,7 +11,7 @@ from features.ticket_types.models import TicketType
 from features.ticket_types.schemas import TicketTypeCreate, TicketTypeUpdate
 from features.ticket_types.service import ticket_type_service
 
-from .layouts import VenueLayout, get_layout
+from .layouts import VenueLayout, get_layout, seat_key
 from .models import *
 from .schemas import *
 
@@ -67,12 +67,27 @@ class SeatingService:
                 return "sold" if taken[seat_id] == "sold" else "held"
             return "available" if category in on_sale else "unavailable"
 
+        # One view for every hall: stage on top, nearest tier and row first, seat 1 on the
+        # left. A plan drawn with the stage at the bottom is turned round by 180 degrees.
+        flip = layout.stage == "bottom"
+        ascending = (layout.numbering == "left_to_right") != flip
+        tiers = list(dict.fromkeys(section.tier for section in layout.sections))
+        if flip:
+            tiers.reverse()
+        last_column = max(section.column for section in layout.sections)
+        ordered = sorted(
+            layout.sections,
+            key=lambda section: (
+                tiers.index(section.tier),
+                last_column - section.column if flip else section.column,
+            ),
+        )
         sections = [
             SeatSectionResponse(
                 key=section.key,
                 name=section.name,
                 tier=section.tier,
-                column=section.column,
+                column=last_column - section.column if flip else section.column,
                 category=section.category,
                 rows=[
                     SeatRowResponse(
@@ -85,14 +100,15 @@ class SeatingService:
                                 status=seat_status(seat.id, section.category),
                             )
                             for seat in (
-                                layout.seats[f"{section.key}-{row.label}-{n}"] for n in row.numbers
+                                layout.seats[seat_key(section.key, row.label, n)]
+                                for n in (row.numbers if ascending else reversed(row.numbers))
                             )
                         ],
                     )
-                    for row in section.rows
+                    for row in (reversed(section.rows) if flip else section.rows)
                 ],
             )
-            for section in layout.sections
+            for section in ordered
         ]
         categories = [
             SeatCategoryResponse(
@@ -113,7 +129,6 @@ class SeatingService:
         return SeatMapResponse(
             layout_key=layout.key,
             name=layout.name,
-            stage=layout.stage,
             hold_minutes=settings.ORDER_HOLD_MINUTES,
             categories=categories,
             sections=sections,

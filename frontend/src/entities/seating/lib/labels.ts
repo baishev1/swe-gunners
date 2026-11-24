@@ -11,11 +11,17 @@ export function parseSeatId(id: string) {
   return { sectionKey, row, number }
 }
 
-// Tickets store the section's display name; map the balcony names back to their keys.
+// Tickets store the section's display name; map the named sections back to their keys.
 const SECTION_KEYS: Record<string, string> = {
   'Balcony left': 'BL',
   'Balcony centre': 'BC',
   'Balcony right': 'BR',
+  'Lower left': 'LL',
+  'Lower middle': 'LM',
+  'Lower right': 'LR',
+  'Upper left': 'UL',
+  'Upper middle': 'UM',
+  'Upper right': 'UR',
 }
 
 /** "Section E · row A · seat 15" for a ticket's stored section, row and seat. */

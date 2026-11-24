@@ -12,13 +12,13 @@ export interface SeatRow {
   seats: Seat[]
 }
 
-export type SeatTier = 'balcony' | 'upper' | 'lower'
+export type SeatTier = 'lower' | 'upper' | 'balcony'
 
 export interface SeatSection {
   key: string
   name: string
   tier: SeatTier
-  /** 0 left, 1 centre, 2 right, as drawn on the hall plan. */
+  /** 0 left, 1 centre, 2 right, seen with the stage on top. */
   column: number
   category: number
   rows: SeatRow[]
@@ -37,7 +37,6 @@ export interface SeatCategory {
 export interface SeatMap {
   layout_key: string
   name: string
-  stage: 'top' | 'bottom'
   hold_minutes: number
   categories: SeatCategory[]
   sections: SeatSection[]

@@ -175,7 +175,8 @@
     "create": "Create event",
     "assignedSeating": "Assigned seating: attendees choose seats on the hall map",
     "venueLayouts": {
-      "main_hall": "seat map, 1000 seats"
+      "main_hall": "seat map, 1000 seats",
+      "orange_hall": "seat map, 450 seats"
     }
   },
   "ticketTypes": {
@@ -668,12 +669,22 @@
     "tiers": {
       "balcony": "Balcony",
       "upper": "Upper parterre",
-      "lower": "Lower parterre"
+      "lower": "Lower parterre",
+      "orange_hall": {
+        "lower": "Lower tier",
+        "upper": "Upper tier"
+      }
     },
     "sections": {
       "BL": "Balcony left",
       "BC": "Balcony centre",
-      "BR": "Balcony right"
+      "BR": "Balcony right",
+      "LL": "Lower left",
+      "LM": "Lower middle",
+      "LR": "Lower right",
+      "UL": "Upper left",
+      "UM": "Upper middle",
+      "UR": "Upper right"
     },
     "section": "Section {{key}}",
     "seatShort": "{{section}} · row {{row}} · seat {{number}}",
@@ -702,9 +713,15 @@
     "description": "{{layout}}: {{count}} seats in three price categories. Each category becomes one ticket type.",
     "categoryLabel": "Category {{number}} ({{count}} seats)",
     "categories": {
-      "1": "Lower parterre",
-      "2": "Upper parterre",
-      "3": "Balcony"
+      "main_hall": {
+        "1": "Lower parterre",
+        "2": "Upper parterre",
+        "3": "Balcony"
+      },
+      "orange_hall": {
+        "1": "Lower tier",
+        "2": "Upper tier"
+      }
     },
     "save": "Save seating prices",
     "saved": "Seating prices saved."
