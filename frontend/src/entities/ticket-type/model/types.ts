@@ -17,4 +17,6 @@ export interface TicketType extends TicketTypePayload {
   refunded_count: number
   checked_in_count: number
   available: number
+  /** Price category of the venue layout this type sells seats for. */
+  seat_category: number | null
 }

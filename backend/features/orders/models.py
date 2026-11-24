@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import JSON, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core import *
@@ -26,5 +26,7 @@ class OrderItem(DbBase):
     ticket_type_name: Mapped[str] = mapped_column(String(255))
     unit_price_kzt: Mapped[int] = mapped_column(Integer)
     quantity: Mapped[int] = mapped_column(Integer)
+    # Seat ids for assigned-seating events, one per ticket (SRS 4.3.1).
+    seats: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
 
     order: Mapped["Order"] = relationship(back_populates="items")

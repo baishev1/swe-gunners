@@ -6,6 +6,7 @@ import { useVenues } from '@/entities/venue'
 import { getErrorMessage } from '@/shared/api'
 import { fromDateTimeInput, toDateTimeInput } from '@/shared/lib/format'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
 import { Input } from '@/shared/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/shared/ui/native-select'
@@ -38,6 +39,9 @@ export function EventForm({ event, onSaved }: EventFormProps) {
   )
   const [coverImageUrl, setCoverImageUrl] = useState(event?.cover_image_url ?? '')
   const [refundPolicy, setRefundPolicy] = useState(event?.refund_policy ?? '')
+  const [assignedSeating, setAssignedSeating] = useState(event?.is_assigned_seating ?? false)
+  // Assigned seating needs a venue with a predefined layout (SRS 4.3.1).
+  const venueLayout = venues.data?.find((venue) => venue.id === venueId)?.layout_key ?? null
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -55,6 +59,7 @@ export function EventForm({ event, onSaved }: EventFormProps) {
         registration_end_time: fromDateTimeInput(registrationEnd),
         cover_image_url: coverImageUrl || null,
         refund_policy: refundPolicy || null,
+        is_assigned_seating: Boolean(venueLayout) && assignedSeating,
       },
       { onSuccess: (saved) => onSaved?.(saved) },
     )
@@ -106,6 +111,18 @@ export function EventForm({ event, onSaved }: EventFormProps) {
             ))}
           </NativeSelect>
         </Field>
+        {venueLayout && (
+          <Field orientation="horizontal">
+            <Checkbox
+              id="event-assigned-seating"
+              checked={assignedSeating}
+              onCheckedChange={(checked) => setAssignedSeating(checked === true)}
+            />
+            <FieldLabel htmlFor="event-assigned-seating" className="font-normal">
+              {t('eventForm.assignedSeating')}
+            </FieldLabel>
+          </Field>
+        )}
         <Field>
           <FieldLabel htmlFor="event-start">{t('eventForm.starts')}</FieldLabel>
           <Input

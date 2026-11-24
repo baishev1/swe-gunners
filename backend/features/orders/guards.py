@@ -7,6 +7,7 @@ from features.events.guards import can_view_event
 from features.events.models import Event
 from features.paid_sales.service import paid_sales_service
 from features.promo.service import promo_service
+from features.seating.service import seating_service
 from features.ticket_types.models import TicketType
 from features.users.models import User
 
@@ -149,6 +150,10 @@ def valid_order_create(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"At most {ticket_type.max_per_order} {ticket_type.name} tickets per order",
             )
+
+    seat_error = seating_service.seat_selection_error(event, data.items, ticket_types)
+    if seat_error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=seat_error)
 
     if data.promo_code:
         campaign = promo_service.find_by_code(db, event.id, data.promo_code)

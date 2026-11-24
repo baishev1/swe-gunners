@@ -5,6 +5,7 @@ import { downloadTicketPdf, getTicketQrSvg } from '@/shared/api'
 import { Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui'
 import { Skeleton } from '@/shared/ui/skeleton'
 import type { Ticket } from '@/shared/types'
+import { ticketSeatLabel } from '@/entities/seating'
 
 interface TicketCardProps {
   ticket: Ticket
@@ -41,6 +42,11 @@ export function TicketCard({ ticket }: TicketCardProps) {
             {t(`eventAttendees.statuses.${ticket.status}`, { defaultValue: ticket.status })}
           </Badge>
         </div>
+        {ticket.section && ticket.row && ticket.seat && (
+          <p className="text-sm font-semibold">
+            {ticketSeatLabel(t, ticket.section, ticket.row, ticket.seat)}
+          </p>
+        )}
         <p className="text-muted-foreground text-xs">{t('tickets.id', { id: ticket.id })}</p>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">

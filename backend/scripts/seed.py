@@ -29,6 +29,9 @@ from features.payments.service import payment_service
 from features.promo.models import PromoCampaign
 from features.promo.schemas import PromoCampaignCreate
 from features.promo.service import promo_service
+from features.seating.layouts import MAIN_HALL
+from features.seating.schemas import SeatCategoryPrice, SeatingSetupRequest
+from features.seating.service import seating_service
 from features.ticket_types.models import TicketType
 from features.ticket_types.schemas import TicketTypeCreate
 from features.ticket_types.service import ticket_type_service
@@ -62,12 +65,20 @@ PROMO_CODE = "DEMO20"
 
 KZT = 100  # Prices are stored in tiyn.
 
+# Main Hall price categories: (category, ticket type name, price).
+SEAT_PRICES = [
+    (1, "Lower parterre", 12000 * KZT),
+    (2, "Upper parterre", 8000 * KZT),
+    (3, "Balcony", 4500 * KZT),
+]
+
 
 @dataclass
 class Demo:
     users: dict[str, User]
     buyers: list[User]
     venue: Venue
+    main_hall: Venue
 
 
 def seed_user(db: Session, email: str, full_name: str, role: str) -> User:
@@ -108,6 +119,16 @@ def seed_venue(db: Session) -> Venue:
     return venue
 
 
+def seed_main_hall(db: Session) -> Venue:
+    """The predefined assigned-seating layout (SRS 4.3.1), 1000 seats."""
+    venue = db.scalar(select(Venue).where(Venue.layout_key == MAIN_HALL.key))
+    if venue is None:
+        venue = Venue(name=MAIN_HALL.name, address="Almaty", layout_key=MAIN_HALL.key)
+        db.add(venue)
+        db.commit()
+    return venue
+
+
 def find_event(db: Session, title: str, organizer: User) -> Event | None:
     return db.scalar(select(Event).where(Event.title == title, Event.organizer_id == organizer.id))
 
@@ -122,6 +143,7 @@ def create_event(
     capacity: int,
     ticket_types: list[tuple[str, int, int]],
     is_assigned_seating: bool = False,
+    venue: Venue | None = None,
 ) -> Event:
     """Creates and publishes an event through the services, so the timeline has entries."""
     organizer = demo.users["organizer"]
@@ -130,7 +152,7 @@ def create_event(
         title=title,
         description=description,
         category=category,
-        venue_id=demo.venue.id,
+        venue_id=(venue or demo.venue).id,
         start_time=start,
         end_time=start + timedelta(hours=3),
         capacity=capacity,
@@ -147,6 +169,19 @@ def create_event(
         ticket_type_service.create_ticket_type(
             db, event, TicketTypeCreate(name=name, price=price, quantity=quantity), organizer.id
         )
+    if is_assigned_seating:
+        seating_service.setup(
+            db,
+            event,
+            MAIN_HALL,
+            SeatingSetupRequest(
+                categories=[
+                    SeatCategoryPrice(category=c, name=name, price=price)
+                    for c, name, price in SEAT_PRICES
+                ]
+            ),
+            organizer.id,
+        )
     return event_service.publish_event(db, event, organizer.id)
 
 
@@ -162,7 +197,7 @@ def place_order(
     db: Session,
     event: Event,
     buyer: User,
-    items: list[tuple[TicketType, int]],
+    items: list[tuple[TicketType, int | list[str]]],
     days_ago: float = 0,
     promo_code: str | None = None,
 ) -> Order:
@@ -173,7 +208,13 @@ def place_order(
             event_id=event.id,
             customer_name=buyer.full_name,
             customer_email=buyer.email,
-            items=[OrderItemCreate(ticket_type_id=t.id, quantity=q) for t, q in items],
+            # An int buys that many general-admission tickets, a list buys those seats.
+            items=[
+                OrderItemCreate(ticket_type_id=t.id, quantity=q)
+                if isinstance(q, int)
+                else OrderItemCreate(ticket_type_id=t.id, quantity=len(q), seats=q)
+                for t, q in items
+            ],
             promo_code=promo_code,
         ),
         buyer.id,
@@ -269,7 +310,7 @@ def seed_paid_event(db: Session, demo: Demo) -> Event:
 
 
 def seed_seated_event(db: Session, demo: Demo) -> Event:
-    """Assigned-seating event with section, row and seat assigned to each ticket."""
+    """Assigned-seating event in Main Hall with a few seats already sold (SRS 4.3.1)."""
     organizer = demo.users["organizer"]
     event = find_event(db, SEATED_EVENT_TITLE, organizer)
     if event is not None:
@@ -282,36 +323,24 @@ def seed_seated_event(db: Session, demo: Demo) -> Event:
         timedelta(days=21),
         "Classical concert with assigned hall seating.",
         "music",
-        120,
-        [("Parterre", 8000 * KZT, 80), ("Balcony", 4500 * KZT, 40)],
+        MAIN_HALL.seat_count(),
+        [],
         is_assigned_seating=True,
+        venue=demo.main_hall,
     )
     paid_sales_service.pay_fee(db, event, organizer.id, simulate_failure=False)
     paid_sales_service.accept_terms(db, event, organizer.id)
     paid_sales_service.activate(db, event, organizer.id)
 
-    parterre = ticket_type_named(db, event, "Parterre")
+    lower = ticket_type_named(db, event, "Lower parterre")
+    upper = ticket_type_named(db, event, "Upper parterre")
     balcony = ticket_type_named(db, event, "Balcony")
 
     aigerim, daniyar, madina = demo.buyers
-    place_order(db, event, aigerim, [(parterre, 2)], days_ago=4)
-    place_order(db, event, daniyar, [(balcony, 1)], days_ago=2)
-    place_order(db, event, madina, [(parterre, 1)], days_ago=1)
-
-    seat_assignments = [
-        ("A", "2", "12"),
-        ("A", "2", "13"),
-        ("B", "5", "4"),
-        ("A", "3", "7"),
-    ]
-    tickets = db.scalars(
-        select(Ticket).where(Ticket.event_id == event.id).order_by(Ticket.created_at, Ticket.id)
-    ).all()
-    for ticket, (section, row, seat) in zip(tickets, seat_assignments, strict=False):
-        ticket.section = section
-        ticket.row = row
-        ticket.seat = seat
-    db.commit()
+    place_order(db, event, aigerim, [(lower, ["E-D-16", "E-D-17"])], days_ago=4)
+    place_order(db, event, daniyar, [(balcony, ["BC-J-20"])], days_ago=2)
+    place_order(db, event, madina, [(upper, ["B-S-21"])], days_ago=1)
+    place_order(db, event, demo.users["attendee"], [(lower, ["E-C-15"])])
 
     assign_staff(db, event, demo.users["event_admin"])
     return event
@@ -416,7 +445,7 @@ def seed(db: Session) -> None:
     users = {role: seed_user(db, email, name, role) for email, name, role in USERS}
     buyers = [seed_user(db, email, name, "attendee") for email, name in BUYERS]
     seed_organizer_profile(db, users["organizer"])
-    demo = Demo(users=users, buyers=buyers, venue=seed_venue(db))
+    demo = Demo(users=users, buyers=buyers, venue=seed_venue(db), main_hall=seed_main_hall(db))
     for step in SEED_STEPS:
         step(db, demo)
 

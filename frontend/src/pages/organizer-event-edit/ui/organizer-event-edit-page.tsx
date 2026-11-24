@@ -8,6 +8,7 @@ import { TicketTypeManager } from '@/features/manage-ticket-types'
 import { EventStaffManager } from '@/features/manage-event-staff'
 import { OrganizerOrdersPanel } from '@/features/organizer-orders'
 import { PaidSalesChecklistCard } from '@/features/paid-sales-activation'
+import { SeatingSetupCard } from '@/features/set-up-seating'
 import { PrivateEventLink } from '@/features/share-private-event'
 import { getErrorMessage } from '@/shared/api'
 import { ROUTES } from '@/shared/config'
@@ -76,6 +77,9 @@ export function OrganizerEventEditPage() {
           <EventForm key={event.data.updated_at} event={event.data} />
         </CardContent>
       </Card>
+      {event.data.is_assigned_seating && event.data.venue.layout_key && (
+        <SeatingSetupCard eventId={event.data.id} />
+      )}
       <Card>
         <CardHeader>
           <CardTitle>{t('organizerEventEdit.ticketTypes')}</CardTitle>

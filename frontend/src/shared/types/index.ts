@@ -5,6 +5,8 @@ export interface OrderItem {
   ticket_type_name: string
   unit_price_kzt: number
   quantity: number
+  /** Seat ids for assigned-seating events, e.g. "E-A-15". */
+  seats?: string[]
   created_at: string
   updated_at: string
 }
@@ -28,6 +30,7 @@ export interface Order {
 export interface OrderItemCreate {
   ticket_type_id: string
   quantity: number
+  seats?: string[]
 }
 
 export interface OrderCreatePayload {
@@ -51,6 +54,9 @@ export interface Ticket {
   qr_token: string
   status: 'valid' | 'checked_in' | 'cancelled' | 'refunded'
   checked_in_at?: string | null
+  section?: string | null
+  row?: string | null
+  seat?: string | null
   created_at: string
   updated_at: string
 }

@@ -16,6 +16,7 @@ from features.audit_log.service import audit_log_service
 from features.events.models import Event
 from features.notifications.service import notification_service
 from features.orders.models import Order
+from features.seating.layouts import get_layout
 
 from .models import *
 from .schemas import *
@@ -26,9 +27,14 @@ class TicketService:
         return secrets.token_hex(32)
 
     def issue_tickets_for_order(self, db: Session, order: Order) -> list[Ticket]:
+        event = db.get(Event, order.event_id)
+        layout = get_layout(event.venue.layout_key) if event and event.venue else None
         tickets: list[Ticket] = []
         for item in order.items:
-            for _ in range(item.quantity):
+            for index in range(item.quantity):
+                # Each ticket keeps its section, row and seat (SRS 4.3.1).
+                seat_id = item.seats[index] if index < len(item.seats) else None
+                seat = layout.seats.get(seat_id) if layout and seat_id else None
                 ticket = Ticket(
                     order_id=order.id,
                     order_item_id=item.id,
@@ -39,6 +45,9 @@ class TicketService:
                     attendee_email=order.customer_email,
                     qr_token=self.generate_qr_token(),
                     status="valid",
+                    section=seat.section.name if seat else None,
+                    row=seat.row if seat else None,
+                    seat=str(seat.number) if seat else None,
                 )
                 db.add(ticket)
                 tickets.append(ticket)
@@ -46,7 +55,6 @@ class TicketService:
         db.commit()
         for t in tickets:
             db.refresh(t)
-        event = db.get(Event, order.event_id)
         notification_service.order_confirmation(
             order, tickets, event.title if event else "BiletFlow event"
         )
@@ -241,8 +249,21 @@ class TicketService:
             Paragraph("TICKET TYPE", label_style),
             Paragraph(ticket.ticket_type_name, val_style),
             Spacer(1, 8),
+            *(
+                [
+                    Paragraph("SEAT", label_style),
+                    Paragraph(
+                        f"Section {ticket.section} · Row {ticket.row} · Seat {ticket.seat}",
+                        val_style,
+                    ),
+                    Spacer(1, 8),
+                ]
+                if ticket.section
+                else []
+            ),
+            # Only what entry needs: no email or payment data on paper (SRS 4.7).
             Paragraph("ATTENDEE", label_style),
-            Paragraph(f"{ticket.attendee_name} ({ticket.attendee_email})", val_style),
+            Paragraph(ticket.attendee_name, val_style),
             Spacer(1, 8),
             Paragraph("TICKET ID", label_style),
             Paragraph(str(ticket.id), subtitle_style),

@@ -41,5 +41,6 @@ class TicketTypeResponse(TicketTypeBase):
     refunded_count: int
     checked_in_count: int
     available: int
+    seat_category: int | None = None
     created_at: datetime
     updated_at: datetime

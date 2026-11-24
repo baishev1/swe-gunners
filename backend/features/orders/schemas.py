@@ -10,11 +10,14 @@ class OrderItemBase(BaseModel):
     ticket_type_name: str
     unit_price_kzt: int = Field(ge=0)
     quantity: int = Field(ge=1)
+    seats: list[str] = []
 
 
 class OrderItemCreate(BaseModel):
     ticket_type_id: UUID
     quantity: int = Field(ge=1)
+    # Required for assigned-seating events: one seat id per ticket.
+    seats: list[str] = Field(default=[], max_length=50)
 
 
 class OrderItemResponse(OrderItemBase):

@@ -22,6 +22,7 @@ from features import (
     tickets,
     venues,
 )
+from features.seating import routes as seating_routes
 
 from .lifespan import lifespan
 
@@ -68,5 +69,6 @@ app.include_router(payments.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.router, prefix="/api/v1")
 app.include_router(paid_sales.routes.admin_router, prefix="/api/v1")
 app.include_router(analytics.routes.router, prefix="/api/v1")
+app.include_router(seating_routes.router, prefix="/api/v1")
 app.include_router(event_reports.routes.router, prefix="/api/v1")
 app.include_router(event_reports.routes.admin_router, prefix="/api/v1")
