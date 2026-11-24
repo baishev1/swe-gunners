@@ -115,7 +115,7 @@ flutter test --dart-define=USE_MOCK_API=true
 
 Tests are self-contained and require no compile-time flag. They cover real-mode transport paths (backend attendee row parsing, attendance summary, attendee detail via search without removed routes, check-in, undo, 401 invalidation), mock scenarios, session persistence/race handling, error mapping across `kk`/`ru`/`en`, HTTPS release enforcement, event sorting, and narrow-screen/large-text layout.
 
-### Device verification notes (`MOB-11`)
+### Device verification notes
 
 Automated widget and transport checks pass in CI (`mobile` job in `.github/workflows/ci.yml`), including narrow width (320px), 1.4x text scale, real-mode guest search/detail, and all three locales. Physical hardware checks require a signed iOS device and Android device/emulator before release sign-off:
 
