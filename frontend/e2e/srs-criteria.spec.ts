@@ -212,3 +212,92 @@ test('attendee types a promo code at checkout', async ({ page, request }) => {
   expect(order.discount_kzt).toBe(150000)
   expect(order.promo_campaign_id).toBe(campaign.id)
 })
+
+// SRS §11 #8: the admission scanner rejects Campaign QR Codes and keeps accepting tickets.
+test('scanner rejects a campaign QR and still admits a valid ticket', async ({ request }) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const eventAdmin = await apiToken(request, 'eventadmin@biletflow.dev')
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const { event, ticketType, start } = await publishedEvent(request, organizer, {
+    title: `Scanner Check ${Date.now()}`,
+    price: 500000,
+  })
+  await activatePaidSales(request, organizer, event.id)
+  const campaign = await api(request, 'post', `/promo/campaigns?event_id=${event.id}`, organizer, {
+    name: 'Flyers',
+    discount_type: 'percent',
+    discount_value: 10,
+    end_time: start.toISOString(),
+    max_redemptions: 10,
+    ticket_type_ids: [ticketType.id],
+  })
+  const staffUser = await api(request, 'get', '/auth/me', eventAdmin)
+  await api(request, 'post', `/checkin/staff?event_id=${event.id}`, organizer, {
+    user_id: staffUser.id,
+    can_undo_check_in: false,
+    can_manage_support: false,
+  })
+  const order = await api(request, 'post', '/orders', attendee, {
+    event_id: event.id,
+    customer_name: 'Scanner Attendee',
+    customer_email: 'attendee@biletflow.dev',
+    items: [{ ticket_type_id: ticketType.id, quantity: 1 }],
+  })
+  await api(request, 'post', '/payments/simulate', attendee, { order_id: order.id })
+  const [ticket] = await api(request, 'get', `/tickets?order_id=${order.id}`, attendee)
+
+  const scan = (payload: string) =>
+    api(
+      request,
+      'get',
+      `/tickets/verify?event_id=${event.id}&qr_token=${encodeURIComponent(payload)}`,
+      eventAdmin,
+    )
+  // The Campaign QR encodes the campaign link; the token and the printed code must fail too.
+  const campaignToken = String(new URL(campaign.link).searchParams.get('promo'))
+  for (const payload of [campaign.link, campaignToken, campaign.code]) {
+    const result = await scan(payload)
+    expect(result.valid, payload).toBe(false)
+    expect(result.ticket).toBeNull()
+  }
+
+  expect((await scan(ticket.qr_token)).valid).toBe(true)
+  const checkIn = `/api/v1/tickets/check-in?event_id=${event.id}&ticket_id=${ticket.id}`
+  expect((await request.post(checkIn, { headers: eventAdmin })).status()).toBe(200)
+})
+
+// SRS §11 #12: an administrator suspends a suspicious event and further sales stop.
+test('admin suspends an event from the portal and sales stop', async ({ page, request }) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const title = `Suspicious Event ${Date.now()}`
+  const { event, ticketType } = await publishedEvent(request, organizer, { title, price: 0 })
+
+  await signIn(page, 'admin@biletflow.dev', PASSWORD)
+  await page.goto('/admin')
+  await page.getByRole('tab', { name: 'Events' }).click()
+  await page.getByLabel('Event title').fill(title)
+  await page.getByRole('button', { name: 'Search' }).click()
+  const row = page.getByRole('row').filter({ hasText: title })
+  page.once('dialog', (dialog) => dialog.accept())
+  await row.getByRole('button', { name: 'Suspend' }).click()
+  await expect(row.getByText('Suspended', { exact: true })).toBeVisible()
+
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const blocked = await request.post('/api/v1/orders', {
+    headers: attendee,
+    data: {
+      event_id: event.id,
+      customer_name: 'Late Attendee',
+      customer_email: 'attendee@biletflow.dev',
+      items: [{ ticket_type_id: ticketType.id, quantity: 1 }],
+    },
+  })
+  expect(blocked.status()).toBe(400)
+
+  await page.evaluate(() => localStorage.clear())
+  await signIn(page, 'attendee@biletflow.dev', PASSWORD)
+  await page.goto(`/events/detail?event_id=${event.id}`)
+  // React Query retries the 404 three times before the page shows the error.
+  await expect(page.getByText('Event not found')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('link', { name: 'Get tickets' })).toBeHidden()
+})
