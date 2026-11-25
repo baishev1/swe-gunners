@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:biletflow_staff/core/network/api_client.dart';
@@ -59,6 +60,78 @@ void main() {
     expect(storage.token, isNull);
   });
 
+  test('Expired access token is refreshed and the request retried', () async {
+    storage.refreshToken = 'saved-refresh';
+    dio.httpClientAdapter = TestAdapter((request) async {
+      if (request.path == 'auth/refresh') {
+        expect(request.data, {'refresh_token': 'saved-refresh'});
+        expect(request.headers['Authorization'], isNull);
+        return ResponseBody.fromString(
+          jsonEncode({
+            'access_token': 'new-token',
+            'refresh_token': 'new-refresh',
+            'token_type': 'bearer',
+          }),
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        );
+      }
+      if (request.headers['Authorization'] == 'Bearer new-token') {
+        return ResponseBody.fromString(
+          '[]',
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        );
+      }
+      return ResponseBody.fromString('', 401);
+    });
+
+    final response = await dio.get<List<dynamic>>('events');
+
+    expect(response.data, isEmpty);
+    expect(await container.read(sessionProvider.future), 'new-token');
+    expect(storage.token, 'new-token');
+    expect(storage.refreshToken, 'new-refresh');
+  });
+
+  test('Rejected refresh token signs out', () async {
+    storage.refreshToken = 'saved-refresh';
+    final paths = <String>[];
+    dio.httpClientAdapter = TestAdapter((request) async {
+      paths.add(request.path);
+      return ResponseBody.fromString('', 401);
+    });
+
+    await expectLater(dio.get('events'), throwsA(isA<DioException>()));
+
+    expect(paths, ['events', 'auth/refresh']);
+    expect(await container.read(sessionProvider.future), isNull);
+    expect(storage.token, isNull);
+    expect(storage.refreshToken, isNull);
+  });
+
+  test('Offline refresh keeps the session', () async {
+    storage.refreshToken = 'saved-refresh';
+    dio.httpClientAdapter = TestAdapter((request) async {
+      if (request.path == 'auth/refresh') {
+        throw DioException.connectionError(
+          requestOptions: request,
+          reason: 'offline',
+        );
+      }
+      return ResponseBody.fromString('', 401);
+    });
+
+    await expectLater(dio.get('events'), throwsA(isA<DioException>()));
+
+    expect(await container.read(sessionProvider.future), 'saved-token');
+    expect(storage.refreshToken, 'saved-refresh');
+  });
+
   for (final status in [403, 500]) {
     test('$status preserves session', () async {
       dio.httpClientAdapter = TestAdapter(
@@ -84,18 +157,20 @@ void main() {
   test('Delayed 401 cannot invalidate a newer login', () async {
     final started = Completer<void>();
     final response = Completer<ResponseBody>();
-    dio.httpClientAdapter = TestAdapter((_) {
+    dio.httpClientAdapter = TestAdapter((request) {
+      if (started.isCompleted) {
+        // The stale 401 is retried with the newer login's token.
+        expect(request.headers['Authorization'], 'Bearer new-token');
+        return Future.value(ResponseBody.fromString('', 200));
+      }
       started.complete();
       return response.future;
     });
-    final request = expectLater(
-      dio.get('events'),
-      throwsA(isA<DioException>()),
-    );
+    final request = dio.get('events');
     await started.future;
     await container.read(sessionProvider.notifier).saveToken('new-token');
     response.complete(ResponseBody.fromString('', 401));
-    await request;
+    expect((await request).statusCode, 200);
     expect(storage.token, 'new-token');
     expect(await container.read(sessionProvider.future), 'new-token');
   });

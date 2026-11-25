@@ -3,6 +3,7 @@ const upcomingEventId = '019a2000-0000-7000-8000-000000000002';
 const cancelledEventId = '019a2000-0000-7000-8000-000000000003';
 const unassignedEventId = '019a2000-0000-7000-8000-000000000004';
 const demoToken = 'demo-access-token';
+const demoRefreshToken = 'demo-refresh-token';
 const demoEmail = 'staff@biletflow.demo';
 const demoPassword = 'Demo123!';
 const demoUser = {

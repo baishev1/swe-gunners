@@ -1,6 +1,6 @@
 # Biletflow Staff
 
-Flutter 3.44.4 / Dart 3.12.2. UI: [Forui](https://forui.dev/docs), state: Riverpod, HTTP: Dio. The only persisted app data is the authentication token, stored with `flutter_secure_storage` (Keychain on iOS, encrypted storage on Android).
+Flutter 3.44.4 / Dart 3.12.2. UI: [Forui](https://forui.dev/docs), state: Riverpod, HTTP: Dio. The only persisted app data is the access and refresh token pair, stored with `flutter_secure_storage` (Keychain on iOS, encrypted storage on Android).
 
 ## Run
 
@@ -48,7 +48,7 @@ lib/
     network/api_client.dart           # Configured Dio + bearer/401 + HTTPS release guard
     network/mock_api_adapter.dart     # Backend-shaped mock transport + useMockApiProvider
     network/mock_fixtures.dart        # Demo events and tickets
-    storage/token_storage.dart        # One secure token key
+    storage/token_storage.dart        # Secure access and refresh token keys
     theme/app_theme.dart              # Light/dark Forui + Material themes
     widgets/app_page.dart             # Shared page scaffold, error mapping, cards
   features/
@@ -63,11 +63,11 @@ Keep each feature flat: its screen, controller/provider, and models/API function
 
 ## Authentication integration
 
-Sign-in sends `email` and `password` to `POST auth/login` and stores the returned `access_token`. Login and password reset explicitly opt out of session handling.
+Sign-in sends `email` and `password` to `POST auth/login` and stores the returned `access_token` and `refresh_token`. Login and password reset explicitly opt out of session handling.
 
 - Startup restores the token before rendering protected UI or sending authenticated requests. It does not require a network check or a new login.
 - Requests to this API automatically include `Authorization: Bearer <token>`. Use relative API paths such as `checkin/events`; tokens are not attached to other hosts/paths.
-- An authenticated `401` deletes the token and returns to the signed-out screen. A late response from an older token cannot clear a newer session.
+- An authenticated `401` trades the refresh token for a new pair through `POST auth/refresh` and retries the request once. If the refresh is rejected, the tokens are deleted and the app returns to the signed-out screen. A refresh that fails offline keeps the session. A late response from an older token cannot clear a newer session.
 - Public request failures, `403`, server failures, and offline/timeouts do not log the user out.
 - `await ref.read(sessionProvider.notifier).logout()` clears secure storage and in-memory state. Storage failures surface as an error instead of silently claiming success.
 - The backend decides token validity. There is no assumed JWT format, arbitrary client expiration timer, token refresh, or response caching.
