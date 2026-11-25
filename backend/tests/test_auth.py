@@ -120,7 +120,9 @@ def test_refresh_rejects_disabled_user(client: TestClient) -> None:
     refresh_token = auth_service.create_refresh_token(user)
     assert core.engine is not None
     with Session(core.engine) as db:
-        db.get(User, user.id).is_active = False
+        persisted = db.get(User, user.id)
+        assert persisted is not None
+        persisted.is_active = False
         db.commit()
 
     response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
