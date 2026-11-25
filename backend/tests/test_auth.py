@@ -74,6 +74,62 @@ def test_me_without_or_with_bad_token_unauthorized(client: TestClient) -> None:
     assert response.status_code == 401
 
 
+def test_refresh_returns_working_tokens(client: TestClient) -> None:
+    client.post("/api/v1/auth/register", json=USER)
+    tokens = client.post(
+        "/api/v1/auth/login", json={"email": USER["email"], "password": USER["password"]}
+    ).json()
+
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": tokens["refresh_token"]})
+
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {access_token}"})
+    assert me.status_code == 200
+
+
+def test_refresh_rejects_access_and_expired_tokens(client: TestClient) -> None:
+    access_token = login(client)
+    expired = jwt.encode(
+        {
+            "sub": str(get_user().id),
+            "purpose": "refresh",
+            "exp": core.time_now() - timedelta(minutes=1),
+        },
+        settings.JWT_SECRET,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
+    for token in (access_token, expired):
+        response = client.post("/api/v1/auth/refresh", json={"refresh_token": token})
+        assert response.status_code == 401
+
+
+def test_refresh_token_is_not_an_access_token(client: TestClient) -> None:
+    login(client)
+    refresh_token = auth_service.create_refresh_token(get_user())
+
+    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {refresh_token}"})
+
+    assert response.status_code == 401
+
+
+def test_refresh_rejects_disabled_user(client: TestClient) -> None:
+    login(client)
+    user = get_user()
+    refresh_token = auth_service.create_refresh_token(user)
+    assert core.engine is not None
+    with Session(core.engine) as db:
+        persisted = db.get(User, user.id)
+        assert persisted is not None
+        persisted.is_active = False
+        db.commit()
+
+    response = client.post("/api/v1/auth/refresh", json={"refresh_token": refresh_token})
+
+    assert response.status_code == 401
+
+
 def test_verify_email_marks_user_verified(client: TestClient) -> None:
     token = login(client)
     verify_token = auth_service.create_verify_token(get_user())

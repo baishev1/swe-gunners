@@ -17,7 +17,18 @@ def register(data: RegisterRequest = Depends(unique_email_guard), db: Session = 
 
 @router.post("/login", response_model=TokenResponse)
 def login(user: User = Depends(valid_credentials_guard)):
-    return TokenResponse(access_token=auth_service.create_access_token(user))
+    return TokenResponse(
+        access_token=auth_service.create_access_token(user),
+        refresh_token=auth_service.create_refresh_token(user),
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh(user: User = Depends(valid_refresh_token)):
+    return TokenResponse(
+        access_token=auth_service.create_access_token(user),
+        refresh_token=auth_service.create_refresh_token(user),
+    )
 
 
 @router.get("/me", response_model=UserResponse)

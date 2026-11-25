@@ -54,6 +54,20 @@ def get_current_user(
     return user
 
 
+def valid_refresh_token(data: RefreshRequest, db: Session = Depends(get_db)) -> User:
+    unauthorized = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+    )
+    try:
+        payload = auth_service.decode_purpose_token(data.refresh_token, "refresh")
+        user = db.get(User, UUID(payload["sub"]))
+    except (jwt.PyJWTError, KeyError, ValueError):
+        raise unauthorized from None
+    if not user or not user.is_active:
+        raise unauthorized
+    return user
+
+
 def require_role(*roles: str):
     def role_guard(user: User = Depends(get_current_user)) -> User:
         if user.role not in roles:

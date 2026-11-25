@@ -47,6 +47,11 @@ class AuthService:
             raise jwt.InvalidTokenError("Expected an access token")
         return UUID(payload["sub"])
 
+    def create_refresh_token(self, user: User) -> str:
+        expires = time_now() + timedelta(minutes=settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES)
+        payload = {"sub": str(user.id), "purpose": "refresh", "exp": expires}
+        return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
     def create_verify_token(self, user: User) -> str:
         payload = {
             "sub": str(user.id),
