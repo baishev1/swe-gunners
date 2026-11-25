@@ -130,7 +130,22 @@ class MockServer {
         return error(401, 'Invalid email or password');
       }
       expired = false;
-      return json({'access_token': demoToken, 'token_type': 'bearer'});
+      return json({
+        'access_token': demoToken,
+        'refresh_token': demoRefreshToken,
+        'token_type': 'bearer',
+      });
+    }
+    // "Expire session" in the demo ends the whole session, refresh included.
+    if (path == 'auth/refresh' && method == 'POST') {
+      if (expired || body['refresh_token'] != demoRefreshToken) {
+        return error(401, 'token_invalid');
+      }
+      return json({
+        'access_token': demoToken,
+        'refresh_token': demoRefreshToken,
+        'token_type': 'bearer',
+      });
     }
     if (path == 'auth/forgot-password' && method == 'POST') {
       return ResponseBody.fromString('', 204);

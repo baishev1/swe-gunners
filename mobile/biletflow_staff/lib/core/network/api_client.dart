@@ -74,17 +74,36 @@ final dioProvider = Provider<Dio>((ref) {
         }
       },
       onError: (error, handler) async {
-        final authorization = error.requestOptions.headers['Authorization'];
+        final options = error.requestOptions;
+        final authorization = options.headers['Authorization'];
         if (error.response?.statusCode == 401 &&
-            error.requestOptions.extra['requiresAuth'] != false &&
+            options.extra['requiresAuth'] != false &&
             authorization is String &&
             authorization.startsWith('Bearer ')) {
-          try {
-            await ref
-                .read(sessionProvider.notifier)
-                .invalidate(authorization.substring(7));
-          } catch (_) {
-            // The session exposes storage failures; preserve the HTTP error.
+          final session = ref.read(sessionProvider.notifier);
+          final expired = authorization.substring(7);
+          if (options.extra['retried'] == true) {
+            try {
+              await session.invalidate(expired);
+            } catch (_) {
+              // The session exposes storage failures; preserve the HTTP error.
+            }
+          } else {
+            String? token;
+            try {
+              token = await session.refresh(expired);
+            } catch (_) {
+              // Offline or storage failure; report the original 401.
+            }
+            if (token != null) {
+              options.extra['retried'] = true;
+              try {
+                handler.resolve(await dio.fetch<dynamic>(options));
+              } on DioException catch (retryError) {
+                handler.next(retryError);
+              }
+              return;
+            }
           }
         }
         handler.next(error);

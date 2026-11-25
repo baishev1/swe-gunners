@@ -77,7 +77,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else {
         await ref
             .read(sessionProvider.notifier)
-            .saveToken(response.data!['access_token'] as String);
+            .saveToken(
+              response.data!['access_token'] as String,
+              response.data!['refresh_token'] as String?,
+            );
       }
     } catch (error) {
       if (mounted) setState(() => _error = error);
