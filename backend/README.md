@@ -177,6 +177,8 @@ authenticated user, never request-body IDs.
 **Authentication:** support and check-in use the auth feature's shared
 `get_current_user` through `features/users/dependencies.py`. Log in with
 `POST /api/v1/auth/login`, then send `Authorization: Bearer <access_token>`.
+When the access token expires, `POST /api/v1/auth/refresh` with the
+`refresh_token` from login returns a new pair.
 Missing, invalid, expired, and purpose-specific email/reset tokens return 401,
 as do tokens for deleted or disabled users. No client-supplied user-ID header
 is accepted. Integration tests exercise login and protected requests with real
