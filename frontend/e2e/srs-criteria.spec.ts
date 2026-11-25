@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
-import { PASSWORD, activatePaidSales, api, apiToken, publishedEvent, signIn } from './support.ts'
+import {
+  PASSWORD,
+  activatePaidSales,
+  api,
+  apiToken,
+  createVerifyToken,
+  publishedEvent,
+  signIn,
+} from './support.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('language', 'en'))
@@ -300,4 +309,198 @@ test('admin suspends an event from the portal and sales stop', async ({ page, re
   // React Query retries the 404 three times before the page shows the error.
   await expect(page.getByText('Event not found')).toBeVisible({ timeout: 15_000 })
   await expect(page.getByRole('link', { name: 'Get tickets' })).toBeHidden()
+})
+
+async function paidOrder(
+  request: APIRequestContext,
+  attendee: Record<string, string>,
+  eventId: string,
+  ticketTypeId: string,
+  customerName: string,
+) {
+  const order = await api(request, 'post', '/orders', attendee, {
+    event_id: eventId,
+    customer_name: customerName,
+    customer_email: 'attendee@biletflow.dev',
+    items: [{ ticket_type_id: ticketTypeId, quantity: 1 }],
+  })
+  await api(request, 'post', '/payments/simulate', attendee, { order_id: order.id })
+  return order
+}
+
+// SRS §11 #2: an organizer completes the simulated paid-sales activation and receives
+// demonstration orders.
+test('new organizer activates paid sales and receives an order', async ({ page, request }) => {
+  const email = `organizer-${Date.now()}@example.com`
+  const user = await api(
+    request,
+    'post',
+    '/auth/register',
+    {},
+    {
+      email,
+      password: PASSWORD,
+      full_name: 'Fresh Organizer',
+      role: 'organizer',
+    },
+  )
+  await api(request, 'post', '/auth/verify-email', {}, { token: createVerifyToken(user.id) })
+  const organizer = await apiToken(request, email)
+  const { event, ticketType } = await publishedEvent(request, organizer, {
+    title: `Activation ${Date.now()}`,
+    price: 500000,
+  })
+
+  // Paid tickets cannot be sold before activation.
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const early = await request.post('/api/v1/orders', {
+    headers: attendee,
+    data: {
+      event_id: event.id,
+      customer_name: 'Early Buyer',
+      customer_email: 'attendee@biletflow.dev',
+      items: [{ ticket_type_id: ticketType.id, quantity: 1 }],
+    },
+  })
+  expect(early.ok()).toBeFalsy()
+
+  await signIn(page, email, PASSWORD)
+  await page.goto('/organizer/profile')
+  await page.getByLabel('Recipient name').fill('Fresh Events LLP')
+  await page.getByLabel('IBAN').fill('KZ86125KZT5004100100')
+  await page.getByLabel('BIN / IIN').fill('123456789012')
+  await page.getByRole('button', { name: 'Save' }).click()
+  await expect(page.getByText('Saved.')).toBeVisible()
+
+  await page.goto(`/organizer/events/edit?event_id=${event.id}`)
+  const checklist = page.getByRole('list', { name: 'Activation checklist' })
+  await checklist.getByRole('button', { name: 'Verify identity (demo)' }).click()
+  await checklist.getByRole('button', { name: 'Pay fee (demo)' }).click()
+  await checklist.getByRole('button', { name: 'Accept terms' }).click()
+  await page.getByRole('button', { name: 'Activate paid sales' }).click()
+  await expect(page.getByText(/^Paid sales are active/)).toBeVisible()
+
+  await paidOrder(request, attendee, event.id, ticketType.id, 'Demo Buyer')
+  await page.reload()
+  const row = page.getByRole('row').filter({ hasText: 'Demo Buyer' })
+  await expect(row.getByText('Paid', { exact: true })).toBeVisible()
+})
+
+// SRS §11 #9 and #10: organizers see accurate ticket, attendance, payment and refund
+// records, and the analytics built from them.
+test('organizer refunds an order and the records and analytics agree', async ({
+  page,
+  request,
+}) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const eventAdmin = await apiToken(request, 'eventadmin@biletflow.dev')
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const { event, ticketType } = await publishedEvent(request, organizer, {
+    title: `Records ${Date.now()}`,
+    price: 500000,
+  })
+  await activatePaidSales(request, organizer, event.id)
+  const staffUser = await api(request, 'get', '/auth/me', eventAdmin)
+  await api(request, 'post', `/checkin/staff?event_id=${event.id}`, organizer, {
+    user_id: staffUser.id,
+    can_undo_check_in: false,
+    can_manage_support: false,
+  })
+
+  const arrived = await paidOrder(request, attendee, event.id, ticketType.id, 'Arrived Guest')
+  await paidOrder(request, attendee, event.id, ticketType.id, 'Refunded Guest')
+  const [ticket] = await api(request, 'get', `/tickets?order_id=${arrived.id}`, attendee)
+  await api(
+    request,
+    'post',
+    `/tickets/check-in?event_id=${event.id}&ticket_id=${ticket.id}`,
+    eventAdmin,
+  )
+
+  await signIn(page, 'organizer@biletflow.dev', PASSWORD)
+  await page.goto(`/organizer/events/edit?event_id=${event.id}`)
+  const refunded = page.getByRole('row').filter({ hasText: 'Refunded Guest' })
+  await refunded.getByRole('button', { name: 'Refund' }).click()
+  await refunded.getByRole('button', { name: 'Confirm refund' }).click()
+  await expect(refunded.getByText('Refunded', { exact: true })).toBeVisible()
+  const paid = page.getByRole('row').filter({ hasText: 'Arrived Guest' })
+  await expect(paid.getByText('Paid', { exact: true })).toBeVisible()
+
+  await page.goto(`/organizer/events/attendees?event_id=${event.id}`)
+  await expect(
+    page
+      .getByRole('row')
+      .filter({ hasText: 'Arrived Guest' })
+      .getByRole('cell', { name: 'Checked in', exact: true }),
+  ).toBeVisible()
+  await expect(
+    page
+      .getByRole('row')
+      .filter({ hasText: 'Refunded Guest' })
+      .getByRole('cell', { name: 'Refunded', exact: true }),
+  ).toBeVisible()
+
+  await page.goto(`/organizer/events/analytics?event_id=${event.id}`)
+  // Stat cards use a <span> label; the ticket type table repeats the same words in <th>.
+  const stat = (label: string) =>
+    page.getByText(label, { exact: true }).and(page.locator('span')).locator('..')
+  await expect(stat('Sold')).toContainText('1')
+  await expect(stat('Gross sales')).toContainText(/10,?000/)
+  await expect(stat('Refunds')).toContainText(/5,?000/)
+  await expect(stat('Checked in')).toContainText('1')
+
+  // Attendee checkout asks for name and email only (SRS §11 #10).
+  await page.goto(`/checkout?event_id=${event.id}`)
+  const attendeeCard = page
+    .locator('[data-slot="card"]')
+    .filter({ has: page.getByText('Attendee information', { exact: true }) })
+  await expect(attendeeCard.getByRole('textbox')).toHaveCount(2)
+})
+
+// SRS §11 #11: organizers review cancelled events, inspect the activity timeline and
+// duplicate an event without copying its transactions.
+test('organizer reviews a cancelled event and duplicates it without orders', async ({
+  page,
+  request,
+}) => {
+  const organizer = await apiToken(request, 'organizer@biletflow.dev')
+  const attendee = await apiToken(request, 'attendee@biletflow.dev')
+  const title = `Cancelled Gig ${Date.now()}`
+  const { event, ticketType } = await publishedEvent(request, organizer, { title, price: 0 })
+  await api(request, 'post', '/orders', attendee, {
+    event_id: event.id,
+    customer_name: 'Early Fan',
+    customer_email: 'attendee@biletflow.dev',
+    items: [{ ticket_type_id: ticketType.id, quantity: 1 }],
+  })
+  await api(request, 'post', `/events/cancel?event_id=${event.id}`, organizer)
+
+  await signIn(page, 'organizer@biletflow.dev', PASSWORD)
+  await page.goto('/organizer/events')
+  await page.getByRole('tab', { name: 'Cancelled' }).click()
+  const card = page.getByRole('listitem').filter({ hasText: title })
+  await card.getByRole('link', { name: 'History' }).click()
+  // A string filter ignores case, and "Published event Cancelled Gig" would match.
+  const entry = (action: string) =>
+    page.getByRole('listitem').filter({ hasText: new RegExp(action) })
+  await expect(entry('Event published')).toBeVisible()
+  // Cancelling closes the free registration too, and the history keeps it.
+  await expect(entry('Order cancelled')).toBeVisible()
+  await expect(entry('Event cancelled')).toBeVisible()
+
+  await page.goto('/organizer/events')
+  await page.getByRole('tab', { name: 'Cancelled' }).click()
+  await card.getByRole('button', { name: 'Duplicate' }).click()
+  await page.waitForURL((url) => {
+    const id = url.searchParams.get('event_id')
+    return url.pathname === '/organizer/events/edit' && id !== null && id !== event.id
+  })
+
+  const copyId = String(new URL(page.url()).searchParams.get('event_id'))
+  const copy = await api(request, 'get', `/events/detail?event_id=${copyId}`, organizer)
+  expect(copy.title).toBe(`${title} (Copy)`)
+  expect(copy.status).toBe('draft')
+  expect(await api(request, 'get', `/orders/manage?event_id=${copyId}`, organizer)).toEqual([])
+  const original = await api(request, 'get', `/orders/manage?event_id=${event.id}`, organizer)
+  expect(original).toHaveLength(1)
 })

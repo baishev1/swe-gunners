@@ -1,7 +1,20 @@
+import { execFileSync } from 'node:child_process'
+import path from 'node:path'
 import { expect } from '@playwright/test'
 import type { APIRequestContext, Page } from '@playwright/test'
 
 export const PASSWORD = 'password123'
+
+export function createVerifyToken(userId: string) {
+  const script =
+    'import sys; from types import SimpleNamespace; ' +
+    'from features.auth.service import auth_service; ' +
+    'print(auth_service.create_verify_token(SimpleNamespace(id=sys.argv[1])))'
+  return execFileSync('uv', ['run', 'python', '-c', script, userId], {
+    cwd: path.resolve(import.meta.dirname, '../../backend'),
+    encoding: 'utf-8',
+  }).trim()
+}
 
 export async function signIn(page: Page, email: string, password: string) {
   await page.goto('/login')

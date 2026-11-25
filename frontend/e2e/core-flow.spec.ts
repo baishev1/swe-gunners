@@ -1,23 +1,10 @@
-import { execFileSync } from 'node:child_process'
-import path from 'node:path'
 import { expect, test } from '@playwright/test'
 
-import { PASSWORD, api, apiToken, signIn } from './support.ts'
+import { PASSWORD, api, apiToken, createVerifyToken, signIn } from './support.ts'
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('language', 'en'))
 })
-
-function createVerifyToken(userId: string) {
-  const script =
-    'import sys; from types import SimpleNamespace; ' +
-    'from features.auth.service import auth_service; ' +
-    'print(auth_service.create_verify_token(SimpleNamespace(id=sys.argv[1])))'
-  return execFileSync('uv', ['run', 'python', '-c', script, userId], {
-    cwd: path.resolve(import.meta.dirname, '../../backend'),
-    encoding: 'utf-8',
-  }).trim()
-}
 
 test('organizer publishes an event and an anonymous visitor finds it', async ({ page }) => {
   const stamp = Date.now()
