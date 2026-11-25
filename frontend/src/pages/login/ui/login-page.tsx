@@ -18,8 +18,8 @@ export function LoginPage() {
 
   const mutation = useMutation({
     mutationFn: login,
-    onSuccess: ({ access_token }) => {
-      setToken(access_token)
+    onSuccess: ({ access_token, refresh_token }) => {
+      setToken(access_token, refresh_token)
       queryClient.clear()
       navigate(ROUTES.home)
     },

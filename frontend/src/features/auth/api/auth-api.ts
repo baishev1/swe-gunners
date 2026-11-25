@@ -10,10 +10,11 @@ type RegisterBody = LoginBody & { full_name: string; role: RegisterRole }
 type ResetPasswordBody = { token: string; new_password: string }
 
 export async function login(body: LoginBody) {
-  const { data } = await apiClient.post<{ access_token: string; token_type: string }>(
-    '/auth/login',
-    body,
-  )
+  const { data } = await apiClient.post<{
+    access_token: string
+    refresh_token: string
+    token_type: string
+  }>('/auth/login', body)
   return data
 }
 
